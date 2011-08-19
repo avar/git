@@ -1,14 +1,14 @@
 # Swedish translations for Git.
-# Copyright (C) 2010 Peter krefting <peter@softwolves.pp.se>
+# Copyright (C) 2010-2011 Peter Krefting <peter@softwolves.pp.se>
 # This file is distributed under the same license as the Git package.
-# Peter krefting <peter@softwolves.pp.se>, 2010.
+# Peter Krefting <peter@softwolves.pp.se>, 2010-2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: git 1.7.3\n"
+"Project-Id-Version: git 1.7.5\n"
 "Report-Msgid-Bugs-To: Git Mailing List <git@vger.kernel.org>\n"
 "POT-Creation-Date: 2011-07-06 19:20+0000\n"
-"PO-Revision-Date: 2010-09-12 21:07+0100\n"
+"PO-Revision-Date: 2011-08-19 11:11+0100\n"
 "Last-Translator: Peter Krefting <peter@softwolves.pp.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -20,12 +20,12 @@ msgstr ""
 #: diff.c:104
 #, c-format
 msgid "  Failed to parse dirstat cut-off percentage '%.*s'\n"
-msgstr ""
+msgstr "  Misslyckades tolka avbrytningsprocent för dirstat: \"%.*s\"\n"
 
 #: diff.c:109
-#, fuzzy, c-format
+#, c-format
 msgid "  Unknown dirstat parameter '%.*s'\n"
-msgstr "kan inte ta status på mallen \"%s\""
+msgstr "  Okänd parameter för dirstat: \"%.*s\"\n"
 
 #: diff.c:205
 #, c-format
@@ -33,6 +33,8 @@ msgid ""
 "Found errors in 'diff.dirstat' config variable:\n"
 "%s"
 msgstr ""
+"Hittade fel i konfigurationsvariabeln \"diff.dirstat\":\n"
+"%s"
 
 #: diff.c:3295
 #, c-format
@@ -40,74 +42,66 @@ msgid ""
 "Failed to parse --dirstat/-X option parameter:\n"
 "%s"
 msgstr ""
+"Misslyckades tolka argument till flaggan --dirstat/-X:\n"
+"%s"
 
 #: wt-status.c:134
-#, fuzzy
 msgid "Unmerged paths:"
-msgstr "# Ej sammanslagna sökvägar:"
+msgstr "Ej sammanslagna sökvägar:"
 
 #: wt-status.c:140 wt-status.c:157
-#, fuzzy, c-format
+#, c-format
 msgid "  (use \"git reset %s <file>...\" to unstage)"
-msgstr "#   (använd \"git reset %s <fil>...\" för att ta bort från kö)"
+msgstr "  (använd \"git reset %s <fil>...\" för att ta bort från kö)"
 
 #: wt-status.c:142 wt-status.c:159
-#, fuzzy
 msgid "  (use \"git rm --cached <file>...\" to unstage)"
-msgstr "#   (använd \"git rm --cached <fil>...\" för att ta bort från kö)"
+msgstr "  (använd \"git rm --cached <fil>...\" för att ta bort från kö)"
 
 #: wt-status.c:143
-#, fuzzy
 msgid "  (use \"git add/rm <file>...\" as appropriate to mark resolution)"
-msgstr "#   (använd \"git add/rm <fil>...\" som lämpligt för att ange lösning)"
+msgstr "  (använd \"git add/rm <fil>...\" som lämpligt för att ange lösning)"
 
 #: wt-status.c:151
-#, fuzzy
 msgid "Changes to be committed:"
-msgstr "# Ändringar att checka in:"
+msgstr "Ändringar att checka in:"
 
 #: wt-status.c:169
-#, fuzzy
 msgid "Changes not staged for commit:"
-msgstr "# Ändringar att checka in:"
+msgstr "Ändringar ej köade för incheckning:"
 
 #: wt-status.c:173
-#, fuzzy
 msgid "  (use \"git add <file>...\" to update what will be committed)"
 msgstr ""
-"#   (använd \"git add <fil>...\" för att uppdatera vad som skall checkas in)"
+"  (använd \"git add <fil>...\" för att uppdatera vad som skall checkas in)"
 
 #: wt-status.c:175
-#, fuzzy
 msgid "  (use \"git add/rm <file>...\" to update what will be committed)"
 msgstr ""
-"#   (använd \"git add/rm <fil>...\" för att uppdatera vad som skall checkas "
-"in)"
+"  (använd \"git add/rm <fil>...\" för att uppdatera vad som skall checkas in)"
 
 #: wt-status.c:176
-#, fuzzy
 msgid ""
 "  (use \"git checkout -- <file>...\" to discard changes in working directory)"
 msgstr ""
-"#   (använd \"git checkout -- <fil>...\" för att förkasta ändringar i "
+"  (använd \"git checkout -- <fil>...\" för att förkasta ändringar i "
 "arbetskatalogen)"
 
 #: wt-status.c:178
-#, fuzzy
 msgid "  (commit or discard the untracked or modified content in submodules)"
 msgstr ""
-"#   (checka in eller förkasta ospårat eller ändrat innehåll i undermoduler)"
+"  (checka in eller förkasta ospårat eller ändrat innehåll i undermoduler)"
 
 #: wt-status.c:187
-#, fuzzy, c-format
+#, c-format
 msgid "%s files:"
-msgstr "# %s filer:"
+msgstr "%s filer:"
 
 #: wt-status.c:190
-#, fuzzy, c-format
+#, c-format
 msgid "  (use \"git %s <file>...\" to include in what will be committed)"
 msgstr ""
-"#   (använd \"git %s <fil>...\" för att ta med i vad som skall checkas in)"
+"  (använd \"git %s <fil>...\" för att ta med i vad som skall checkas in)"
 
 #: wt-status.c:207
 msgid "bug"
@@ -207,9 +201,8 @@ msgid "Not currently on any branch."
 msgstr "Inte på någon gren för närvarande."
 
 #: wt-status.c:731
-#, fuzzy
 msgid "Initial commit"
-msgstr "# Grundincheckning"
+msgstr "Första incheckning"
 
 #: wt-status.c:745
 msgid "Untracked"
@@ -220,18 +213,17 @@ msgid "Ignored"
 msgstr "Ignorerad"
 
 #: wt-status.c:749
-#, fuzzy, c-format
+#, c-format
 msgid "Untracked files not listed%s"
-msgstr "# Ospårade filer visas ej%s\n"
+msgstr "Ospårade filer visas ej%s"
 
 #: wt-status.c:751
 msgid " (use -u option to show untracked files)"
 msgstr " (använd flaggan -u för att visa ospårade filer)"
 
 #: wt-status.c:757
-#, fuzzy
 msgid "No changes"
-msgstr "# Inga ändringar\n"
+msgstr "Inga ändringar"
 
 #: wt-status.c:761
 #, c-format
@@ -274,7 +266,7 @@ msgstr "HEAD (ingen gren)"
 
 #: wt-status.c:890
 msgid "Initial commit on "
-msgstr "Grundincheckning på "
+msgstr "Första incheckning på "
 
 #: wt-status.c:905
 msgid "behind "
@@ -350,7 +342,7 @@ msgstr "Kunde inte applicera \"%s\""
 
 #: builtin/add.c:310
 msgid "The following paths are ignored by one of your .gitignore files:\n"
-msgstr ""
+msgstr "Följande sökvägar ignoreras av en av dina .gitignore-filer:\n"
 
 #: builtin/add.c:350
 #, c-format
@@ -423,13 +415,13 @@ msgid "git archive: expected a flush"
 msgstr "git archive: förväntade en tömning (flush)"
 
 #: builtin/branch.c:136
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "deleting branch '%s' that has been merged to\n"
 "         '%s', but not yet merged to HEAD."
 msgstr ""
-"tar bort grenen \"%s\" som inte har slagits ihop med\n"
-"         \"%s\", men som ännu inte slagits ihop med HEAD."
+"tar bort grenen \"%s\" som har slagits ihop med\n"
+"         \"%s\", men ännu inte slagits ihop med HEAD."
 
 #: builtin/branch.c:140
 #, c-format
@@ -673,7 +665,7 @@ msgstr "Växlade till grenen \"%s\"\n"
 #: builtin/checkout.c:651
 #, c-format
 msgid " ... and %d more.\n"
-msgstr ""
+msgstr " ... och ytterligare %d.\n"
 
 #. The singular version
 #: builtin/checkout.c:657
@@ -689,7 +681,15 @@ msgid_plural ""
 "\n"
 "%s\n"
 msgstr[0] ""
+"Varning: du lämnar kvar %d incheckning, som inte är kopplad till\n"
+"någon av dina grenar:\n"
+"\n"
+"%s\n"
 msgstr[1] ""
+"Varning: du lämnar kvar %d incheckningar, som inte är kopplade till\n"
+"någon av dina grenar:\n"
+"\n"
+"%s\n"
 
 #: builtin/checkout.c:675
 #, c-format
@@ -700,14 +700,19 @@ msgid ""
 " git branch new_branch_name %s\n"
 "\n"
 msgstr ""
+"Om du vill behålla dem genom att skapa en ny gren är nu en bra tidpunkt\n"
+"att göra så med:\n"
+"\n"
+" git branch nytt_grennamn %s\n"
+"\n"
 
 #: builtin/checkout.c:700
 msgid "internal error: only -- alone should have been left"
-msgstr ""
+msgstr "internt fel: endast ensamt -- skulle varit kvar"
 
 #: builtin/checkout.c:702
 msgid "internal error in revision walk"
-msgstr ""
+msgstr "internt fel i revisionsgenomgång"
 
 #: builtin/checkout.c:706
 msgid "Previous HEAD position was"
@@ -738,14 +743,12 @@ msgid "--patch is incompatible with all other options"
 msgstr "--patch är inkompatibel med alla andra flaggor"
 
 #: builtin/checkout.c:977
-#, fuzzy
 msgid "--detach cannot be used with -b/-B/--orphan"
-msgstr "--cached kan inte användas med --no-index."
+msgstr "--detched kan inte användas med -b/-B/--orphan"
 
 #: builtin/checkout.c:979
-#, fuzzy
 msgid "--detach cannot be used with -t"
-msgstr "--orphan kan inte användas med -t"
+msgstr "--detched kan inte användas med -t"
 
 #: builtin/checkout.c:985
 msgid "--track needs a branch name"
@@ -757,7 +760,7 @@ msgstr "Grennamn saknas; försök med -b"
 
 #: builtin/checkout.c:998
 msgid "--orphan and -b|-B are mutually exclusive"
-msgstr "--orphan och --b|-B kan inte användas samtidigt"
+msgstr "--orphan och -b|-B kan inte användas samtidigt"
 
 #: builtin/checkout.c:1000
 msgid "--orphan cannot be used with -t"
@@ -785,9 +788,8 @@ msgid "git checkout: updating paths is incompatible with switching branches."
 msgstr "git checkout: uppdatera sökvägar är inkompatibelt med att växla gren."
 
 #: builtin/checkout.c:1059
-#, fuzzy
 msgid "git checkout: --detach does not take a path argument"
-msgstr "fetch --all tar inte namnet på ett arkiv som argument"
+msgstr "git checkout: --detach tar inte ett sökvägsargument"
 
 #: builtin/checkout.c:1062
 msgid ""
@@ -813,7 +815,7 @@ msgstr "Kan inte växla gren på en icke-incheckning."
 
 #: builtin/checkout.c:1088
 msgid "--ours/--theirs is incompatible with switching branches."
-msgstr "--ours/--theirs är inkompatibla när du växlar gren."
+msgstr "--ours/--theirs är inkompatibla med att växla gren."
 
 #: builtin/clean.c:78
 msgid "-x and -X cannot be used together"
@@ -845,9 +847,9 @@ msgid "Removing %s\n"
 msgstr "Tar bort %s\n"
 
 #: builtin/clean.c:161 builtin/clean.c:181
-#, fuzzy, c-format
+#, c-format
 msgid "failed to remove %s"
-msgstr "kunde inte ta bort \"%s\""
+msgstr "kunde inte ta bort %s"
 
 #: builtin/clean.c:165
 #, c-format
@@ -923,13 +925,13 @@ msgid "--bare and --origin %s options are incompatible."
 msgstr "flaggorna --bare och --origin %s är inkompatibla."
 
 #: builtin/clone.c:420
-#, fuzzy, c-format
+#, c-format
 msgid "repository '%s' does not exist"
-msgstr "felaktigt arkiv \"%s\""
+msgstr "arkivet \"%s\" finns inte"
 
 #: builtin/clone.c:425
 msgid "--depth is ignored in local clones; use file:// instead."
-msgstr ""
+msgstr "--depth ignoreras i lokala koner; använd file:// istället"
 
 #: builtin/clone.c:435
 #, c-format
@@ -952,14 +954,14 @@ msgid "could not create work tree dir '%s'."
 msgstr "kunde inte skapa arbetskatalogen \"%s\""
 
 #: builtin/clone.c:480
-#, fuzzy, c-format
+#, c-format
 msgid "Cloning into bare repository %s...\n"
-msgstr "Klonar till ett naket arkiv %s\n"
+msgstr "Klonar till ett naket arkiv %s...\n"
 
 #: builtin/clone.c:482
-#, fuzzy, c-format
+#, c-format
 msgid "Cloning into %s...\n"
-msgstr "Klonar till %s\n"
+msgstr "Klonar till %s...\n"
 
 #: builtin/clone.c:540
 #, c-format
@@ -982,7 +984,6 @@ msgstr ""
 "HEAD hos fjärren pekar på en obefintlig referens, kan inte checka ut.\n"
 
 #: builtin/commit.c:41
-#, fuzzy
 msgid ""
 "Your name and email address were configured automatically based\n"
 "on your username and hostname. Please check that they are accurate.\n"
@@ -1002,10 +1003,10 @@ msgstr ""
 "    git config --global user.name \"Ditt namn\"\n"
 "    git config --global user.email du@example.com\n"
 "\n"
-"Om identiteten som användes för incheckningen är felaktig kan du\n"
+"När du gjort detta kan du rätta identiteten för den här incheckningen med:\n"
 "rätta den med:\n"
 "\n"
-"    git commit --amend --author='Ditt namn <du@example.com>'\n"
+"    git commit --amend --reset-author\n"
 
 #: builtin/commit.c:53
 msgid ""
@@ -1026,15 +1027,20 @@ msgid ""
 "\n"
 "Otherwise, please use 'git reset'\n"
 msgstr ""
+"Den tidigare \"cherry-pick\":en är nu tom, antagligen på grund av lösning\n"
+"av konflikter. Om du vill checka in i alla fall använder du:\n"
+"\n"
+"    git commit --allow-empty\n"
+"\n"
+"Om inte, använd \"git reset\"\n"
 
 #: builtin/commit.c:318
 msgid "failed to unpack HEAD tree object"
 msgstr "misslyckades packa upp HEAD:s trädobjekt"
 
 #: builtin/commit.c:359
-#, fuzzy
 msgid "unable to create temporary index"
-msgstr "kunde inte skriva temporär indexfil"
+msgstr "kunde inte skapa temporär indexfil"
 
 #: builtin/commit.c:365
 msgid "interactive add failed"
@@ -1045,9 +1051,9 @@ msgid "unable to write new_index file"
 msgstr "kunde inte skriva filen new_index"
 
 #: builtin/commit.c:447
-#, fuzzy, c-format
+#, c-format
 msgid "cannot do a partial commit during a %s."
-msgstr "kan inte utföra en delvis incheckning under en sammanslagning."
+msgstr "kan inte utföra en delvis incheckning under en %s."
 
 #: builtin/commit.c:456
 msgid "cannot read the index"
@@ -1071,9 +1077,9 @@ msgid "malformed --author parameter"
 msgstr "felformad \"--author\"-flagga"
 
 #: builtin/commit.c:622
-#, fuzzy, c-format
+#, c-format
 msgid "Malformed ident string: '%s'"
-msgstr "Felaktig indatarad: \"%s\"."
+msgstr "Felaktig identitetssträng: \"%s\""
 
 #: builtin/commit.c:656 builtin/commit.c:689 builtin/commit.c:989
 #, c-format
@@ -1121,7 +1127,7 @@ msgid "could not write commit template"
 msgstr "kunde inte skriva incheckningsmall"
 
 #: builtin/commit.c:769
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "\n"
 "It looks like you may be committing a %s.\n"
@@ -1129,50 +1135,43 @@ msgid ""
 "\t%s\n"
 "and try again.\n"
 msgstr ""
-"#\n"
-"# Det verkar som du checkar in en SAMMANSLAGNING.\n"
-"# Om det inte stämmer tar du bort filen\n"
-"#\t%s\n"
-"# och försöker igen.\n"
-"#\n"
+"\n"
+"Det verkar som du checkar in en %s.\n"
+"Om det inte stämmer tar du bort filen\n"
+"\t%s\n"
+"och försöker igen.\n"
 
 #: builtin/commit.c:782
-#, fuzzy
 msgid "Please enter the commit message for your changes."
-msgstr ""
-"\n"
-"# Ange ett incheckningsmeddelande för dina ändringar."
+msgstr "Ange ett incheckningsmeddelande för dina ändringar."
 
 #: builtin/commit.c:785
-#, fuzzy
 msgid ""
 " Lines starting\n"
 "with '#' will be ignored, and an empty message aborts the commit.\n"
 msgstr ""
 " Rader som inleds\n"
-"# med \"#\" kommer ignoreras, och ett tomt meddelande avbryter "
-"incheckningen.\n"
+"med \"#\" kommer ignoreras, och ett tomt meddelande avbryter incheckningen.\n"
 
 #: builtin/commit.c:790
-#, fuzzy
 msgid ""
 " Lines starting\n"
 "with '#' will be kept; you may remove them yourself if you want to.\n"
 "An empty message aborts the commit.\n"
 msgstr ""
 " Rader som inleds\n"
-"# med \"#\" kommer behållas; du kan själv ta bort dem om du vill.\n"
-"# Ett tomt meddelande avbryter incheckningen.\n"
+"med \"#\" kommer behållas; du kan själv ta bort dem om du vill.\n"
+"Ett tomt meddelande avbryter incheckningen.\n"
 
 #: builtin/commit.c:802
-#, fuzzy, c-format
+#, c-format
 msgid "%sAuthor:    %s"
-msgstr "%s# Författare: %s\n"
+msgstr "%sFörfattare: %s"
 
 #: builtin/commit.c:809
-#, fuzzy, c-format
+#, c-format
 msgid "%sCommitter: %s"
-msgstr "%s# Incheckare: %s\n"
+msgstr "%sIncheckare: %s"
 
 #: builtin/commit.c:829
 msgid "Cannot read index"
@@ -1206,33 +1205,30 @@ msgid "You have nothing to amend."
 msgstr "Du har inget att utöka."
 
 #: builtin/commit.c:1034
-#, fuzzy, c-format
+#, c-format
 msgid "You are in the middle of a %s -- cannot amend."
-msgstr "Du är i mitten av en incheckning -- kan inte utöka."
+msgstr "Du är i mitten av en %s -- kan inte utöka."
 
 #: builtin/commit.c:1036
-#, fuzzy
 msgid "Options --squash and --fixup cannot be used together"
-msgstr "-x och -X kan inte användas samtidigt"
+msgstr "Flaggorna --squash och --fixup kan inte användas samtidigt"
 
 #: builtin/commit.c:1046
-#, fuzzy
 msgid "Only one of -c/-C/-F/--fixup can be used."
-msgstr "Kan endast använda en av -c/-C/-F."
+msgstr "Kan endast använda en av -c/-C/-F/--fixup."
 
 #: builtin/commit.c:1048
-#, fuzzy
 msgid "Option -m cannot be combined with -c/-C/-F/--fixup."
-msgstr "Flaggan -m kan inte kombineras med -c/-C/-F."
+msgstr "Flaggan -m kan inte kombineras med -c/-C/-F/--fixup."
 
 #: builtin/commit.c:1054
 msgid "--reset-author can be used only with -C, -c or --amend."
 msgstr "--reset-author kan endast användas med -C, -c eller --amend."
 
 #: builtin/commit.c:1071
-#, fuzzy
 msgid "Only one of --include/--only/--all/--interactive/--patch can be used."
-msgstr "Endast en av --include/--only/--all/--interactive kan användas."
+msgstr ""
+"Endast en av --include/--only/--all/--interactive/--patch kan användas."
 
 #: builtin/commit.c:1073
 msgid "No paths with --include/--only does not make sense."
@@ -1493,7 +1489,7 @@ msgstr "(ej snabbspolad)"
 #: builtin/fetch.c:361 builtin/fetch.c:684
 #, c-format
 msgid "cannot open %s: %s\n"
-msgstr "kan inte öppna %s. %s\n"
+msgstr "kan inte öppna %s: %s\n"
 
 #: builtin/fetch.c:439
 #, c-format
@@ -1620,13 +1616,13 @@ msgid "Auto packing the repository for optimum performance.\n"
 msgstr "Packar arkivet automatiskt för optimal prestanda.\n"
 
 #: builtin/gc.c:226
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Auto packing the repository for optimum performance. You may also\n"
 "run \"git gc\" manually. See \"git help gc\" for more information.\n"
 msgstr ""
 "Packar arkivet automatiskt för optimal prestanda. Du kan även\n"
-"köra \"git gc\" manuellt. Se \"git help gc\" för mer information."
+"köra \"git gc\" manuellt. Se \"git help gc\" för mer information.\n"
 
 #: builtin/gc.c:254
 msgid ""
@@ -1708,7 +1704,7 @@ msgstr "både --cached och träd angavs."
 #: builtin/init-db.c:35
 #, c-format
 msgid "Could not make %s writable by group"
-msgstr "Kunde inte göra %s skrivbar för grubben"
+msgstr "Kunde inte göra %s skrivbar för gruppen"
 
 #: builtin/init-db.c:62
 #, c-format
@@ -1776,24 +1772,24 @@ msgid "insane git directory %s"
 msgstr "tokig git-katalog %s"
 
 #: builtin/init-db.c:322 builtin/init-db.c:325
-#, fuzzy, c-format
+#, c-format
 msgid "%s already exists"
-msgstr "taggen \"%s\" finns redan"
+msgstr "%s finns redan"
 
 #: builtin/init-db.c:354
-#, fuzzy, c-format
+#, c-format
 msgid "unable to handle file type %d"
-msgstr "kunde inte läsa träd (%s)"
+msgstr "kunde inte hantera filtypen %d"
 
 #: builtin/init-db.c:357
-#, fuzzy, c-format
+#, c-format
 msgid "unable to move %s to %s"
-msgstr "kunde inte skriva %s"
+msgstr "kunde inte flytta %s till %s"
 
 #: builtin/init-db.c:362
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create git link %s"
-msgstr "kunde inte skapa filen \"%s\""
+msgstr "kunde inte skapa gitlänk %s"
 
 #.
 #. * TRANSLATORS: The first '%s' is either "Reinitialized
@@ -1875,7 +1871,7 @@ msgstr "format.headers utan värde"
 
 #: builtin/log.c:677
 msgid "name of output directory is too long"
-msgstr "namn på utdatakatalogen är för lång"
+msgstr "namnet på utdatakatalogen är för långt"
 
 #: builtin/log.c:688
 #, c-format
@@ -2038,11 +2034,11 @@ msgstr "Felaktig branch.%s.mergeoptions-sträng: %s"
 #: builtin/merge.c:550
 #, c-format
 msgid "%s: negative length %s"
-msgstr ""
+msgstr "%s: negativ längd %s"
 
 #: builtin/merge.c:609
 msgid "git write-tree failed to write a tree"
-msgstr "git write--tree misslyckades skriva ett träd"
+msgstr "git write-tree misslyckades skriva ett träd"
 
 #: builtin/merge.c:659
 msgid "failed to read the cache"
@@ -2073,9 +2069,9 @@ msgid "Could not open '%s' for writing"
 msgstr "Kunde inte öppna \"%s\" för skrivning"
 
 #: builtin/merge.c:852
-#, fuzzy, c-format
+#, c-format
 msgid "Could not read from '%s'"
-msgstr "kunde inte läsa \"%s\""
+msgstr "Kunde inte läsa \"%s\""
 
 #: builtin/merge.c:869
 #, c-format
@@ -2094,27 +2090,25 @@ msgid "'%s' is not a commit"
 msgstr "\"%s\" är inte en incheckning"
 
 #: builtin/merge.c:992
-#, fuzzy
 msgid "No current branch."
-msgstr "Inte på någon gren för närvarande."
+msgstr "Ingen nuvarande gren."
 
 #: builtin/merge.c:994
-#, fuzzy
 msgid "No remote for the current branch."
-msgstr "Du är inte på någon gren för närvarande."
+msgstr "Ingen fjärr för aktuell gren."
 
 #: builtin/merge.c:996
 msgid "No default upstream defined for the current branch."
-msgstr ""
+msgstr "Standarduppströmsarkiv har inte angetts för aktuell gren."
 
 #: builtin/merge.c:1001
 #, c-format
 msgid "No remote tracking branch for %s from %s"
-msgstr ""
+msgstr "Inge fjärrspårande gren för %s från %s"
 
 #: builtin/merge.c:1053
 msgid "There is no merge to abort (MERGE_HEAD missing)."
-msgstr ""
+msgstr "Det finns ingen sammanslagning att avbryta (MERGE_HEAD saknas)."
 
 #: builtin/merge.c:1068 git-pull.sh:31
 msgid ""
@@ -2129,18 +2123,16 @@ msgid "You have not concluded your merge (MERGE_HEAD exists)."
 msgstr "Du har inte avslutat sammanslagningen (MERGE_HEAD finns)."
 
 #: builtin/merge.c:1075
-#, fuzzy
 msgid ""
 "You have not concluded your cherry-pick (CHERRY_PICK_HEAD exists).\n"
 "Please, commit your changes before you can merge."
 msgstr ""
-"Du har inte avslutat sammanslagningen (MERGE_HEAD finns).\n"
+"Du har inte avslutat din \"cherry-pick\" (CHERRY_PICK_HEAD finns).\n"
 "Checka in dina ändringar innan du kan slå ihop."
 
 #: builtin/merge.c:1078
-#, fuzzy
 msgid "You have not concluded your cherry-pick (CHERRY_PICK_HEAD exists)."
-msgstr "Du har inte avslutat sammanslagningen (MERGE_HEAD finns)."
+msgstr "Du har inte avslutat din \"cherry-pick\" (CHERRY_PICK_HEAD finns)."
 
 #: builtin/merge.c:1087
 msgid "You cannot combine --squash with --no-ff."
@@ -2189,7 +2181,7 @@ msgstr "Kan inte snabbspola, avbryter."
 #: builtin/merge.c:1336 builtin/merge.c:1409
 #, c-format
 msgid "Rewinding the tree to pristine...\n"
-msgstr "Återspolar trädet till ofördärvat...\n"
+msgstr "Återspolar trädet till orört...\n"
 
 #: builtin/merge.c:1340
 #, c-format
@@ -2454,6 +2446,11 @@ msgid ""
 "\n"
 "    git push %s HEAD:<name-of-remote-branch>\n"
 msgstr ""
+"Du befinner dig inte på någon gren för närvarande.\n"
+"För att sända historiken som leder till det aktuella tillståndet\n"
+"(frånkopplat HEAD) nu, använd\n"
+"\n"
+"    git push %s HEAD:<namn-på-fjärrgren>\n"
 
 #: builtin/push.c:79
 #, c-format
@@ -2463,11 +2460,15 @@ msgid ""
 "\n"
 "    git push --set-upstream %s %s\n"
 msgstr ""
+"Den aktuella grenen %s har inte någon uppströmsgren.\n"
+"För att sända den aktuella grenen och sätta fjärren som uppström, använd\n"
+"\n"
+"    git push --set-upstream %s %s\n"
 
 #: builtin/push.c:87
-#, fuzzy, c-format
+#, c-format
 msgid "The current branch %s has multiple upstream branches, refusing to push."
-msgstr "Den aktuella grenen %s spårar flera grenar, vägrar sända."
+msgstr "Den aktuella grenen %s har flera uppströmsgrenar, vägrar sända."
 
 #: builtin/push.c:110
 msgid ""
@@ -2517,6 +2518,15 @@ msgid ""
 "\n"
 "    git push <name>\n"
 msgstr ""
+"Ingen destination har angivits för sändning.\n"
+"Ange antingen URL:en från kommandoraden eller konfigurera ett fjärrarkiv "
+"med\n"
+"\n"
+"    git remote add <namn> <url>\n"
+"\n"
+"och sänd sedan med namnet på fjärren\n"
+"\n"
+"    git push <namn>\n"
 
 #: builtin/push.c:175
 msgid "--all and --tags are incompatible"
@@ -2671,18 +2681,12 @@ msgstr ""
 "Checka in dina ändringar eller använd \"stash\" för att fortsätta."
 
 #: builtin/revert.c:283
-#, fuzzy
 msgid "Your local changes would be overwritten by revert.\n"
-msgstr ""
-"Dina lokala ändringar skulle skrivas över av \"revert\".\n"
-"Checka in dina ändringar eller använd \"stash\" för att fortsätta."
+msgstr "Dina lokala ändringar skulle skrivas över av \"revert\".\n"
 
 #: builtin/revert.c:285
-#, fuzzy
 msgid "Your local changes would be overwritten by cherry-pick.\n"
-msgstr ""
-"Dina lokala ändringar skulle skrivas över av \"cherry-pick\".\n"
-"Checka in dina ändringar eller använd \"stash\" för att fortsätta."
+msgstr "Dina lokala ändringar skulle skrivas över av \"cherry-pick\".\n"
 
 #. TRANSLATORS: %s will be "revert" or "cherry-pick"
 #: builtin/revert.c:335
@@ -2745,9 +2749,9 @@ msgid "git %s: failed to read the index"
 msgstr "git %s: misslyckades läsa indexet"
 
 #: builtin/revert.c:555
-#, fuzzy, c-format
+#, c-format
 msgid "git %s: failed to refresh the index"
-msgstr "git %s: misslyckades läsa indexet"
+msgstr "git %s: misslyckades uppdatera indexet"
 
 #: builtin/revert.c:571
 msgid "cherry-pick --ff cannot be used with --signoff"
@@ -2805,7 +2809,7 @@ msgstr "git rm: kan inte ta bort %s"
 #: builtin/shortlog.c:157
 #, c-format
 msgid "Missing author: %s"
-msgstr "Saknad författare: %s"
+msgstr "Författare saknas: %s"
 
 #: builtin/tag.c:121
 #, c-format
@@ -2935,6 +2939,8 @@ msgid ""
 "You seem to have moved HEAD since the last 'am' failure.\n"
 "Not rewinding to ORIG_HEAD"
 msgstr ""
+"Du verkar ha flyttat HEAD sedan den senaste misslyckade \"am\".\n"
+"Spolar inte tillbaka till ORIG_HEAD"
 
 #: git-am.sh:105
 #, sh-format
@@ -2962,13 +2968,13 @@ msgid ""
 "Did you hand edit your patch?\n"
 "It does not apply to blobs recorded in its index."
 msgstr ""
-"Vill du handredigera din patch?\n"
+"Har du handredigerat din patch?\n"
 "Den kan inte appliceras på blobbar som antecknats i dess index."
 
 #: git-am.sh:154
-#, fuzzy
 msgid "Falling back to patching base and 3-way merge..."
-msgstr "Kan inte falla tillbaka på trevägssammanslagning."
+msgstr ""
+"Faller tillbaka på att patcha basincheckning och en trevägssammanslagning..."
 
 #: git-am.sh:261
 msgid "Only one StGIT patch series can be applied at once"
@@ -2990,7 +2996,7 @@ msgstr "Flaggan -d stöds inte lägre. Använd inte."
 #: git-am.sh:428
 #, sh-format
 msgid "previous rebase directory $dotest still exists but mbox given."
-msgstr "tidigare rebase-katalog $dotest finns redan, men mbox angavs."
+msgstr "tidigare rebase-katalog $dotest finns fortfarande, men mbox angavs."
 
 #: git-am.sh:433
 msgid "Please make up your mind. --skip or --abort?"
@@ -3047,8 +3053,8 @@ msgid ""
 "If there is nothing left to stage, chances are that something else\n"
 "already introduced the same changes; you might want to skip this patch."
 msgstr ""
-"Inga ändrinar - glömde du använda \"git add\"?\n"
-"Om det inte är något kvar att köa kan det hända att någon annan redan\n"
+"Inga ändringar - glömde du använda \"git add\"?\n"
+"Om det inte är något kvar att köa kan det hända att något annat redan\n"
 "introducerat samma ändringar; kanske du bör hoppa över patchen."
 
 #: git-am.sh:774
@@ -3073,79 +3079,80 @@ msgid "applying to an empty history"
 msgstr "applicerar på en tom historik"
 
 #: git-bisect.sh:40
-#, fuzzy
 msgid "You need to start by \"git bisect start\""
-msgstr "Du måste ställa in din incheckarinformation först"
+msgstr "Du måste börja med \"git bisect start\""
 
 #. TRANSLATORS: Make sure to include [Y] and [n] in your
 #. translation. The program will only accept English input
 #. at this point.
 #: git-bisect.sh:48
 msgid "Do you want me to do it for you [Y/n]? "
-msgstr ""
+msgstr "Vill du att jag ska göra det åt dig [Y=Ja, N=Nej]?"
 
 #: git-bisect.sh:67
 msgid "Bad HEAD - I need a HEAD"
-msgstr ""
+msgstr "Felaktigt HEAD - Jag behöver ett HEAD"
 
 #: git-bisect.sh:86
 msgid "won't bisect on seeked tree"
-msgstr ""
+msgstr "utför inte \"bisect\" på ett sökt träd"
 
 #: git-bisect.sh:90
 msgid "Bad HEAD - strange symbolic ref"
-msgstr ""
+msgstr "Felaktigt HEAD - konstig symbolisk referens"
 
 #: git-bisect.sh:120
 #, sh-format
 msgid "'$arg' does not appear to be a valid revision"
-msgstr ""
+msgstr "\"$arg\" verkar inte vara en giltig revision"
 
 #: git-bisect.sh:165
 #, sh-format
 msgid "Bad bisect_write argument: $state"
-msgstr ""
+msgstr "Felaktigt argument till bisect_write: $state"
 
 #: git-bisect.sh:193
 #, sh-format
 msgid "Bad rev input: $arg"
-msgstr ""
+msgstr "Felaktig revisionsindata: $arg"
 
 #: git-bisect.sh:207
 msgid "Please call 'bisect_state' with at least one argument."
-msgstr ""
+msgstr "Anropa \"bisect_state\" med minst ett argument."
 
 #: git-bisect.sh:210
 msgid "Bad rev input: HEAD"
-msgstr ""
+msgstr "Felaktig revisionsindata: HEAD"
 
 #: git-bisect.sh:219
 #, sh-format
 msgid "Bad rev input: $rev"
-msgstr ""
+msgstr "Felaktig revisionsindata: $rev"
 
 #: git-bisect.sh:225
 msgid "'git bisect bad' can take only one argument."
-msgstr ""
+msgstr "\"git bisect bad\" kan bara ta ett argument."
 
 #. have bad but not good.  we could bisect although
 #. this is less optimum.
 #: git-bisect.sh:249
 msgid "Warning: bisecting only with a bad commit."
-msgstr ""
+msgstr "Varning: kör \"bisect\" endast med en dålig incheckning."
 
 #. TRANSLATORS: Make sure to include [Y] and [n] in your
 #. translation. The program will only accept English input
 #. at this point.
 #: git-bisect.sh:257
 msgid "Are you sure [Y/n]? "
-msgstr ""
+msgstr "Är du säker [Y=Ja, N=Nej]?"
 
 #: git-bisect.sh:268
 msgid ""
 "You need to give me at least one good and one bad revisions.\n"
 "(You can use \"git bisect bad\" and \"git bisect good\" for that.)"
 msgstr ""
+"Du måste ange minst en bra och en dålig revision.\n"
+"(Du kan använda \"git bisect bad\" och \"git bisect good\" för detta.)"
 
 #: git-bisect.sh:274
 msgid ""
@@ -3153,15 +3160,18 @@ msgid ""
 "You then need to give me at least one good and one bad revisions.\n"
 "(You can use \"git bisect bad\" and \"git bisect good\" for that.)"
 msgstr ""
+"Du måste starta med \"git bisect start\".\n"
+"Sedan måste du ange minst en bra och en dålig revision.\n"
+"(Du kan använda \"git bisect bad\" och \"git bisect good\" för detta.)"
 
 #: git-bisect.sh:330 git-bisect.sh:457
 msgid "We are not bisecting."
-msgstr ""
+msgstr "\"Bisect\" har inte startats."
 
 #: git-bisect.sh:337
-#, fuzzy, sh-format
+#, sh-format
 msgid "'$invalid' is not a valid commit"
-msgstr "\"%s\" är inte en incheckning"
+msgstr "\"$invalid\" är inte en giltig incheckning"
 
 #: git-bisect.sh:346
 #, sh-format
@@ -3169,24 +3179,26 @@ msgid ""
 "Could not check out original HEAD '$branch'.\n"
 "Try 'git bisect reset <commit>'."
 msgstr ""
+"Kunde inte checka ut original-HEAD \"$branch\".\n"
+"Försök med \"git bisect reset <incheckning>\"."
 
 #: git-bisect.sh:371
 msgid "No logfile given"
-msgstr ""
+msgstr "Ingen loggfil angavs"
 
 #: git-bisect.sh:372
-#, fuzzy, sh-format
+#, sh-format
 msgid "cannot read $file for replaying"
-msgstr "kan inte läsa indexet"
+msgstr "kan inte läsa $file för återspelning"
 
 #: git-bisect.sh:388
 msgid "?? what are you talking about?"
-msgstr ""
+msgstr "?? var menar du?"
 
 #: git-bisect.sh:400
 #, sh-format
 msgid "running $command"
-msgstr ""
+msgstr "kör $command"
 
 #: git-bisect.sh:407
 #, sh-format
@@ -3194,10 +3206,12 @@ msgid ""
 "bisect run failed:\n"
 "exit code $res from '$command' is < 0 or >= 128"
 msgstr ""
+"körning av \"bisect\" misslyckades:\n"
+"felkoden $res från \"$command\" är < 0 eller >= 128"
 
 #: git-bisect.sh:433
 msgid "bisect run cannot continue any more"
-msgstr ""
+msgstr "kan inte fortsätta \"bisect\"-körningen längre"
 
 #: git-bisect.sh:441
 #, sh-format
@@ -3205,10 +3219,12 @@ msgid ""
 "bisect run failed:\n"
 "'bisect_state $state' exited with error code $res"
 msgstr ""
+"körning av \"bisect\" misslyckades:\n"
+"\"bisect_state $state\" avslutade med felkoden $res"
 
 #: git-bisect.sh:449
 msgid "bisect run success"
-msgstr ""
+msgstr "körning av \"bisect\" lyckades"
 
 #: git-pull.sh:21
 msgid ""
@@ -3216,14 +3232,17 @@ msgid ""
 "Please, fix them up in the work tree, and then use 'git add/rm <file>'\n"
 "as appropriate to mark resolution, or use 'git commit -a'."
 msgstr ""
+"Kan inte hämta (pull) eftersom du har filer som inte slagits samman.\n"
+"Rätta dem i arbetskatalogen och använd \"git add/rm <fil>\" som\n"
+"lämpligt för att markera lösning, eller använd \"git commit -a\"."
 
 #: git-pull.sh:25
 msgid "Pull is not possible because you have unmerged files."
-msgstr ""
+msgstr "Kan inte hämta (pull) eftersom du har filer som inte slagits samman."
 
 #: git-pull.sh:189
 msgid "updating an unborn branch with changes added to the index"
-msgstr ""
+msgstr "uppdaterar en ofödd gren med ändringar lagda till i indexet"
 
 #. The fetch involved updating the current branch.
 #. The working tree and the index file is still based on the
@@ -3236,166 +3255,157 @@ msgid ""
 "Warning: fast-forwarding your working tree from\n"
 "Warning: commit $orig_head."
 msgstr ""
+"Varning: \"fetch\" uppdaterade den aktuella grenens huvud.\n"
+"Varning: snabbspolar din arbetskatalog från\n"
+"Varning: incheckningen $orig_head."
 
 #: git-pull.sh:248
-#, fuzzy
 msgid "Cannot merge multiple branches into empty head"
-msgstr "Kan endast slå ihop en enda incheckning i ett tomt huvud."
+msgstr "Kan inte slå ihop flera grenar i ett tomt huvud"
 
 #: git-pull.sh:252
 msgid "Cannot rebase onto multiple branches"
-msgstr ""
+msgstr "Kan inte utföra \"rebase\" ovanpå flera grenar"
 
 #: git-stash.sh:43
 msgid "git stash clear with parameters is unimplemented"
-msgstr ""
+msgstr "git stach clear med flaggor är inte implementerat"
 
 #: git-stash.sh:65
-#, fuzzy
 msgid "You do not have the initial commit yet"
-msgstr "Du har ingen giltig HEAD"
+msgstr "Du har ingen första incheckning ännu"
 
 #: git-stash.sh:80
-#, fuzzy
 msgid "Cannot save the current index state"
-msgstr "Kan inte komma åt aktuell arbetskatalog"
+msgstr "Kan inte spara aktuellt tillstånd för indexet"
 
 #: git-stash.sh:94 git-stash.sh:107
-#, fuzzy
 msgid "Cannot save the current worktree state"
-msgstr "Kan inte komma åt aktuell arbetskatalog"
+msgstr "Kan inte spara aktuellt tillstånd för arbetskatalogen"
 
 #: git-stash.sh:111
-#, fuzzy
 msgid "No changes selected"
-msgstr "# Inga ändringar\n"
+msgstr "Inga ändringar valda"
 
 #: git-stash.sh:114
 msgid "Cannot remove temporary index (can't happen)"
-msgstr ""
+msgstr "Kan inte ta bort temporärt index (kan inte ske)"
 
 #: git-stash.sh:127
-#, fuzzy
 msgid "Cannot record working tree state"
-msgstr "Kan inte komma åt arbetskatalogen \"%s\""
+msgstr "Kan inte spara tillstånd för arbetskatalogen"
 
 #: git-stash.sh:182
 msgid "No local changes to save"
-msgstr ""
+msgstr "Inga lokala ändringar att spara"
 
 #: git-stash.sh:186
 msgid "Cannot initialize stash"
-msgstr ""
+msgstr "Kan inte initiera gömma (stash)"
 
 #: git-stash.sh:194
 msgid "Cannot save the current status"
-msgstr ""
+msgstr "Kan inte spara aktuell status"
 
 #: git-stash.sh:207
-#, fuzzy
 msgid "Cannot remove worktree changes"
-msgstr "Kan inte komma åt arbetskatalogen \"%s\""
+msgstr "Kan inte ta bort ändringar i arbetskatalogen"
 
 #: git-stash.sh:302
 msgid "No stash found."
-msgstr ""
+msgstr "Hittade ingen gömma (stash)."
 
 #: git-stash.sh:309
-#, fuzzy, sh-format
+#, sh-format
 msgid "Too many revisions specified: $REV"
-msgstr "För många flaggor angavs"
+msgstr "För många revisioner angavs: $REV"
 
 #: git-stash.sh:315
-#, fuzzy, sh-format
+#, sh-format
 msgid "$reference is not valid reference"
-msgstr "referensen är inte ett träd: %s"
+msgstr "$reference är inte en giltig referens"
 
 #: git-stash.sh:340
-#, fuzzy, sh-format
+#, sh-format
 msgid "'$args' is not a stash-like commit"
-msgstr "\"%s\" är inte en incheckning"
+msgstr "\"$args\" är inte en incheckning som liknar en gömma (stash)"
 
 #: git-stash.sh:351
 #, sh-format
 msgid "'$args' is not a stash reference"
-msgstr ""
+msgstr "\"$args\" är inte en referens till en gömma (stash)"
 
 #: git-stash.sh:359
-#, fuzzy
 msgid "unable to refresh index"
-msgstr "Kunde inte skriva indexet."
+msgstr "Kunde inte uppdatera indexet"
 
 #: git-stash.sh:363
-#, fuzzy
 msgid "Cannot apply a stash in the middle of a merge"
-msgstr "Kan inte utföra en %s återställning mitt i en sammanslagning."
+msgstr "Kan inte applicera en gömma (stash) mitt i en sammanslagning"
 
 #: git-stash.sh:371
 msgid "Conflicts in index. Try without --index."
-msgstr ""
+msgstr "Konflikter i index. Testa utan --index."
 
 #: git-stash.sh:373
-#, fuzzy
 msgid "Could not save index tree"
-msgstr "Kunde inte läsa indexet"
+msgstr "Kunde inte spara indexträd"
 
 #: git-stash.sh:399
 msgid "Cannot unstage modified files"
-msgstr ""
+msgstr "Kunde inte avköa modifierade filer"
 
 #: git-stash.sh:414
-#, fuzzy
 msgid "Index was not unstashed."
-msgstr "kunde köra stash."
+msgstr "Indexet inte hämtat ur gömman (unstash)."
 
 #: git-stash.sh:433
 #, sh-format
 msgid "Dropped ${REV} ($s)"
-msgstr ""
+msgstr "Kastade ${REV} ($s)"
 
 #: git-stash.sh:434
 #, sh-format
 msgid "${REV}: Could not drop stash entry"
-msgstr ""
+msgstr "${REV}: Kunde inte kasta gömman (stash)"
 
 #: git-stash.sh:441
-#, fuzzy
 msgid "No branch name specified"
-msgstr "Misslyckades byta namn på gren"
+msgstr "Inget grennamn angivet"
 
 #: git-stash.sh:512
 msgid "(To restore them type \"git stash apply\")"
-msgstr ""
+msgstr "(För att återställa dem, skriv \"git stash apply\")"
 
 #: git-submodule.sh:38
 #, sh-format
 msgid "remote ($remote) does not have a url defined in .git/config"
-msgstr ""
+msgstr "fjärren ($remote) har ingen url angiven i .git/config"
 
 #: git-submodule.sh:56
 #, sh-format
 msgid "cannot strip one component off url '$remoteurl'"
-msgstr ""
+msgstr "kan inte ta bort en komponent från url:en \"$remoteurl\""
 
 #: git-submodule.sh:108
 #, sh-format
 msgid "No submodule mapping found in .gitmodules for path '$path'"
-msgstr ""
+msgstr "Hittar ingen undermodulsmappning för sökvägen \"$path\" i .gitmodules"
 
 #: git-submodule.sh:132
 #, sh-format
 msgid "Clone of '$url' into submodule path '$path' failed"
-msgstr ""
+msgstr "Misslyckades klona \"$url\" till undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:205
 #, sh-format
 msgid "repo URL: '$repo' must be absolute or begin with ./|../"
-msgstr ""
+msgstr "arkiv-URL: \"$repo\" måste vara absolut eller börja med ./|../"
 
 #: git-submodule.sh:222
-#, fuzzy, sh-format
+#, sh-format
 msgid "'$path' already exists in the index"
-msgstr "kan inte läsa indexet"
+msgstr "\"$path\" finns redan i indexet"
 
 #: git-submodule.sh:227
 #, sh-format
@@ -3404,61 +3414,66 @@ msgid ""
 "$path\n"
 "Use -f if you really want to add it."
 msgstr ""
+"Följande sökväg ignoreras av en av dina .gitignore-filer:\n"
+"$path\n"
+"Använd -f om du verkligen vill lägga till den."
 
 #: git-submodule.sh:240
 #, sh-format
 msgid "Adding existing repo at '$path' to the index"
-msgstr ""
+msgstr "Lägger till befintligt arkiv på \"$path\" till indexet"
 
 #: git-submodule.sh:242
-#, fuzzy, sh-format
+#, sh-format
 msgid "'$path' already exists and is not a valid git repo"
-msgstr "destinationssökvägen \"%s\" finns redan och är inte en tom katalog."
+msgstr "\"$path\" finns redan och är inte ett giltigt git-arkiv"
 
 #: git-submodule.sh:265
 #, sh-format
 msgid "Unable to checkout submodule '$path'"
-msgstr ""
+msgstr "Kan inte checka ut undermodulen \"\"$path\""
 
 #: git-submodule.sh:269
-#, fuzzy, sh-format
+#, sh-format
 msgid "Failed to add submodule '$path'"
-msgstr "Kunde inte läsa objektet \"%s\"."
+msgstr "Misslyckades lägga till undermodul \"$path\""
 
 #: git-submodule.sh:274
 #, sh-format
 msgid "Failed to register submodule '$path'"
-msgstr ""
+msgstr "Misslyckades registrera undermodulen \"$path\""
 
 #: git-submodule.sh:312
 #, sh-format
 msgid "Entering '$prefix$path'"
-msgstr ""
+msgstr "Går in i \"$prefix$path\""
 
 #: git-submodule.sh:324
 #, sh-format
 msgid "Stopping at '$path'; script returned non-zero status."
 msgstr ""
+"Stoppar vid \"$path\"; skriptet avslutade med en status skild från noll."
 
 #: git-submodule.sh:367
 #, sh-format
 msgid "No url found for submodule path '$path' in .gitmodules"
-msgstr ""
+msgstr "Hittade ingen url för undermodulsökvägen \"$path\" i .gitmodules"
 
 #: git-submodule.sh:377
 #, sh-format
 msgid "Failed to register url for submodule path '$path'"
-msgstr ""
+msgstr "Misslyckades registrera url för undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:382
 #, sh-format
 msgid "Failed to register update mode for submodule path '$path'"
 msgstr ""
+"Misslyckades registrera uppdateringsläge för undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:384
 #, sh-format
 msgid "Submodule '$name' ($url) registered for path '$path'"
-msgstr ""
+msgstr "Undermoulden \"$name\" ($url) registrerad för sökvägen \"$path\""
 
 #: git-submodule.sh:467
 #, sh-format
@@ -3466,99 +3481,101 @@ msgid ""
 "Submodule path '$path' not initialized\n"
 "Maybe you want to use 'update --init'?"
 msgstr ""
+"Undermodulen \"$path\" har inte initierats\n"
+"Kanske du borde använda \"update --init\"?"
 
 #: git-submodule.sh:480
 #, sh-format
 msgid "Unable to find current revision in submodule path '$path'"
-msgstr ""
+msgstr "Kan inte hitta aktuell revision i undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:504
 #, sh-format
 msgid "Unable to fetch in submodule path '$path'"
-msgstr ""
+msgstr "Kan inte hämta i undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:517
 #, sh-format
 msgid "Unable to rebase '$sha1' in submodule path '$path'"
 msgstr ""
+"Kan inte utföra \"rebase\" till \"$sha1\" i undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:518
 #, sh-format
 msgid "Submodule path '$path': rebased into '$sha1'"
-msgstr ""
+msgstr "Undermodulssökvägen \"$path\": \"rebase\":ad ovanpå \"$sha1\""
 
 #: git-submodule.sh:522
-#, fuzzy, sh-format
+#, sh-format
 msgid "Unable to merge '$sha1' in submodule path '$path'"
-msgstr "Kunde inte läsa objektet \"%s\"."
+msgstr "Kan inte slå ihop \"$sha1\" i undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:523
 #, sh-format
 msgid "Submodule path '$path': merged in '$sha1'"
-msgstr ""
+msgstr "Undermodulssökvägen \"$path\": sammanslagen i \"$sha1\""
 
 #: git-submodule.sh:527
-#, fuzzy, sh-format
+#, sh-format
 msgid "Unable to checkout '$sha1' in submodule path '$path'"
-msgstr "Kunde inte läsa objektet \"%s\"."
+msgstr "Kan inte checka ut \"$sha1\" i undermodulssökvägen \"$path\""
 
 #: git-submodule.sh:528
 #, sh-format
 msgid "Submodule path '$path': checked out '$sha1'"
-msgstr ""
+msgstr "Undermodulssökvägen \"$path\": checkade ut \"$sha1\""
 
 #: git-submodule.sh:539 git-submodule.sh:841
 #, sh-format
 msgid "Failed to recurse into submodule path '$path'"
-msgstr ""
+msgstr "Kunde inte rekursera ned i undermodulssökväg \"$path\""
 
 #: git-submodule.sh:623
 msgid "--"
-msgstr ""
+msgstr "--"
 
 #. unexpected type
 #: git-submodule.sh:664
-#, fuzzy, sh-format
+#, sh-format
 msgid "unexpected mode $mod_dst"
-msgstr "diff-status %c förväntades inte"
+msgstr "oväntat läge (mode) $mod_dst"
 
 #: git-submodule.sh:684
 #, sh-format
 msgid "  Warn: $name doesn't contain commit $sha1_src"
-msgstr ""
+msgstr "  Varning: $name innehåller inte incheckningen $sha1_src"
 
 #: git-submodule.sh:687
 #, sh-format
 msgid "  Warn: $name doesn't contain commit $sha1_dst"
-msgstr ""
+msgstr "  Varning: $name innehåller inte incheckning $sha1_dst"
 
 #: git-submodule.sh:690
 #, sh-format
 msgid "  Warn: $name doesn't contain commits $sha1_src and $sha1_dst"
 msgstr ""
+"  Varning: $name innehåller inte incheckningarna $sha1_src och $sha1_dst"
 
 #: git-submodule.sh:715
 msgid "blob"
-msgstr ""
+msgstr "blob"
 
 #: git-submodule.sh:716
 msgid "submodule"
-msgstr ""
+msgstr "undermodul"
 
 #: git-submodule.sh:753
-#, fuzzy
 msgid "# Submodules changed but not updated:"
-msgstr "# Ändrade men inte uppdaterade:"
+msgstr "# Ändrade men inte uppdaterade undermoduler:"
 
 #: git-submodule.sh:755
-#, fuzzy
 msgid "# Submodule changes to be committed:"
-msgstr "# Ändringar att checka in:"
+msgstr "# Ändringar i undermoduler att checka in:"
 
 #: git-submodule.sh:885
 #, sh-format
 msgid "Synchronizing submodule url for '$name'"
-msgstr ""
+msgstr "Synkroniserar undermodul-url för \"$name\""
 
 #~ msgid "# Changed but not updated:"
 #~ msgstr "# Ändrade men inte uppdaterade:"
