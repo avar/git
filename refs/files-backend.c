@@ -3060,7 +3060,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	 * reference itself, plus we might need to update the
 	 * reference if --updateref was specified:
 	 */
-	lock = lock_ref_oid_basic(refs, refname, oid,
+	lock = lock_ref_oid_basic(refs, refname, NULL,
 				  REF_NO_DEREF,
 				  &type, &err);
 	if (!lock) {
@@ -3110,7 +3110,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 		}
 	}
 
-	assert(oideq(&lock->old_oid, oid));
+	assert(!oid);
 	(*prepare_fn)(refname, &lock->old_oid, cb.policy_cb);
 	refs_for_each_reflog_ent(ref_store, refname, expire_reflog_ent, &cb);
 	(*cleanup_fn)(cb.policy_cb);
