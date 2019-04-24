@@ -549,10 +549,11 @@ int git_config_rename(const char *var, const char *value);
 
 #define DIFF_PICKAXE_ALL	1
 #define DIFF_PICKAXE_REGEX	2
+#define DIFF_PICKAXE_PATCH	4
 
-#define DIFF_PICKAXE_KIND_S	4 /* traditional plumbing counter */
-#define DIFF_PICKAXE_KIND_G	8 /* grep in the patch */
-#define DIFF_PICKAXE_KIND_OBJFIND	16 /* specific object IDs */
+#define DIFF_PICKAXE_KIND_S	8 /* traditional plumbing counter */
+#define DIFF_PICKAXE_KIND_G	16 /* grep in the patch */
+#define DIFF_PICKAXE_KIND_OBJFIND	32 /* specific object IDs */
 
 #define DIFF_PICKAXE_KIND_GS_MASK (DIFF_PICKAXE_KIND_S | \
 				   DIFF_PICKAXE_KIND_G)
@@ -561,10 +562,15 @@ int git_config_rename(const char *var, const char *value);
 				 DIFF_PICKAXE_KIND_OBJFIND)
 #define DIFF_PICKAXE_KINDS_G_REGEX_MASK (DIFF_PICKAXE_KIND_G | \
 					 DIFF_PICKAXE_REGEX)
+#define DIFF_PICKAXE_KINDS_S_PATCH_MASK (DIFF_PICKAXE_KIND_S | \
+					 DIFF_PICKAXE_PATCH)
+#define DIFF_PICKAXE_KINDS_ALL_OBJFIND_MASK (DIFF_PICKAXE_ALL | \
+					     DIFF_PICKAXE_KIND_OBJFIND)
 #define DIFF_PICKAXE_KINDS_ALL_OBJFIND_MASK (DIFF_PICKAXE_ALL | \
 					     DIFF_PICKAXE_KIND_OBJFIND)
 
-#define DIFF_PICKAXE_IGNORE_CASE	32
+#define DIFF_PICKAXE_IGNORE_CASE	64
+
 
 void diffcore_std(struct diff_options *);
 void diffcore_fix_diff_index(void);

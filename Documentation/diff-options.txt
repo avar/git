@@ -650,6 +650,9 @@ occurrences of that string did not change).
 Unless `--text` is supplied patches of binary files without a textconv
 filter will be ignored.
 +
+When `--pickaxe-patch` is supplied the whole diff is searched instead
+of just added/removed lines. See below.
++
 See the 'pickaxe' entry in linkgit:gitdiffcore[7] for more
 information.
 
@@ -670,6 +673,20 @@ The object can be a blob or a submodule commit. It implies the `-t` option in
 --pickaxe-regex::
 	Treat the <string> given to `-S` as an extended POSIX regular
 	expression to match.
+
+--pickaxe-patch::
+	When `-G` looks for a change a diff will be generated, and
+	only the added/removed lines will be matched against with the
+	"+" or "-" stripped.
++
+Supplying this option skips that pre-processing. This makes it
+possible to match only lines that added or removed something matching
+a <regex> with "\^\+<regex>" and "^-<regex>", respectively.
++
+It also allows for finding something in the diff context. E.g. "\^
+<regex>" will match the context lines (see `-U<n>` above) around the
+added/removed lines, and doing an unanchored match will match any of
+the the added/removed lines & diff context.
 
 endif::git-format-patch[]
 
