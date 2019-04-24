@@ -15,6 +15,7 @@ typedef int (*pickaxe_fn)(mmfile_t *one, mmfile_t *two,
 struct diffgrep_cb {
 	struct grep_opt	*grep_filter;
 	int hit;
+	int patch;
 };
 
 static int diffgrep_consume(void *priv, char *line, unsigned long len)
@@ -23,12 +24,13 @@ static int diffgrep_consume(void *priv, char *line, unsigned long len)
 	regmatch_t regmatch;
 	struct grep_opt *grep_filter = data->grep_filter;
 	struct grep_pat *grep_pat = grep_filter->pattern_list;
+	size_t off = data->patch ? 0 : 1;
 
-	if (line[0] != '+' && line[0] != '-')
+	if (off && line[0] != '+' && line[0] != '-')
 		return 0;
 	if (data->hit)
 		BUG("Already matched in diffgrep_consume! Broken xdiff_emit_line_fn?");
-	if (patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0)) {
+	if (patmatch(grep_pat, line + off, line + len + 1, &regmatch, 0)) {
 		data->hit = 1;
 		return 1;
 	}
@@ -54,6 +56,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	ecbdata.hit = 0;
 	xecfg.flags = XDL_EMIT_NO_HUNK_HDR;
 	xecfg.ctxlen = o->context;
+	ecbdata.patch = o->pickaxe_opts & DIFF_PICKAXE_PATCH;
 	xecfg.interhunkctxlen = o->interhunkcontext;
 
 	/*
