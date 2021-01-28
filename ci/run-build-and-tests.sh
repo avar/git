@@ -10,6 +10,7 @@ windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
 *) ln -s "$cache_dir/.prove" t/.prove;;
 esac
 
+make fuzz-objs
 make
 case "$jobname" in
 linux-gcc)
