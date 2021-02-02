@@ -396,6 +396,8 @@ struct diff_options {
 	struct repository *repo;
 	struct option *parseopts;
 
+	struct grep_opt *grep_filter;
+
 	int no_free;
 };
 
@@ -552,6 +554,8 @@ int git_config_rename(const char *var, const char *value);
 #define DIFF_PICKAXE_KIND_G	8 /* grep in the patch */
 #define DIFF_PICKAXE_KIND_OBJFIND	16 /* specific object IDs */
 
+#define DIFF_PICKAXE_KIND_GS_MASK (DIFF_PICKAXE_KIND_S | \
+				   DIFF_PICKAXE_KIND_G)
 #define DIFF_PICKAXE_KINDS_MASK (DIFF_PICKAXE_KIND_S | \
 				 DIFF_PICKAXE_KIND_G | \
 				 DIFF_PICKAXE_KIND_OBJFIND)
