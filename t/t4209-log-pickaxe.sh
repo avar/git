@@ -66,6 +66,9 @@ test_expect_success 'usage' '
 	test_i18ngrep "mutually exclusive" err &&
 
 	test_expect_code 128 git log -Gstring --find-object=HEAD 2>err &&
+	test_i18ngrep "mutually exclusive" err &&
+
+	test_expect_code 128 git log --pickaxe-all --find-object=HEAD 2>err &&
 	test_i18ngrep "mutually exclusive" err
 '
 
