@@ -31,7 +31,7 @@ static int xdiff_out_hunk(void *priv_,
 	return 0;
 }
 
-static void consume_one(void *priv_, char *s, unsigned long size)
+static int consume_one(void *priv_, char *s, unsigned long size)
 {
 	struct xdiff_emit_state *priv = priv_;
 	char *ep;
@@ -43,6 +43,7 @@ static void consume_one(void *priv_, char *s, unsigned long size)
 		size -= this_size;
 		s += this_size;
 	}
+	return 0;
 }
 
 static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
@@ -115,10 +116,11 @@ int xdi_diff(mmfile_t *mf1, mmfile_t *mf2, xpparam_t const *xpp, xdemitconf_t co
 	return xdl_diff(&a, &b, xpp, xecfg, xecb);
 }
 
-void discard_hunk_line(void *priv,
-		       long ob, long on, long nb, long nn,
-		       const char *func, long funclen)
+int discard_hunk_line(void *priv,
+		      long ob, long on, long nb, long nn,
+		      const char *func, long funclen)
 {
+	return 0;
 }
 
 int xdi_diff_outf(mmfile_t *mf1, mmfile_t *mf2,
