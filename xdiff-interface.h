@@ -25,6 +25,11 @@
  * granular return values, but for now use it carefully, or consider
  * e.g. using discard_hunk_line() if you say just don't care about
  * hunk headers.
+ *
+ * Note that just returning -1 will make your early return
+ * indistinguishable from an error internal to xdiff. See "diff_grep"
+ * in diffcore-pickaxe.c for a trick to work around this, i.e. using
+ * the "consume_callback_data" to note the desired early return.
  */
 typedef int (*xdiff_emit_line_fn)(void *, char *, unsigned long);
 typedef int (*xdiff_emit_hunk_fn)(void *data,
