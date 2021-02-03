@@ -228,6 +228,7 @@ void diffcore_pickaxe(struct diff_options *o)
 	int opts = o->pickaxe_opts;
 	regex_t regex, *regexp = NULL;
 	kwset_t kws = NULL;
+	pickaxe_fn fn;
 
 	if (opts & (DIFF_PICKAXE_REGEX | DIFF_PICKAXE_KIND_G)) {
 		int cflags = REG_EXTENDED | REG_NEWLINE;
@@ -235,6 +236,14 @@ void diffcore_pickaxe(struct diff_options *o)
 			cflags |= REG_ICASE;
 		regcomp_or_die(&regex, needle, cflags);
 		regexp = &regex;
+
+		/* diff.c errors on -G and --pickaxe-regex for us */
+		if (opts & DIFF_PICKAXE_KIND_G)
+			fn = diff_grep;
+		else if (opts & DIFF_PICKAXE_REGEX)
+			fn = has_changes;
+		else
+			BUG("unreachable");
 	} else if (opts & DIFF_PICKAXE_KIND_S) {
 		if (o->pickaxe_opts & DIFF_PICKAXE_IGNORE_CASE &&
 		    has_non_ascii(needle)) {
@@ -251,10 +260,14 @@ void diffcore_pickaxe(struct diff_options *o)
 			kwsincr(kws, needle, strlen(needle));
 			kwsprep(kws);
 		}
+		fn = has_changes;
+	} else if (opts & DIFF_PICKAXE_KIND_OBJFIND) {
+		fn = NULL;
+	} else {
+		BUG("unknown pickaxe_opts flag");
 	}
 
-	pickaxe(&diff_queued_diff, o, regexp, kws,
-		(opts & DIFF_PICKAXE_KIND_G) ? diff_grep : has_changes);
+	pickaxe(&diff_queued_diff, o, regexp, kws, fn);
 
 	if (regexp)
 		regfree(regexp);
