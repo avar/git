@@ -149,7 +149,7 @@ test_expect_success 'log -S --no-textconv (missing textconv tool)' '
 test_expect_success 'setup log -[GS] plain & regex' '
 	test_create_repo GS-plain &&
 	test_commit -C GS-plain --append A data.txt "a" &&
-	test_commit -C GS-plain --append B data.txt "a a" &&
+	test_commit -C GS-plain --append B data.txt "aa" &&
 	test_commit -C GS-plain --append C data.txt "b" &&
 	test_commit -C GS-plain --append D data.txt "[b]" &&
 	test_commit -C GS-plain E data.txt "" &&
@@ -158,6 +158,7 @@ test_expect_success 'setup log -[GS] plain & regex' '
 	git -C GS-plain log --grep="[ABE]" >A-to-B-then-E-log &&
 	git -C GS-plain log --grep="[CDE]" >C-to-D-then-E-log &&
 	git -C GS-plain log --grep="[DE]" >D-then-E-log &&
+	git -C GS-plain log --grep="[AE]" >A-then-E-log &&
 	git -C GS-plain log >full-log
 '
 
@@ -165,7 +166,12 @@ test_expect_success 'log -G trims diff new/old [-+]' '
 	git -C GS-plain log -G"[+-]a" >log &&
 	test_must_be_empty log &&
 	git -C GS-plain log -G"^a" >log &&
-	test_cmp log A-to-B-then-E-log
+	test_cmp A-to-B-then-E-log log
+'
+
+test_expect_success 'log -S --pickaxe-regex uses REG_NOTBOL for subsequent matches' '
+	git -C GS-plain log -S"^a" --pickaxe-regex >log &&
+	test_cmp A-then-E-log log
 '
 
 test_expect_success 'log -S<pat> is not a regex, but -S<pat> --pickaxe-regex is' '
