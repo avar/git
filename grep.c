@@ -521,7 +521,7 @@ static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
 	int err;
-	int regflags = 0;
+	int regflags = 0;//REG_NEWLINE;
 
 	p->word_regexp = opt->word_regexp;
 	p->ignore_case = opt->ignore_case;
