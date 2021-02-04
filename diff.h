@@ -8,6 +8,8 @@
 #include "pathspec.h"
 #include "object.h"
 #include "oidset.h"
+#include "xdiff-interface.h"
+#include "grep.h"
 
 /**
  * The diff API is for programs that compare two sets of files (e.g. two trees,
@@ -230,6 +232,10 @@ enum diff_submodule_format {
 	DIFF_SUBMODULE_INLINE_DIFF
 };
 
+typedef int (*pickaxe_fn)(mmfile_t *one, mmfile_t *two,
+			  struct diff_options *o,
+			  struct grep_opt *grep_filter);
+
 /**
  * the set of options the calling program wants to affect the operation of
  * diffcore library with.
@@ -266,6 +272,9 @@ struct diff_options {
 	 */
 	const char *pickaxe;
 	unsigned pickaxe_opts;
+	int pickaxed_compiled;
+	pickaxe_fn pickaxe_fn;
+	struct grep_opt pickaxe_grep_opt;
 
 	/* -I<regex> */
 	regex_t **ignore_regex;
