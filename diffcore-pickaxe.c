@@ -8,10 +8,6 @@
 #include "xdiff-interface.h"
 #include "grep.h"
 
-typedef int (*pickaxe_fn)(mmfile_t *one, mmfile_t *two,
-			  struct diff_options *o,
-			  struct grep_opt *grep_filter);
-
 struct diffgrep_cb {
 	struct grep_opt	*grep_filter;
 	int hit;
@@ -201,32 +197,35 @@ static void pickaxe(struct diff_queue_struct *q, struct diff_options *o,
 	*q = outq;
 }
 
-void diffcore_pickaxe(struct diff_options *o)
+static void compile_pickaxe(struct diff_options *o)
 {
 	const char *needle = o->pickaxe;
 	int opts = o->pickaxe_opts;
-	struct grep_opt opt;
 	pickaxe_fn fn;
+
+	assert(!o->pickaxed_compiled);
+	o->pickaxed_compiled = 1;
 
 	if (opts & ~DIFF_PICKAXE_KIND_OBJFIND &&
 	    (!needle || !*needle))
 		BUG("should have needle under -G or -S");
 	if (opts & (DIFF_PICKAXE_REGEX | DIFF_PICKAXE_KIND_GS_MASK)) {
-		grep_init(&opt, the_repository, NULL);
+		grep_init(&o->pickaxe_grep_opt, the_repository, NULL);
 #ifdef USE_LIBPCRE2
-		grep_commit_pattern_type(GREP_PATTERN_TYPE_PCRE, &opt);
+		grep_commit_pattern_type(GREP_PATTERN_TYPE_PCRE, &o->pickaxe_grep_opt);
 #else
-		grep_commit_pattern_type(GREP_PATTERN_TYPE_ERE, &opt);
+		grep_commit_pattern_type(GREP_PATTERN_TYPE_ERE, &o->pickaxe_grep_opt);
 #endif
 
 		if (o->pickaxe_opts & DIFF_PICKAXE_IGNORE_CASE)
-			opt.ignore_case = 1;
+			o->pickaxe_grep_opt.ignore_case = 1;
 		if (opts & DIFF_PICKAXE_KIND_S &&
 		    !(opts & DIFF_PICKAXE_REGEX))
-			opt.fixed = 1;
+			o->pickaxe_grep_opt.fixed = 1;
 
-		append_grep_pattern(&opt, needle, "diffcore-pickaxe", 0, GREP_PATTERN);
-		compile_grep_patterns(&opt);
+		append_grep_pattern(&o->pickaxe_grep_opt, needle, "diffcore-pickaxe", 0, GREP_PATTERN);
+		fprintf(stderr, "compiling for %s\n", needle);
+		compile_grep_patterns(&o->pickaxe_grep_opt);
 
 		if (opts & DIFF_PICKAXE_KIND_G)
 			fn = diff_grep;
@@ -243,16 +242,23 @@ void diffcore_pickaxe(struct diff_options *o)
 			 * t4209-log-pickaxe.sh.
 			 */
 			BUG("unreachable");
+
+		o->pickaxe_fn = fn;
 	} else if (opts & DIFF_PICKAXE_KIND_OBJFIND) {
 		fn = NULL;
 	} else {
 		BUG("unknown pickaxe_opts flag");
 	}
+}
 
-	pickaxe(&diff_queued_diff, o, &opt, fn);
+void diffcore_pickaxe(struct diff_options *o)
+{
+	if (!o->pickaxed_compiled)
+		compile_pickaxe(o);
+	pickaxe(&diff_queued_diff, o, &o->pickaxe_grep_opt, o->pickaxe_fn);
 
-	if (opts & ~DIFF_PICKAXE_KIND_OBJFIND)
-		free_grep_patterns(&opt);
+	/*if (opts & ~DIFF_PICKAXE_KIND_OBJFIND)
+		free_grep_patterns(&o->pickaxe_grep_opt);*/
 
 	return;
 }
