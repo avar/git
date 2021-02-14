@@ -33,14 +33,14 @@ public class Beer
 EOF_TEST
 
 test_expect_success 'custom: setup match to end of line' '
-	git config diff.custom.funcname "......Beer\$"
+	git config diff.custom.funcname "Beer\$"
 '
 
 test_diff_funcname 'custom: match to end of line' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-RIGHT_Beer
+Beer
 EOF_HUNK
-public class RIGHT_Beer
+public class Beer
 {
 	int special;
 	public static void main(String args[])
