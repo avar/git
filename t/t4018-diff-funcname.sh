@@ -83,6 +83,17 @@ test_expect_success 'setup hunk header tests' '
 	git -C t4018 add .
 '
 
+do_change_me () {
+	file=$1
+	sed -e "s/ChangeMe/IWasChanged/" <"$file" >tmp &&
+	mv tmp "$file"
+}
+
+last_diff_context_line () {
+	file=$1
+	sed -n -e "s/^.*@@$//p" -e "s/^.*@@ //p" <$file
+}
+
 # check each individual file
 for i in $(git -C t4018 ls-files)
 do
@@ -93,13 +104,12 @@ do
 
 		# add test file to the index
 		git add \"$i\" &&
-		# place modified file in the worktree
-		sed -e 's/ChangeMe/IWasChanged/' <\"t4018/$i.content\" >\"$i\"
+		do_change_me \"$i\"
 	"
 
 	test_expect_success "hunk header: $i" "
 		git diff -U1 $i >diff &&
-		sed -n -e 's/^.*@@$//p' -e 's/^.*@@ //p' <diff >ctx &&
+		last_diff_context_line diff >ctx &&
 		test_cmp t4018/$i.header ctx
 	"
 done
