@@ -52,7 +52,6 @@ public class Beer
 EOF_TEST
 
 test_expect_success 'custom: setup alternation in pattern' '
-	git config diff.custom.funcname "Beer$" &&
 	git config diff.custom.xfuncname "^[ 	]*((public|static).*)$"
 '
 
