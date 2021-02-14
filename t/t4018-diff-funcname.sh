@@ -144,6 +144,13 @@ test_diff_funcname () {
 		test_cmp expected actual
 	' &&
 
+	test_expect_success "$desc -U9001" '
+		git diff -U9001 "$what" >diff &&
+		last_diff_context_line diff >actual &&
+		echo >blank &&
+		test_cmp blank actual
+	' &&
+
 	test_expect_success "teardown: $desc" '
 		# In case any custom config was set immediately before
 		# the test itself in the test file
