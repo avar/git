@@ -95,7 +95,7 @@ last_diff_context_line () {
 }
 
 # check each individual file
-for i in $(git -C t4018 ls-files)
+for i in $(git -C t4018 ls-files -- ':!*.sh')
 do
 	test_expect_success "setup hunk header: $i" "
 		grep -v '^t4018' \"t4018/$i\" >\"t4018/$i.content\" &&
@@ -112,6 +112,42 @@ do
 		last_diff_context_line diff >ctx &&
 		test_cmp t4018/$i.header ctx
 	"
+done
+
+test_diff_funcname () {
+	desc=$1
+	cat <&8 >arg.header &&
+	cat <&9 >arg.test &&
+	what=$(cat arg.what) &&
+
+	test_expect_success "setup: $desc" '
+		cp arg.test "$what" &&
+		cp arg.header expected &&
+		git add "$what" &&
+		do_change_me "$what"
+	' &&
+
+	test_expect_success "$desc" '
+		git diff -U1 "$what" >diff &&
+		last_diff_context_line diff >actual &&
+		test_cmp expected actual
+	'
+}
+
+for what in $diffpatterns
+do
+	test="$TEST_DIRECTORY/t4018/$what.sh"
+	if ! test -e "$test"
+	then
+		continue
+	fi &&
+
+	test_expect_success "setup: hunk header for $what" '
+		echo "$what diff=$what" >.gitattributes &&
+		echo "$what" >arg.what
+	' &&
+
+	. "$test"
 done
 
 test_done

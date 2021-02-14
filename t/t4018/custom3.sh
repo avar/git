@@ -1,8 +1,16 @@
-t4018 header: int special, RIGHT;
+#!/bin/sh
+#
+# See ../t4018-diff-funcname.sh's test_diff_funcname()
+#
+
+test_diff_funcname 'custom3: alternation in pattern' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+public static void main(String RIGHT[])
+EOF_HUNK
 public class Beer
 {
-	int special, RIGHT;
-	public static void main(String args[])
+	int special;
+	public static void main(String RIGHT[])
 	{
 		String s=" ";
 		for(int x = 99; x > 0; x--)
@@ -16,3 +24,4 @@ public class Beer
 			+ "99 bottles of beer on the wall.\n");
 	}
 }
+EOF_TEST
