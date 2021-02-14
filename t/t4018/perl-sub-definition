@@ -1,3 +1,4 @@
+t4018 header: sub RIGHT {
 sub RIGHT {
 	my ($n) = @_;
 	print "ChangeMe";

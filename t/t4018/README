@@ -1,15 +1,22 @@
-How to write RIGHT test cases
-=============================
+t4018 header: description of the test.
+How to write test cases
+=======================
+
+Create test cases called "LANG-whatever" in this directory, where
+"LANG" is e.g. the userdiff driver name, where "whatever" is a brief
+description of the test.
 
 Insert the word "ChangeMe" (exactly this form) at a distance of
 at least two lines from the line that must appear in the hunk header.
 
-The text that must appear in the hunk header must contain the word
-"right", but in all upper-case, like in the title above.
+Any line starting with "t4018" is a control line for the test:
 
-This text is a bit twisted and out of order, but it is itself a
-test case for the default hunk header pattern. Know what you are doing
-if you change it.
+ - The "t4018 header:" line above specifies what text must appear in
+   the hunk header. We strip away the starting "@@ [...] @@" part of
+   the line for ease of not having to hardcode the line numbers and
+   offsets.
 
-BTW, this tests that the head line goes to the hunk header, not the line
-of equal signs.
+In many of the test cases the header line includes the token "RIGHT",
+this used to be part of the test syntax, but isn't anymore. Now we
+care about the "t4018 header:" line, not whatever line contains a
+"RIGHT" token.

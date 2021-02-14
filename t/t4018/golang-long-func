@@ -1,3 +1,4 @@
+t4018 header: func RIGHT(aVeryVeryVeryLongVariableName AVeryVeryVeryLongType,
 func RIGHT(aVeryVeryVeryLongVariableName AVeryVeryVeryLongType,
 	anotherLongVariableName AnotherLongType) {
 	a := 5

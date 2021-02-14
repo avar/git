@@ -1,3 +1,4 @@
+t4018 header: func (t *Test) RIGHT(a Type) (Type, error) {
 type Test struct {
 	a Type
 }

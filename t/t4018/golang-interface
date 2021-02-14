@@ -1,3 +1,4 @@
+t4018 header: type RIGHT interface {
 type RIGHT interface {
 	a() Type
 	b() ChangeMe

@@ -1,3 +1,4 @@
+t4018 header: struct item RIGHT(int i)
 struct item RIGHT(int i)
 // Do not
 // pick up
