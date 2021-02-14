@@ -1,3 +1,4 @@
+t4018 header: sub RIGHTwithheredocument {
 sub RIGHTwithheredocument {
 	print <<"EOF"
 decoy here-doc

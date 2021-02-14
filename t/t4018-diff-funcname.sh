@@ -78,16 +78,20 @@ test_expect_success 'setup hunk header tests' '
 		echo "$i-* diff=$i"
 	done > .gitattributes &&
 
-	# add all test files to the index
-	(
-		cd "$TEST_DIRECTORY"/t4018 &&
-		git --git-dir="$TRASH_DIRECTORY/.git" add .
-	) &&
+	cp -R "$TEST_DIRECTORY"/t4018 . &&
+	git init t4018 &&
+	git -C t4018 add . &&
 
-	# place modified files in the worktree
-	for i in $(git ls-files)
+	for i in $(git -C t4018 ls-files)
 	do
-		sed -e "s/ChangeMe/IWasChanged/" <"$TEST_DIRECTORY/t4018/$i" >"$i" || return 1
+		grep -v "^t4018" "t4018/$i" >"t4018/$i.content" &&
+		sed -n -e "s/^t4018 header: //p" <"t4018/$i" >"t4018/$i.header" &&
+		cp "t4018/$i.content" "$i" &&
+
+		# add test file to the index
+		git add "$i" &&
+		# place modified file in the worktree
+		sed -e "s/ChangeMe/IWasChanged/" <"t4018/$i.content" >"$i" || return 1
 	done
 '
 
@@ -95,8 +99,9 @@ test_expect_success 'setup hunk header tests' '
 for i in $(git ls-files)
 do
 	test_expect_success "hunk header: $i" "
-		git diff -U1 $i >actual &&
-		grep '@@ .* @@.*RIGHT' actual
+		git diff -U1 $i >diff &&
+		sed -n -e 's/^.*@@$//p' -e 's/^.*@@ //p' <diff >ctx &&
+		test_cmp t4018/$i.header ctx
 	"
 done
 
