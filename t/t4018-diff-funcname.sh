@@ -8,18 +8,6 @@ test_description='Test custom diff function name patterns'
 . ./test-lib.sh
 
 test_expect_success 'setup' '
-	# a non-trivial custom pattern
-	git config diff.custom1.funcname "!static
-!String
-[^ 	].*s.*" &&
-
-	# a custom pattern which matches to end of line
-	git config diff.custom2.funcname "......Beer\$" &&
-
-	# alternation in pattern
-	git config diff.custom3.funcname "Beer$" &&
-	git config diff.custom3.xfuncname "^[ 	]*((public|static).*)$" &&
-
 	# for regexp compilation tests
 	echo A >A.java &&
 	echo B >B.java
@@ -31,7 +19,14 @@ test_expect_success 'setup: test-tool userdiff' '
 	test-tool userdiff list-builtin-drivers >builtin-drivers &&
 	test_file_not_empty builtin-drivers &&
 	sort <builtin-drivers >builtin-drivers.sorted &&
-	test_cmp builtin-drivers.sorted builtin-drivers &&
+	test_cmp builtin-drivers.sorted builtin-drivers
+'
+
+test_expect_success 'test-tool userdiff: custom patterns' '
+	# a non-trivial custom pattern
+	test_config diff.custom1.funcname "!static
+!String
+[^     ].*s.*" &&
 
 	# Ditto, but "custom" requires the .git directory and config
 	# to be setup and read.
@@ -44,7 +39,6 @@ test_expect_success 'setup: test-tool userdiff' '
 
 diffpatterns="
 	$(cat builtin-drivers)
-	$(cat custom-drivers)
 "
 
 for p in $diffpatterns
@@ -141,7 +135,7 @@ test_diff_funcname () {
 	'
 }
 
-for what in $diffpatterns
+for what in $diffpatterns custom
 do
 	test="$TEST_DIRECTORY/t4018/$what.sh"
 	if ! test -e "$test"
