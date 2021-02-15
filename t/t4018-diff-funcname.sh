@@ -37,11 +37,7 @@ test_expect_success 'test-tool userdiff: custom patterns' '
 	test_cmp custom-drivers.sorted custom-drivers
 '
 
-diffpatterns="
-	$(cat builtin-drivers)
-"
-
-for p in $diffpatterns
+for p in $(cat builtin-drivers)
 do
 	test_expect_success "builtin $p pattern compiles" '
 		echo "*.java diff=$p" >.gitattributes &&
@@ -67,7 +63,7 @@ test_expect_success 'last regexp must not be negated' '
 '
 
 test_expect_success 'setup hunk header tests' '
-	for i in $diffpatterns
+	for i in $(cat builtin-drivers)
 	do
 		echo "$i* diff=$i"
 	done > .gitattributes &&
@@ -135,7 +131,7 @@ test_diff_funcname () {
 	'
 }
 
-for what in $diffpatterns custom
+for what in $(cat builtin-drivers) custom
 do
 	test="$TEST_DIRECTORY/t4018/$what.sh"
 	if ! test -e "$test"
