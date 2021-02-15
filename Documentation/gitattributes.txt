@@ -794,11 +794,17 @@ backslashes; the pattern above picks a line that begins with a
 backslash, and zero or more occurrences of `sub` followed by
 `section` followed by open brace, to the end of line.
 
-There are a few built-in patterns to make this easier, and `tex`
-is one of them, so you do not have to write the above in your
-configuration file (you still need to enable this with the
-attribute mechanism, via `.gitattributes`).  The following built in
-patterns are available:
+There are built-in patterns shipped as part of git itself. A more
+advanced version of the `tex` pattern discussed above is one of them.
+
+For built-in patterns, you do not need `diff.<lang>.xfuncname` in your
+configuration file as discussed above, but if present, it will
+override a built-in pattern.
+
+Nevertheless, you need to enable built-in patterns via .gitattributes`
+for the pattern to take effect.
+
+The following built-in patterns are available:
 
 - `ada` suitable for source code in the Ada language.
 
