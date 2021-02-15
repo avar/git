@@ -767,6 +767,10 @@ endif::git-format-patch[]
 	The function names are determined in the same way as
 	`git diff` works out patch hunk headers (see 'Defining a
 	custom hunk-header' in linkgit:gitattributes[5]).
++
+When showing the whole function for context the "@@" context line
+itself will always be empty, since the context that would otherwise be
+shown there will be the first line of the hunk being shown.
 
 ifndef::git-format-patch[]
 ifndef::git-log[]
