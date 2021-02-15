@@ -257,8 +257,5 @@ void diffcore_pickaxe(struct diff_options *o)
 		compile_pickaxe(o);
 	pickaxe(&diff_queued_diff, o, &o->pickaxe_grep_opt, o->pickaxe_fn);
 
-	/*if (opts & ~DIFF_PICKAXE_KIND_OBJFIND)
-		free_grep_patterns(&o->pickaxe_grep_opt);*/
-
 	return;
 }
