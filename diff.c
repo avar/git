@@ -6387,6 +6387,11 @@ static void diff_free_ignore_regex(struct diff_options *options)
 	free(options->ignore_regex);
 }
 
+static void diff_free_pickaxe(struct diff_options *options)
+{
+	free_grep_patterns(&options->pickaxe_grep_opt);
+}
+
 void diff_free(struct diff_options *options)
 {
 	if (options->no_free)
@@ -6394,6 +6399,7 @@ void diff_free(struct diff_options *options)
 
 	diff_free_file(options);
 	diff_free_ignore_regex(options);
+	diff_free_pickaxe(options);
 }
 
 void diff_flush(struct diff_options *options)
