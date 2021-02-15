@@ -46,7 +46,6 @@ test_expect_success 'list drivers without tests' '
 	html
 	objc
 	pascal
-	ruby
 	tex
 	EOF
 '
