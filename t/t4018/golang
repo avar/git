@@ -1,3 +1,52 @@
+t4018 description: package
+t4018 header: package main
+package main
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- ALLCAPS
+t4018 header: package main
+package ALLCAPS
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- CamelCase
+t4018 header: package main
+package CamelCase
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- 123
+t4018 header: package main
+package 123
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- x509
+t4018 header: package x509
+package x509
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- underbars
+t4018 header: package not_conventional
+package not_conventional
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- camelCase
+t4018 header: package camelCase
+package camelCase
+
+import "fmt"
+// ChangeMe
+
 t4018 description: complex function
 t4018 header: func (t *Test) RIGHT(a Type) (Type, error) {
 type Test struct {
