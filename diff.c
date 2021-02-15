@@ -6393,7 +6393,8 @@ static void diff_free_ignore_regex(struct diff_options *options)
 
 static void diff_free_pickaxe(struct diff_options *options)
 {
-	free_grep_patterns(&options->pickaxe_grep_opt);
+	if (options->pickaxe_opts & DIFF_PICKAXE_KINDS_MASK)
+		free_grep_patterns(&options->pickaxe_grep_opt);
 }
 
 void diff_free(struct diff_options *options)
