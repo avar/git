@@ -76,3 +76,19 @@ sub asub
 	print "ChangeMe\n";
 }
 EOF_TEST
+
+
+test_expect_success 'custom: setup config overrides built-in patterns' '
+	git config diff.perl.xfuncname "!^=head
+^[^ ]+.*"
+'
+
+test_diff_funcname 'custom: config overrides built-in patterns' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+sub foo;
+EOF_HUNK
+sub foo;
+=head1
+
+ChangeMe
+EOF_TEST

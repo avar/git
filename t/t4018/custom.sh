@@ -111,3 +111,73 @@ ChangeMe
 
 baz
 EOF_TEST
+
+test_expect_success 'custom: setup negation syntax, ! is magic' '
+	git config diff.custom.xfuncname "!negation
+line"
+'
+
+test_diff_funcname 'custom: negation syntax, ! is magic' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+line
+EOF_HUNK
+line
+!negation
+
+ChangeMe
+
+baz
+EOF_TEST
+
+test_expect_success 'custom: setup negation syntax, use [!] to override ! magic' '
+	git config diff.custom.xfuncname "[!]negation
+line"
+'
+
+test_diff_funcname 'custom: negation syntax, use [!] to override ! magic' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+!negation
+EOF_HUNK
+line
+!negation
+
+ChangeMe
+
+baz
+EOF_TEST
+
+test_expect_success 'custom: setup captures in multiple patterns' '
+	git config diff.custom.xfuncname "!^=head
+^format ([^ ]+)
+^sub ([^;]+)"
+'
+
+test_diff_funcname 'custom: captures in multiple patterns' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+foo
+EOF_HUNK
+sub foo;
+
+=head1
+
+ChangeMe
+
+EOF_TEST
+
+test_expect_success 'custom: multiple patterns ending with \n' '
+	git config diff.custom.xfuncname "!^=head
+^sub ([^;]+)
+"
+'
+
+test_diff_funcname 'custom: multiple patterns ending with \n' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+
+EOF_HUNK
+sub foo;
+
+=head1
+
+ChangeMe
+
+EOF_TEST
