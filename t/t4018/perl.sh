@@ -89,6 +89,5 @@ sub foo;
 EOF_HUNK
 sub foo;
 =head1
-
 ChangeMe
 EOF_TEST
