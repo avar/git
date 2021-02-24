@@ -5,9 +5,9 @@
 
 test_diff_funcname 'perl: skip end of heredoc' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-sub RIGHTwithheredocument {
+sub withheredocument {
 EOF_HUNK
-sub RIGHTwithheredocument {
+sub withheredocument {
 	print <<"EOF"
 decoy here-doc
 EOF
@@ -19,9 +19,9 @@ EOF_TEST
 
 test_diff_funcname 'perl: skip forward decl' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-package RIGHT;
+package Some::Package;
 EOF_HUNK
-package RIGHT;
+package Some::Package;
 
 use strict;
 use warnings;
@@ -35,13 +35,13 @@ EOF_TEST
 
 test_diff_funcname 'perl: skip sub in pod' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-=head1 SYNOPSIS_RIGHT
+=head1 SYNOPSIS
 EOF_HUNK
 =head1 NAME
 
 Beer - subroutine to output fragment of a drinking song
 
-=head1 SYNOPSIS_RIGHT
+=head1 SYNOPSIS
 
 	use Beer qw(round finalround);
 
@@ -59,9 +59,9 @@ EOF_TEST
 
 test_diff_funcname 'perl: sub definition' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-sub RIGHT {
+sub asub {
 EOF_HUNK
-sub RIGHT {
+sub asub {
 	my ($n) = @_;
 	print "ChangeMe";
 }
@@ -69,9 +69,9 @@ EOF_TEST
 
 test_diff_funcname 'perl: sub definition kr brace' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
-sub RIGHT
+sub asub
 EOF_HUNK
-sub RIGHT
+sub asub
 {
 	print "ChangeMe\n";
 }
