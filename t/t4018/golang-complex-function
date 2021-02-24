@@ -1,9 +1,0 @@
-t4018 header: func (t *Test) RIGHT(a Type) (Type, error) {
-type Test struct {
-	a Type
-}
-
-func (t *Test) RIGHT(a Type) (Type, error) {
-	t.a = a
-	return ChangeMe, nil
-}

@@ -41,12 +41,20 @@ below) are:
 Create test cases called "LANG-whatever" in this directory, where
 "whatever" is a brief description of the test.
 
+You can also stick all the tests into one "LANG" file. See "t4018
+description" below.
+
 Any line starting with "t4018" is a control line for the test:
 
  - The "t4018 header:" line above specifies what text must appear in
    the hunk header. We strip away the starting "@@ [...] @@" part of
    the line for ease of not having to hardcode the line numbers and
    offsets.
+
+ - The "t4018 description:" line above the test is a convention to add
+   a human-readable description for the test. Unlike in the case of
+   the LANG.sh test cases these descriptions don't make it to
+   "test_expect_success", and won't be seen in the test output.
 
 In many of the test cases the header line includes the token "RIGHT",
 this used to be part of the test syntax, but isn't anymore. Now we
