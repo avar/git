@@ -47,6 +47,32 @@ package camelCase
 import "fmt"
 // ChangeMe
 
+t4018 description: import (
+t4018 header: import (
+package somePackage
+
+import (
+	"os"
+	ChangeMe
+)
+
+t4018 description: const (
+t4018 header: const (
+package somePackage
+
+const (
+	Foo = 1
+	Bar = ChangeMe
+)
+
+t4018 description: const rule is selective
+t4018 header: package main
+package main
+
+const Foo = "Bar"
+
+// ChangeMe
+
 t4018 description: complex function
 t4018 header: func (t *Test) RIGHT(a Type) (Type, error) {
 type Test struct {

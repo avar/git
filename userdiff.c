@@ -132,6 +132,8 @@ PATTERNS("golang",
 	 "^(package[ \t][a-z][A-Za-z0-9_]+)[ \t]*\n"
 	 /* Functions */
 	 "^(func[ \t].*)\n"
+	 /* const & import */
+	 "^((import|const)[ \t]*\\([ \t]*)\n"
 	 /* Structs and interfaces */
 	 "^(type[ \t].*[ \t](struct|interface)[ \t].*)",
 	 /* -- */
