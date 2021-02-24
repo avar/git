@@ -10,6 +10,7 @@ test_expect_success 'custom: setup non-trivial custom' '
 '
 
 test_diff_funcname 'custom: non-trivial custom pattern' \
+	'-U1' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
 int special, RIGHT;
 EOF_HUNK

@@ -5,11 +5,10 @@ How to write test cases
 There are two ways of writing tests in this directory. In both cases
 "LANG" is the userdiff driver name, e.g. "perl" or "cpp".
 
-The word "ChangeMe" (exactly this form) should appear at a distance of
-at least two lines from the line that must appear in the hunk
-header. See below sections.
+The word "ChangeMe" below the line that must appear in the hunk header
+(we run the diff with -U0). See below sections.
 
-t4018 header: t/README.
+t4018 header: The content of the "EOF_TEST" argument is used as-is, with the
 "LANG.sh" test cases
 ====================
 
