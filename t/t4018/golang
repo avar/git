@@ -51,3 +51,23 @@ type some struct { // comment
 	a Type
 	b ChangeMe
 }
+
+t4018 description: func combined with type
+t4018 header: func myfunc() {
+func myfunc() {
+	type mystruct struct {
+		a Foo
+		b Bar
+	}
+	ChangeMe
+
+t4018 description: anonymous indented func()
+t4018 header: func SomeThing() bool {
+func SomeThing() bool {
+	func() {
+		defer func() {
+			fmt.Println("hello")
+		}()
+	}()
+
+	ChangeMe
