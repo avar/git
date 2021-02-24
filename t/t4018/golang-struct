@@ -1,5 +1,0 @@
-t4018 header: type RIGHT struct {
-type RIGHT struct {
-	a Type
-	b ChangeMe
-}
