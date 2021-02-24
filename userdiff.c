@@ -129,9 +129,9 @@ IPATTERN("fountain",
 	 "[^ \t-]+"),
 PATTERNS("golang",
 	 /* Functions */
-	 "^[ \t]*(func[ \t]*.*(\\{[ \t]*)?)\n"
+	 "^[ \t]*(func[ \t].*)\n"
 	 /* Structs and interfaces */
-	 "^[ \t]*(type[ \t].*(struct|interface)[ \t]*(\\{[ \t]*)?)",
+	 "^[ \t]*(type[ \t].*(struct|interface)[ \t].*)",
 	 /* -- */
 	 "[a-zA-Z_][a-zA-Z0-9_]*"
 	 "|[-+0-9.eE]+i?|0[xX]?[0-9a-fA-F]+i?"

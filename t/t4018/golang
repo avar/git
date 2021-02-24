@@ -46,7 +46,7 @@ type RIGHT struct {
 }
 
 t4018 description: struct with comment after {
-t4018 header: type some struct {
+t4018 header: type some struct { // comment
 type some struct { // comment
 	a Type
 	b ChangeMe
