@@ -80,24 +80,23 @@ test_expect_success 'setup hunk header tests' '
 
 	cp -R "$TEST_DIRECTORY"/t4018 . &&
 	git init t4018 &&
-	git -C t4018 add . &&
-
-	for i in $(git -C t4018 ls-files)
-	do
-		grep -v "^t4018" "t4018/$i" >"t4018/$i.content" &&
-		sed -n -e "s/^t4018 header: //p" <"t4018/$i" >"t4018/$i.header" &&
-		cp "t4018/$i.content" "$i" &&
-
-		# add test file to the index
-		git add "$i" &&
-		# place modified file in the worktree
-		sed -e "s/ChangeMe/IWasChanged/" <"t4018/$i.content" >"$i" || return 1
-	done
+	git -C t4018 add .
 '
 
 # check each individual file
-for i in $(git ls-files)
+for i in $(git -C t4018 ls-files)
 do
+	test_expect_success "setup hunk header: $i" "
+		grep -v '^t4018' \"t4018/$i\" >\"t4018/$i.content\" &&
+		sed -n -e 's/^t4018 header: //p' <\"t4018/$i\" >\"t4018/$i.header\" &&
+		cp \"t4018/$i.content\" \"$i\" &&
+
+		# add test file to the index
+		git add \"$i\" &&
+		# place modified file in the worktree
+		sed -e 's/ChangeMe/IWasChanged/' <\"t4018/$i.content\" >\"$i\"
+	"
+
 	test_expect_success "hunk header: $i" "
 		git diff -U1 $i >diff &&
 		sed -n -e 's/^.*@@$//p' -e 's/^.*@@ //p' <diff >ctx &&
