@@ -16,6 +16,13 @@ func RIGHT() {
 	b := ChangeMe
 }
 
+t4018 description: func with comment after {
+t4018 header: func name() { // comment
+func name() { // comment
+	a := 5
+	b := ChangeMe
+}
+
 t4018 description: interface
 t4018 header: type RIGHT interface {
 type RIGHT interface {
@@ -34,6 +41,13 @@ func RIGHT(aVeryVeryVeryLongVariableName AVeryVeryVeryLongType,
 t4018 description: struct
 t4018 header: type RIGHT struct {
 type RIGHT struct {
+	a Type
+	b ChangeMe
+}
+
+t4018 description: struct with comment after {
+t4018 header: type some struct {
+type some struct { // comment
 	a Type
 	b ChangeMe
 }
