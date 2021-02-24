@@ -1,5 +1,0 @@
-t4018 header: sub RIGHT
-sub RIGHT
-{
-	print "ChangeMe\n";
-}
