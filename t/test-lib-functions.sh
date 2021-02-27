@@ -636,6 +636,7 @@ test_expect_failure () {
 		fi
 	fi
 	test_finish_
+	return 1
 }
 
 test_expect_success () {
@@ -656,6 +657,7 @@ test_expect_success () {
 		fi
 	fi
 	test_finish_
+	return 1
 }
 
 # test_external runs external test scripts that provide continuous
