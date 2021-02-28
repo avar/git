@@ -170,7 +170,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
 	> <CYAN>expecting success of 0150.1 '"'"'successful one-line test'"'"': true<RESET>
-	> ok 1 - successful one-line test
+	> <GREEN>ok 1 - successful one-line test<RESET>
 	> Z
 	> <CYAN>expecting success of 0150.2 '"'"'successful two-line test'"'"': Z
 	> 	true &&
@@ -179,7 +179,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> 	# harness, 2010-06-24)
 	> 	printf "hello"
 	> <RESET>
-	> hellook 2 - successful two-line test
+	> hello<GREEN>ok 2 - successful two-line test<RESET>
 	> Z
 	> <CYAN>checking known breakage of 0150.3 '"'"'unexpectedly passing TODO test'"'"': Z
 	> 	echo A >expected &&
