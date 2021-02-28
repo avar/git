@@ -576,6 +576,10 @@ else
 	}
 fi
 
+say_color_tap() {
+	say_color "$@"
+}
+
 TERM=dumb
 export TERM
 
@@ -680,7 +684,7 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
-	say_color "" "ok $test_count - $@"
+	say_color_tap "" "ok $test_count - $@"
 }
 
 test_failure_ () {
@@ -705,7 +709,7 @@ test_failure_ () {
 		write_junit_xml_testcase "$1" "      $junit_insert"
 	fi
 	test_failure=$(($test_failure + 1))
-	say_color berror "not ok $test_count - $1"
+	say_color_tap berror "not ok $test_count - $1"
 	shift
 	printf '%s\n' "$*" | sed -e 's/^/#	/'
 	test "$immediate" = "" || { finalize_junit_xml; GIT_EXIT_OK=t; exit 1; }
@@ -726,7 +730,7 @@ test_known_broken_failure_ () {
 		write_junit_xml_testcase "$* (known breakage)"
 	fi
 	test_broken=$(($test_broken+1))
-	say_color warn "not ok $test_count - $@ # TODO known breakage"
+	say_color_tap warn "not ok $test_count - $@ # TODO known breakage"
 }
 
 test_debug () {
@@ -1044,7 +1048,7 @@ test_skip () {
 				"      <skipped message=\"$message\" />"
 		fi
 
-		say_color skip "ok $test_count # skip $1 ($skipped_reason)"
+		say_color_tap skip "ok $test_count # skip $1 ($skipped_reason)"
 		: true
 		;;
 	*)
@@ -1170,12 +1174,12 @@ test_done () {
 		test -z "$skip_all" || skip_all="# SKIP $skip_all"
 		case "$test_count" in
 		0)
-			say "1..$test_count${skip_all:+ $skip_all}"
+			say_color_tap "info" "1..$test_count${skip_all:+ $skip_all}"
 			;;
 		*)
 			test -z "$skip_all" ||
 			say_color warn "$skip_all"
-			say "1..$test_count"
+			say_color_tap "info" "1..$test_count"
 			;;
 		esac
 
@@ -1197,8 +1201,9 @@ test_done () {
 		exit 0 ;;
 
 	*)
+
 		say_color berror "# failed $test_failure among $msg"
-		say "1..$test_count"
+		say_color_tap "info" "1..$test_count"
 
 		exit 1 ;;
 
