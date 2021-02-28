@@ -134,20 +134,20 @@ test_diff_funcname () {
 		cp arg.header expected &&
 		git add "$what" &&
 		do_change_me "$what"
-	' &&
+	'
 
 	test_expect_success "$desc" '
 		git diff $diff_opts "$what" >diff &&
 		last_diff_context_line diff >actual &&
 		test_cmp expected actual
-	' &&
+	'
 
 	test_expect_success "$desc -U9001" '
 		git diff -U9001 "$what" >diff &&
 		last_diff_context_line diff >actual &&
 		echo >blank &&
 		test_cmp blank actual
-	' &&
+	'
 
 	test_expect_success "teardown: $desc" '
 		# In case any custom config was set immediately before
@@ -174,7 +174,7 @@ do
 	test_expect_success "setup: hunk header for $what" '
 		echo "$what diff=$what" >.gitattributes &&
 		echo "$what" >arg.what
-	' &&
+	'
 
 	. "$test"
 done
