@@ -153,10 +153,32 @@ parse_option () {
 	--no-chain-lint)
 		GIT_TEST_CHAIN_LINT=0 ;;
 	-x)
-		trace=t ;;
-	-V|--verbose-log)
-		verbose_log=t
+		trace=t
+		verbose=t
+		;;
+	--verbose-log=0)
+
+		verbose_log_comment_level=-1
+		echo setting $verbose_log_comment_level
+		parse_option "--verbose-log"
+		;;
+	-V0|-V|--verbose-log)
+		verbose=t
 		tee=t
+
+		if test "$opt" = "-V0"
+		then
+			verbose_log_comment_level=-1
+		fi
+
+		# --verbose-log, unlike --verbose --tee, shows only
+		# --the TAP on stdout,
+		verbose_log=--out-only-tap
+
+		# TAP comment level via --verbose-log=0, -V, -VV, -VVV etc.
+		verbose_log_comment_level=${verbose_log_comment_level:-0}
+		verbose_log_comment_level=$(($verbose_log_comment_level + 1))
+
 		;;
 	--write-junit-xml)
 		write_junit_xml=t
@@ -211,7 +233,7 @@ do
 	fi
 
 	case "$opt" in
-	--*|-?)
+	--*|-?|-V0)
 		parse_option "$opt" ;;
 	-?*)
 		# bundled short options must be fed separately to parse_option
@@ -240,7 +262,7 @@ then
 	test -z "$verbose" && verbose_only="$valgrind_only"
 elif test -n "$valgrind"
 then
-	test -z "$verbose_log" && verbose=t
+	verbose=t
 fi
 
 if test -n "$stress"
@@ -371,7 +393,22 @@ then
 	(
 		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
 		echo $? >"$TEST_RESULTS_BASE.exit"
-	) | tee -a "$GIT_TEST_TEE_OUTPUT_FILE"
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee-tap \
+		--prefix="GIT_TEST_TEE_STARTED " \
+		--file-escape \
+		${verbose_log:---out-escape} ${verbose_log:+--out-comment-level=$verbose_log_comment_level} \
+		"$GIT_TEST_TEE_OUTPUT_FILE"
+	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
+	exit
+elif test -n "$verbose" && test -n "$HARNESS_ACTIVE"
+then
+	mkdir -p "$TEST_RESULTS_DIR"
+	(
+		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
+		echo $? >"$TEST_RESULTS_BASE.exit"
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee-tap \
+		--prefix="GIT_TEST_TEE_STARTED " \
+		--out-escape
 	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
 	exit
 fi
@@ -398,10 +435,6 @@ then
 		echo >&2 "warning: ignoring -x; '$0' is untraceable without BASH_XTRACEFD"
 		trace=
 	fi
-fi
-if test -n "$trace" && test -z "$verbose_log"
-then
-	verbose=t
 fi
 
 # For repeatability, reset the environment to known value.
@@ -594,7 +627,10 @@ else
 fi
 
 say_color_tap() {
-	say_color "$@"
+	say_color_tap=$1
+	shift
+	printf "%s" "${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }"
+	say_color "$say_color_tap" "$@"
 }
 
 # Comments starting with "#" are TAP syntax, we add our own comment
@@ -655,16 +691,6 @@ say () {
 	say_color info "$*"
 }
 
-if test -n "$HARNESS_ACTIVE"
-then
-	if test "$verbose" = t || test -n "$verbose_only"
-	then
-		printf 'Bail out! %s\n' \
-		 'verbose mode forbidden under TAP harness; try --verbose-log'
-		exit 1
-	fi
-fi
-
 test "${test_description}" != "" ||
 error "Test script did not set test_description."
 
@@ -677,10 +703,7 @@ fi
 exec 5>&1
 exec 6<&0
 exec 7>&2
-if test "$verbose_log" = "t"
-then
-	exec 3>>"$GIT_TEST_TEE_OUTPUT_FILE" 4>&3
-elif test "$verbose" = "t"
+if test "$verbose" = "t"
 then
 	exec 4>&2 3>&1
 else
@@ -974,9 +997,7 @@ maybe_setup_valgrind () {
 
 trace_level_=0
 want_trace () {
-	test "$trace" = t && {
-		test "$verbose" = t || test "$verbose_log" = t
-	}
+	test "$trace" = t && test "$verbose" = t
 }
 
 # This is a separate function because some tests use
