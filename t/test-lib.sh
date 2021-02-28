@@ -686,7 +686,7 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
-	say_color_tap "" "ok $test_count - $@"
+	say_color_tap "${verbose:+pass}" "ok $test_count - $@"
 }
 
 test_failure_ () {
