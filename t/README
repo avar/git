@@ -157,10 +157,13 @@ appropriately before running "make". Short options can be bundled, i.e.
 
 -V::
 --verbose-log::
-	Write verbose output to the same logfile as `--tee`, but do
-	_not_ write it to stdout. Unlike `--tee --verbose`, this option
+	An alias for `--verbose --tee`. This option
 	is safe to use when stdout is being consumed by a TAP parser
-	like `prove`. Implies `--tee` and `--verbose`.
+	like `prove`.
+	Historically this option was different from `--verbose --tee`
+	and would not write any verbose output to stdout to ensure the
+	TAP-correctness of the output. The TAP-correctness of the
+	output is now sanity checked by the test library,
 
 --with-dashes::
 	By default tests are run without dashed forms of

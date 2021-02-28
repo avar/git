@@ -54,6 +54,12 @@ _run_sub_test_lib_test_common () {
 		# the sub-test.
 		sane_unset HARNESS_ACTIVE &&
 
+		# Under a top-level --verbose-log we'd get the
+		# "GIT_TEST_TEE_STARTED " prefix in all our output
+		# without resetting GIT_TEST_TEE_STARTED (normally it
+		# guards against recursion).
+		sane_unset GIT_TEST_TEE_STARTED &&
+
 		export TEST_DIRECTORY &&
 		TEST_OUTPUT_DIRECTORY=$(pwd) &&
 		export TEST_OUTPUT_DIRECTORY &&
