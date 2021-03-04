@@ -871,6 +871,7 @@ static int traverse_trees_recursive(int n, unsigned long dirmask,
 	newinfo.name = p->path;
 	newinfo.namelen = p->pathlen;
 	newinfo.mode = p->raw_mode;
+	newinfo.mode = canon_mode(newinfo.mode);
 	newinfo.pathlen = st_add3(newinfo.pathlen, tree_entry_len(p), 1);
 	newinfo.df_conflicts |= df_conflicts;
 
@@ -1023,7 +1024,8 @@ static struct cache_entry *create_ce_entry(const struct traverse_info *info,
 		is_transient ?
 		make_empty_transient_cache_entry(len) :
 		make_empty_cache_entry(istate, len);
-	unsigned int mode = n->raw_mode;
+	unsigned int mode = canon_mode(n->raw_mode);
+	mode = canon_mode(mode);
 
 	ce->ce_mode = create_ce_mode(mode);
 	ce->ce_flags = create_ce_flags(stage);

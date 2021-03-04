@@ -479,6 +479,7 @@ handle_non_note:
 			const char *q = oid_to_hex(&subtree->key_oid);
 			size_t i;
 			unsigned int mode = entry.raw_mode;
+			mode = canon_mode(mode);
 			for (i = 0; i < prefix_len; i++) {
 				strbuf_addch(&non_note_path, *q++);
 				strbuf_addch(&non_note_path, *q++);

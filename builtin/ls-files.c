@@ -429,7 +429,7 @@ static int read_one_entry_opt(struct index_state *istate,
 {
 	int len;
 	struct cache_entry *ce;
-	unsigned mode = raw_mode;
+	unsigned mode = canon_mode(raw_mode);
 
 	if (S_ISDIR(mode))
 		return READ_TREE_RECURSIVE;
