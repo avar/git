@@ -171,12 +171,19 @@ struct traverse_info {
  * Find an entry in a tree given a pathname and the sha1 of a tree to
  * search. Returns 0 if the entry is found and -1 otherwise.
  *
- * The third and fourth parameters are set to the entry's sha1 and
- * mode respectively.
+ * There are variants of this function depending on what fields in the
+ * "struct name_entry" you'd like. You always need a pointer to an
+ * appropriate variable to fill in (NULL won't do!):
+ *
+ * get_tree_entry_mode(): unsigned int mode
+ * get_tree_entry_type(): enum object_type
  */
 int get_tree_entry_mode(struct repository *, const struct object_id *, const char *,
 			struct object_id *,
 			unsigned short *);
+int get_tree_entry_type(struct repository *, const struct object_id *, const char *,
+			struct object_id *,
+			enum object_type *);
 
 /**
  * Generate the full pathname of a tree entry based from the root of the
