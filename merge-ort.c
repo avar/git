@@ -502,7 +502,7 @@ static void setup_path_info(struct merge_options *opt,
 	mi->basename_offset = current_dir_name_len;
 	mi->clean = !!resolved;
 	if (resolved) {
-		mi->result.mode = merged_version->mode;
+		mi->result.mode = merged_version->raw_mode;
 		oidcpy(&mi->result.oid, &merged_version->oid);
 		mi->is_null = !!is_null;
 	} else {
@@ -512,7 +512,7 @@ static void setup_path_info(struct merge_options *opt,
 		ASSIGN_AND_VERIFY_CI(ci, mi);
 		for (i = MERGE_BASE; i <= MERGE_SIDE2; i++) {
 			ci->pathnames[i] = fullpath;
-			ci->stages[i].mode = names[i].mode;
+			ci->stages[i].mode = names[i].raw_mode;
 			oidcpy(&ci->stages[i].oid, &names[i].oid);
 		}
 		ci->filemask = filemask;
@@ -545,7 +545,7 @@ static void add_pair(struct merge_options *opt,
 	struct rename_info *renames = &opt->priv->renames;
 	int names_idx = is_add ? side : 0;
 	const struct object_id *oid = &names[names_idx].oid;
-	unsigned int mode = names[names_idx].mode;
+	unsigned int mode = names[names_idx].raw_mode;
 
 	one = alloc_filespec(pathname);
 	two = alloc_filespec(pathname);
@@ -616,13 +616,13 @@ static int collect_merge_info_callback(int n,
 	unsigned side1_null = !(mask & 2);
 	unsigned side2_null = !(mask & 4);
 	unsigned side1_matches_mbase = (!side1_null && !mbase_null &&
-					names[0].mode == names[1].mode &&
+					names[0].raw_mode == names[1].raw_mode &&
 					oideq(&names[0].oid, &names[1].oid));
 	unsigned side2_matches_mbase = (!side2_null && !mbase_null &&
-					names[0].mode == names[2].mode &&
+					names[0].raw_mode == names[2].raw_mode &&
 					oideq(&names[0].oid, &names[2].oid));
 	unsigned sides_match = (!side1_null && !side2_null &&
-				names[1].mode == names[2].mode &&
+				names[1].raw_mode == names[2].raw_mode &&
 				oideq(&names[1].oid, &names[2].oid));
 
 	/*
