@@ -418,7 +418,7 @@ static void load_subtree(struct notes_tree *t, struct leaf_node *subtree,
 		if (path_len == 2 * (hashsz - prefix_len)) {
 			/* This is potentially the remainder of the SHA-1 */
 
-			if (!S_ISREG(entry.mode))
+			if (entry.object_type != OBJ_BLOB)
 				/* notes must be blobs */
 				goto handle_non_note;
 
@@ -431,7 +431,7 @@ static void load_subtree(struct notes_tree *t, struct leaf_node *subtree,
 			/* This is potentially an internal node */
 			size_t len = prefix_len;
 
-			if (!S_ISDIR(entry.mode))
+			if (entry.object_type != OBJ_TREE)
 				/* internal nodes must be trees */
 				goto handle_non_note;
 

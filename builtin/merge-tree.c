@@ -275,11 +275,11 @@ static void unresolved(const struct traverse_info *info, struct name_entry n[3])
 	if (dirmask == mask)
 		return;
 
-	if (n[2].mode && !S_ISDIR(n[2].mode))
+	if (n[2].object_type != OBJ_TREE)
 		entry = link_entry(3, info, n + 2, entry);
-	if (n[1].mode && !S_ISDIR(n[1].mode))
+	if (n[1].object_type != OBJ_TREE)
 		entry = link_entry(2, info, n + 1, entry);
-	if (n[0].mode && !S_ISDIR(n[0].mode))
+	if (n[0].object_type != OBJ_TREE)
 		entry = link_entry(1, info, n + 0, entry);
 
 	add_merge_entry(entry);
@@ -324,7 +324,8 @@ static int threeway_callback(int n, unsigned long mask, unsigned long dirmask, s
 	}
 
 	if (same_entry(entry+0, entry+1)) {
-		if (!is_null_oid(&entry[2].oid) && !S_ISDIR(entry[2].mode)) {
+		if (!is_null_oid(&entry[2].oid) &&
+		    entry[2].object_type != OBJ_TREE) {
 			/* We did not touch, they modified -- take theirs */
 			resolve(info, entry+1, entry+2);
 			return mask;
