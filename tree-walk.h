@@ -17,6 +17,8 @@ struct name_entry {
 	const char *path;
 	int pathlen;
 	unsigned int mode;
+	/* simple 'mode': Only OBJ_{BLOB,TREE,COMMIT} */
+	enum object_type object_type;
 };
 
 /**
