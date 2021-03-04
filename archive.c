@@ -231,7 +231,7 @@ static int queue_or_write_archive_entry(const struct object_id *oid,
 					void *context)
 {
 	struct archiver_context *c = context;
-	unsigned mode = raw_mode;
+	unsigned mode = canon_mode(raw_mode);
 
 	while (c->bottom &&
 	       !(base->len >= c->bottom->len &&
