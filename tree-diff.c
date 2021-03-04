@@ -195,10 +195,11 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 	assert(t || tp);
 
 	if (t) {
+		enum object_type object_type;
 		/* path present in resulting tree */
-		oid = tree_entry_extract_mode(t, &path, &mode);
+		oid = tree_entry_extract_all(t, &path, &mode, &object_type);
 		pathlen = tree_entry_len(&t->entry);
-		isdir = S_ISDIR(mode);
+		isdir = (object_type == OBJ_TREE);
 	} else {
 		/*
 		 * a path was removed - take path from imin parent. Also take

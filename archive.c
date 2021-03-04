@@ -472,14 +472,14 @@ static void parse_treeish_arg(const char **argv,
 
 	if (prefix) {
 		struct object_id tree_oid;
-		unsigned short mode;
+		enum object_type object_type;
 		int err;
 
-		err = get_tree_entry_mode(ar_args->repo,
+		err = get_tree_entry_type(ar_args->repo,
 					  &tree->object.oid,
 					  prefix, &tree_oid,
-					  &mode);
-		if (err || !S_ISDIR(mode))
+					  &object_type);
+		if (err || object_type != OBJ_TREE)
 			die(_("current working directory is untracked"));
 
 		tree = parse_tree_indirect(&tree_oid);
