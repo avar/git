@@ -47,6 +47,7 @@ struct tree_desc {
  * appropriate variable to fill in (NULL won't do!):
  *
  * tree_entry_extract_mode(): const char *path, unsigned int mode
+ * tree_entry_extract_all(): const char *path, unsigned int mode, enum object_type
  */
 static inline const struct object_id *tree_entry_extract_mode(struct tree_desc *desc,
 							      const char **pathp,
@@ -54,6 +55,17 @@ static inline const struct object_id *tree_entry_extract_mode(struct tree_desc *
 {
 	*pathp = desc->entry.path;
 	*modep = desc->entry.mode;
+	return &desc->entry.oid;
+}
+
+static inline const struct object_id *tree_entry_extract_all(struct tree_desc *desc,
+							     const char **pathp,
+							     unsigned short *modep,
+							     enum object_type *object_typep)
+{
+	*pathp = desc->entry.path;
+	*modep = desc->entry.mode;
+	*object_typep = desc->entry.object_type;
 	return &desc->entry.oid;
 }
 
