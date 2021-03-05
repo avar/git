@@ -143,11 +143,11 @@ static void match_trees(const struct object_id *hash1,
 	while (one.size) {
 		const char *path;
 		const struct object_id *elem;
-		unsigned short mode;
+		enum object_type object_type;
 		int score;
 
-		elem = tree_entry_extract_mode(&one, &path, &mode);
-		if (!S_ISDIR(mode))
+		elem = tree_entry_extract_type(&one, &path, &object_type);
+		if (object_type != OBJ_TREE)
 			goto next;
 		score = score_trees(elem, hash2);
 		if (*best_score < score) {
@@ -198,14 +198,14 @@ static int splice_tree(const struct object_id *oid1, const char *prefix,
 
 	rewrite_here = NULL;
 	while (desc.size) {
+		enum object_type object_type;
 		const char *name;
-		unsigned short mode;
 		int len = tree_entry_len(&desc.entry);
 
-		tree_entry_extract_mode(&desc, &name, &mode);
+		tree_entry_extract_type(&desc, &name, &object_type);
 		if (len == toplen &&
 		    !memcmp(name, prefix, toplen)) {
-			if (!S_ISDIR(mode))
+			if (object_type != OBJ_TREE)
 				die("entry %s in tree %s is not a tree", name,
 				    oid_to_hex(oid1));
 
