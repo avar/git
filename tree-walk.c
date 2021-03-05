@@ -591,17 +591,17 @@ static int find_tree_entry(struct repository *r, struct tree_desc *t,
 			oidcpy(result, &oid);
 			return 0;
 		}
-		return get_tree_entry(r, &oid, name + entrylen, result,
-				      mode);
+		return get_tree_entry_mode(r, &oid, name + entrylen, result,
+					   mode);
 	}
 	return -1;
 }
 
-int get_tree_entry(struct repository *r,
-		   const struct object_id *tree_oid,
-		   const char *name,
-		   struct object_id *oid,
-		   unsigned short *mode)
+int get_tree_entry_mode(struct repository *r,
+			const struct object_id *tree_oid,
+			const char *name,
+			struct object_id *oid,
+			unsigned short *mode)
 {
 	int retval;
 	void *tree;

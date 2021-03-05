@@ -174,9 +174,9 @@ struct traverse_info {
  * The third and fourth parameters are set to the entry's sha1 and
  * mode respectively.
  */
-int get_tree_entry(struct repository *, const struct object_id *, const char *,
-		   struct object_id *,
-		   unsigned short *);
+int get_tree_entry_mode(struct repository *, const struct object_id *, const char *,
+			struct object_id *,
+			unsigned short *);
 
 /**
  * Generate the full pathname of a tree entry based from the root of the
