@@ -1204,7 +1204,7 @@ SPATCH_FLAGS = --all-includes --include-headers-for-types --patch .
 # For the 'coccicheck' target; setting SPATCH_BATCH_SIZE higher will
 # usually result in less CPU usage at the cost of higher peak memory.
 # Setting it to 0 will feed all files in a single spatch invocation.
-SPATCH_BATCH_SIZE = 1
+SPATCH_BATCH_SIZE = 8
 
 # For the 'coccicheck' target; SPATCH_XARGS can be used to manually
 # tweak the xargs invocation. By default we invoke "xargs -n 1", and
