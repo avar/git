@@ -994,7 +994,6 @@ void init_notes(struct notes_tree *t, const char *notes_ref,
 		combine_notes_fn combine_notes, int flags)
 {
 	struct object_id oid, object_oid;
-	unsigned short mode;
 	struct leaf_node root_tree;
 
 	if (!t)
@@ -1021,7 +1020,7 @@ void init_notes(struct notes_tree *t, const char *notes_ref,
 		return;
 	if (flags & NOTES_INIT_WRITABLE && read_ref(notes_ref, &object_oid))
 		die("Cannot use notes ref %s", notes_ref);
-	if (get_tree_entry_mode(the_repository, &object_oid, "", &oid, &mode))
+	if (get_tree_entry_path(the_repository, &object_oid, "", &oid))
 		die("Failed to read notes tree referenced by %s (%s)",
 		    notes_ref, oid_to_hex(&object_oid));
 

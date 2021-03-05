@@ -288,12 +288,10 @@ void shift_tree(struct repository *r,
 
 	if (add_score < del_score) {
 		/* We need to pick a subtree of two */
-		unsigned short mode;
-
 		if (!*del_prefix)
 			return;
 
-		if (get_tree_entry_mode(r, hash2, del_prefix, shifted, &mode))
+		if (get_tree_entry_path(r, hash2, del_prefix, shifted))
 			die("cannot find path %s in tree %s",
 			    del_prefix, oid_to_hex(hash2));
 		return;

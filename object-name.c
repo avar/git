@@ -1693,7 +1693,6 @@ static void diagnose_invalid_oid_path(struct repository *r,
 				      int object_name_len)
 {
 	struct object_id oid;
-	unsigned short mode;
 
 	if (!prefix)
 		prefix = "";
@@ -1704,7 +1703,7 @@ static void diagnose_invalid_oid_path(struct repository *r,
 	if (is_missing_file_error(errno)) {
 		char *fullname = xstrfmt("%s%s", prefix, filename);
 
-		if (!get_tree_entry_mode(r, tree_oid, fullname, &oid, &mode)) {
+		if (!get_tree_entry_path(r, tree_oid, fullname, &oid)) {
 			die(_("path '%s' exists, but not '%s'\n"
 			    "hint: Did you mean '%.*s:%s' aka '%.*s:./%s'?"),
 			    fullname,

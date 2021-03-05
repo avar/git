@@ -632,6 +632,17 @@ int get_tree_entry_all(struct repository *r,
 	return retval;
 }
 
+int get_tree_entry_path(struct repository *r,
+			const struct object_id *tree_oid,
+			const char *name,
+			struct object_id *oid)
+{
+	unsigned short mode;
+	enum object_type object_type;
+	return get_tree_entry_all(r, tree_oid, name, oid,
+				  &mode, &object_type);
+}
+
 int get_tree_entry_mode(struct repository *r,
 			const struct object_id *tree_oid,
 			const char *name,

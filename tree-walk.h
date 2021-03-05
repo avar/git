@@ -193,10 +193,13 @@ struct traverse_info {
  * "struct name_entry" you'd like. You always need a pointer to an
  * appropriate variable to fill in (NULL won't do!):
  *
+ * get_tree_entry_path(): <no extra argument, just get the common 'path'>
  * get_tree_entry_mode(): unsigned int mode
  * get_tree_entry_type(): enum object_type
  * get_tree_entry_all(): unsigned int mode, enum object_type
  */
+int get_tree_entry_path(struct repository *, const struct object_id *, const char *,
+			struct object_id *);
 int get_tree_entry_mode(struct repository *, const struct object_id *, const char *,
 			struct object_id *,
 			unsigned short *);

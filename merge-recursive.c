@@ -1884,11 +1884,9 @@ static int tree_has_path(struct repository *r, struct tree *tree,
 			 const char *path)
 {
 	struct object_id hashy;
-	unsigned short mode_o;
-
-	return !get_tree_entry_mode(r,
+	return !get_tree_entry_path(r,
 				    &tree->object.oid, path,
-				    &hashy, &mode_o);
+				    &hashy);
 }
 
 /*
