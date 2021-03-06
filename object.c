@@ -28,6 +28,8 @@ static const char *object_type_strings[] = {
 	"tag",		/* OBJ_TAG = 4 */
 };
 
+static const char *oid_is_a_X_not_a_Y = N_("object %s is a %s, not a %s");
+
 const char *type_name(unsigned int type)
 {
 	if (type >= ARRAY_SIZE(object_type_strings))
@@ -159,6 +161,36 @@ void *create_object(struct repository *r, const struct object_id *oid, void *o)
 	return obj;
 }
 
+static int oid_is_type_or(const struct object_id *oid,
+			  enum object_type want,
+			  enum object_type type,
+			  int err)
+{
+	if (want == type)
+		return 0;
+	if (err)
+		return error(_(oid_is_a_X_not_a_Y),
+			     oid_to_hex(oid), type_name(type),
+			     type_name(want));
+	else
+		die(_(oid_is_a_X_not_a_Y), oid_to_hex(oid),
+		    type_name(type), type_name(want));
+}
+
+void oid_is_type_or_die(const struct object_id *oid,
+			enum object_type want,
+			enum object_type *type)
+{
+	oid_is_type_or(oid, want, *type, 0);
+}
+
+int oid_is_type_or_error(const struct object_id *oid,
+			 enum object_type want,
+			 enum object_type *type)
+{
+	return oid_is_type_or(oid, want, *type, 1);
+}
+
 void *object_as_type(struct object *obj, enum object_type type, int quiet)
 {
 	if (obj->type == type)
@@ -172,7 +204,7 @@ void *object_as_type(struct object *obj, enum object_type type, int quiet)
 	}
 	else {
 		if (!quiet)
-			error(_("object %s is a %s, not a %s"),
+			error(_(oid_is_a_X_not_a_Y),
 			      oid_to_hex(&obj->oid),
 			      type_name(obj->type), type_name(type));
 		return NULL;
