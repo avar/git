@@ -131,6 +131,7 @@ int parse_tree_gently(struct tree *item, int quiet_on_missing)
 	enum object_type type;
 	void *buffer;
 	unsigned long size;
+	int ret;
 
 	if (item->object.parsed)
 		return 0;
@@ -139,10 +140,10 @@ int parse_tree_gently(struct tree *item, int quiet_on_missing)
 		return quiet_on_missing ? -1 :
 			error("Could not read %s",
 			     oid_to_hex(&item->object.oid));
-	if (type != OBJ_TREE) {
+	ret = oid_is_type_or_error(&item->object.oid, OBJ_TREE, &type);
+	if (ret) {
 		free(buffer);
-		return error("Object %s not a tree",
-			     oid_to_hex(&item->object.oid));
+		return ret;
 	}
 	return parse_tree_buffer(item, buffer, size);
 }
