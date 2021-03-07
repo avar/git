@@ -35,9 +35,9 @@ const char *type_name(unsigned int type)
 	return object_type_strings[type];
 }
 
-int type_from_string_gently(const char *str, ssize_t len)
+enum object_type type_from_string_gently(const char *str, ssize_t len)
 {
-	int i;
+	enum object_type i;
 
 	for (i = 1; i < ARRAY_SIZE(object_type_strings); i++)
 		if (!strncmp(str, object_type_strings[i], len) &&
@@ -46,10 +46,10 @@ int type_from_string_gently(const char *str, ssize_t len)
 	return -1;
 }
 
-int type_from_string(const char *str)
+enum object_type type_from_string(const char *str)
 {
 	size_t len = strlen(str);
-	int ret = type_from_string_gently(str, len);
+	enum object_type ret = type_from_string_gently(str, len);
 	if (ret < 0)
 		die(_("invalid object type \"%s\""), str);
 	return ret;
