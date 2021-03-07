@@ -1324,7 +1324,7 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 	 */
 	if ((flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE) && (type < 0))
 		type = 0;
-	else if (type < 0)
+	else if (type == OBJ_BAD)
 		die(_("invalid object type"));
 	if (oi->typep)
 		*oi->typep = type;

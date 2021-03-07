@@ -958,7 +958,7 @@ int fsck_tag_standalone(const struct object_id *oid, const char *buffer,
 		goto done;
 	}
 	*tagged_type = type_from_string_gently(buffer, eol - buffer);
-	if (*tagged_type < 0)
+	if (*tagged_type == OBJ_BAD)
 		ret = report(options, oid, OBJ_TAG, FSCK_MSG_BAD_TYPE, "invalid 'type' value");
 	if (ret)
 		goto done;
