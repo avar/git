@@ -219,13 +219,13 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 	*eaten_p = 0;
 
 	if (type == OBJ_BLOB) {
-		struct blob *blob = lookup_blob(r, oid);
+		struct blob *blob = lookup_blob_type(r, oid, type);
 		if (blob) {
 			blob->object.parsed = 1;
 			return &blob->object;
 		}
 	} else if (type == OBJ_TREE) {
-		struct tree *tree = lookup_tree(r, oid);
+		struct tree *tree = lookup_tree_type(r, oid, type);
 		if (tree) {
 			if (!tree->buffer)
 				tree->object.parsed = 0;
@@ -237,7 +237,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 			return &tree->object;
 		}
 	} else if (type == OBJ_COMMIT) {
-		struct commit *commit = lookup_commit(r, oid);
+		struct commit *commit = lookup_commit_type(r, oid, type);
 		if (commit) {
 			if (parse_commit_buffer(r, commit, buffer, size, 1))
 				return NULL;
@@ -248,7 +248,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 			return &commit->object;
 		}
 	} else if (type == OBJ_TAG) {
-		struct tag *tag = lookup_tag(r, oid);
+		struct tag *tag = lookup_tag_type(r, oid, type);
 		if (tag) {
 			if (parse_tag_buffer(r, tag, buffer, size))
 			       return NULL;
