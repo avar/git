@@ -35,9 +35,9 @@ const char *type_name(unsigned int type)
 	return object_type_strings[type];
 }
 
-int type_from_string_gently(const char *str, size_t len)
+enum object_type type_from_string_gently(const char *str, size_t len)
 {
-	int i;
+	enum object_type i;
 
 	if (len == ~(size_t)0)
 		BUG("type-from-string-gently no longer allows unspecified length");
@@ -49,10 +49,10 @@ int type_from_string_gently(const char *str, size_t len)
 	return -1;
 }
 
-int type_from_string(const char *str)
+enum object_type type_from_string(const char *str)
 {
 	size_t len = strlen(str);
-	int ret = type_from_string_gently(str, len);
+	enum object_type ret = type_from_string_gently(str, len);
 	if (ret < 0)
 		die(_("invalid object type \"%s\""), str);
 	return ret;
