@@ -601,7 +601,7 @@ static int show_tag_object(const struct object_id *oid, struct rev_info *rev)
 
 static int show_tree_object(const struct object_id *oid,
 			    struct strbuf *base, const char *pathname,
-			    enum object_type object_type, unsigned mode,
+			    enum object_type object_type, unsigned raw_mode,
 			    void *context)
 {
 	FILE *file = context;
