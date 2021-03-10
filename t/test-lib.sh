@@ -564,6 +564,15 @@ then
 	say_color_info=$(printf "\033[36m") # cyan
 	say_color_binfo=$(printf "\033[36;1m") # bold cyan
 	say_color_="" # no formatting for normal text
+	say_color_start () {
+		test -z "$1" && test -n "$quiet" && return
+		eval "say_color_color=\$say_color_$1"
+		shift
+		printf "%s" "$say_color_color$*"
+	}
+	say_color_reset () {
+		printf "%s" "$say_color_reset"
+	}
 	say_color () {
 		test -z "$1" && test -n "$quiet" && return
 		eval "say_color_color=\$say_color_$1"
@@ -571,6 +580,12 @@ then
 		printf "%s\\n" "$say_color_color$*${say_color_color:+$say_color_reset}"
 	}
 else
+	say_color_start () {
+		return
+	}
+	say_color_reset () {
+		return
+	}
 	say_color() {
 		test -z "$1" && test -n "$quiet" && return
 		shift
