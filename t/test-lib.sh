@@ -1050,7 +1050,8 @@ test_skip () {
 				"      <skipped message=\"$message\" />"
 		fi
 
-		say_color_tap skip "ok $test_count # skip $1 ($skipped_reason)"
+		say_color_tap skip "ok $test_count # SKIP $1 ($skipped_reason)"
+
 		: true
 		;;
 	*)
