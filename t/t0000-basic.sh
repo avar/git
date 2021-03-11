@@ -318,7 +318,7 @@ test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
 		run_sub_test_lib_test full-pass &&
 		check_sub_test_lib_test full-pass <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
 		> ok 3 - passing test #3
 		> # passed all 3 test(s)
 		> 1..3
@@ -339,10 +339,10 @@ test_expect_success 'subtest: skip several with GIT_SKIP_TESTS' '
 		EOF
 		check_sub_test_lib_test git-skip-tests-several <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
 		> ok 3 - passing test #3
 		> ok 4 - passing test #4
-		> ok 5 # skip passing test #5 (GIT_SKIP_TESTS)
+		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
 		> # passed all 6 test(s)
 		> 1..6
@@ -356,10 +356,10 @@ test_expect_success 'subtest: sh pattern skipping with GIT_SKIP_TESTS' '
 		run_sub_test_lib_test git-skip-tests-several &&
 		check_sub_test_lib_test git-skip-tests-several <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
-		> ok 3 # skip passing test #3 (GIT_SKIP_TESTS)
-		> ok 4 # skip passing test #4 (GIT_SKIP_TESTS)
-		> ok 5 # skip passing test #5 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
+		> ok 3 # SKIP passing test #3 (GIT_SKIP_TESTS)
+		> ok 4 # SKIP passing test #4 (GIT_SKIP_TESTS)
+		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
 		> # passed all 6 test(s)
 		> 1..6
@@ -395,11 +395,11 @@ test_expect_success 'subtest: --run basic' '
 	run_sub_test_lib_test git-skip-tests-several --run="1,3,5" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -412,9 +412,9 @@ test_expect_success 'subtest: --run with a range' '
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -426,8 +426,8 @@ test_expect_success 'subtest: --run with two ranges' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
-	> ok 4 # skip passing test #4 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
 	> # passed all 6 test(s)
@@ -442,9 +442,9 @@ test_expect_success 'subtest: --run with a left open range' '
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -454,9 +454,9 @@ test_expect_success 'subtest: --run with a right open range' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="4-" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
-	> ok 2 # skip passing test #2 (--run)
-	> ok 3 # skip passing test #3 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
@@ -471,7 +471,7 @@ test_expect_success 'subtest: --run with basic negation' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
@@ -486,10 +486,10 @@ test_expect_success 'subtest: --run with two negations' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -500,11 +500,11 @@ test_expect_success 'subtest: --run a range and negation' '
 		--run="-4,!2" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
 	> ok 4 - passing test #4
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -514,9 +514,9 @@ test_expect_success 'subtest: --run range negation' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="!1-3" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
-	> ok 2 # skip passing test #2 (--run)
-	> ok 3 # skip passing test #3 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
@@ -529,12 +529,12 @@ test_expect_success 'subtest: --run include, exclude and include' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="1-5,!1-3,2" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -544,12 +544,12 @@ test_expect_success 'subtest: --run include, exclude and include, comma separate
 	run_sub_test_lib_test git-skip-tests-several \
 		--run=1-5,!1-3,2 &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -561,10 +561,10 @@ test_expect_success 'subtest: --run exclude and include' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
-	> ok 4 # skip passing test #4 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -575,11 +575,11 @@ test_expect_success 'subtest: --run empty selectors' '
 		--run="1,,3,,,5" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -597,12 +597,12 @@ test_expect_success 'subtest: --run substring selector' '
 	EOF
 	check_sub_test_lib_test run-substring-selector <<-\EOF
 	> ok 1 - relevant test
-	> ok 2 # skip other test #1 (--run)
-	> ok 3 # skip other test #2 (--run)
-	> ok 4 # skip other test #3 (--run)
-	> ok 5 # skip other test #4 (--run)
-	> ok 6 # skip other test #5 (--run)
-	> ok 7 # skip other test #6 (--run)
+	> ok 2 # SKIP other test #1 (--run)
+	> ok 3 # SKIP other test #2 (--run)
+	> ok 4 # SKIP other test #3 (--run)
+	> ok 5 # SKIP other test #4 (--run)
+	> ok 6 # SKIP other test #5 (--run)
+	> ok 7 # SKIP other test #6 (--run)
 	> # passed all 7 test(s)
 	> 1..7
 	EOF
@@ -654,10 +654,10 @@ test_expect_success 'subtest: tests respect prerequisites' '
 	check_sub_test_lib_test prereqs <<-\EOF
 	ok 1 - prereq is satisfied
 	ok 2 - have_prereq works
-	ok 3 # skip prereq not satisfied (missing DONTHAVEIT)
+	ok 3 # SKIP prereq not satisfied (missing DONTHAVEIT)
 	ok 4 - multiple prereqs
-	ok 5 # skip mixed prereqs (yes,no) (missing DONTHAVEIT of HAVEIT,DONTHAVEIT)
-	ok 6 # skip mixed prereqs (no,yes) (missing DONTHAVEIT of DONTHAVEIT,HAVEIT)
+	ok 5 # SKIP mixed prereqs (yes,no) (missing DONTHAVEIT of HAVEIT,DONTHAVEIT)
+	ok 6 # SKIP mixed prereqs (no,yes) (missing DONTHAVEIT of DONTHAVEIT,HAVEIT)
 	# passed all 6 test(s)
 	1..6
 	EOF
@@ -679,8 +679,8 @@ test_expect_success 'subtest: tests respect lazy prerequisites' '
 
 	check_sub_test_lib_test lazy-prereqs <<-\EOF
 	ok 1 - lazy prereq is satisifed
-	ok 2 # skip negative lazy prereq (missing !LAZY_TRUE)
-	ok 3 # skip lazy prereq not satisfied (missing LAZY_FALSE)
+	ok 2 # SKIP negative lazy prereq (missing !LAZY_TRUE)
+	ok 3 # SKIP lazy prereq not satisfied (missing LAZY_FALSE)
 	ok 4 - negative false prereq
 	# passed all 4 test(s)
 	1..4
