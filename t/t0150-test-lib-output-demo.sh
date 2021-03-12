@@ -81,27 +81,27 @@ test_expect_success 'setup t0150-fake.sh' '
 '
 
 test_expect_success 'run t0150-fake.sh' '
-	run_sub_test_lib_test_err t0150-fake &&
+	run_sub_test_lib_test_err t0150-fake --color &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
-	> ok 1 - successful one-line test
-	> ok 2 - successful two-line test
-	> ok 3 - unexpectedly passing TODO test # TODO known breakage vanished
-	> not ok 4 - failing TODO test # TODO known breakage
-	> ok 5 # skip we will be skipping this test (GIT_SKIP_TESTS)
-	> not ok 6 - an one-line fail (set TEST_LIB_OUTPUT_DEMO=true)
+	> ok 1 - successful one-line test<RESET>
+	> ok 2 - successful two-line test<RESET>
+	> <RED;BOLD>ok 3 - unexpectedly passing TODO test # TODO known breakage vanished<RESET>
+	> <YELLOW>not ok 4 - failing TODO test # TODO known breakage<RESET>
+	> <BLUE>ok 5 # skip we will be skipping this test (GIT_SKIP_TESTS)<RESET>
+	> <RED;BOLD>not ok 6 - an one-line fail (set TEST_LIB_OUTPUT_DEMO=true)<RESET>
 	> #	false
-	> not ok 7 - a multi-line failure (set TEST_LIB_OUTPUT_DEMO=true)
+	> <RED;BOLD>not ok 7 - a multi-line failure (set TEST_LIB_OUTPUT_DEMO=true)<RESET>
 	> #	Z
 	> #		test_when_finished "rm out" &&
 	> #		# will not be empty!
 	> #		echo >out &&
 	> #		test_must_be_empty out
 	> #	Z
-	> # 1 known breakage(s) vanished; please update test(s)
-	> # still have 1 known breakage(s)
-	> # failed 2 among remaining 5 test(s)
-	> 1..7
+	> <RED;BOLD># 1 known breakage(s) vanished; please update test(s)<RESET>
+	> <YELLOW># still have 1 known breakage(s)<RESET>
+	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
+	> <CYAN>1..7<RESET>
 	EOF
 '
 
