@@ -561,7 +561,7 @@ then
 		test -z "$1" && test -n "$quiet" && return
 		eval "say_color_color=\$say_color_$1"
 		shift
-		printf "%s\\n" "$say_color_color$*$say_color_reset"
+		printf "%s\\n" "$say_color_color$*${say_color_color:+$say_color_reset}"
 	}
 else
 	say_color() {

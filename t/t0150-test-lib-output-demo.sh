@@ -84,8 +84,8 @@ test_expect_success 'run t0150-fake.sh' '
 	run_sub_test_lib_test_err t0150-fake --color &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
-	> ok 1 - successful one-line test<RESET>
-	> ok 2 - successful two-line test<RESET>
+	> ok 1 - successful one-line test
+	> ok 2 - successful two-line test
 	> <RED;BOLD>ok 3 - unexpectedly passing TODO test # TODO known breakage vanished<RESET>
 	> <YELLOW>not ok 4 - failing TODO test # TODO known breakage<RESET>
 	> <BLUE>ok 5 # skip we will be skipping this test (GIT_SKIP_TESTS)<RESET>
