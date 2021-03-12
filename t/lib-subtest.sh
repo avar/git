@@ -80,13 +80,13 @@ _run_sub_test_lib_test_common () {
 		GIT_SKIP_TESTS=$skip &&
 		export GIT_SKIP_TESTS &&
 		sane_unset GIT_TEST_FAIL_PREREQS &&
-		./"$name.sh" "$@" >out 2>err;
+		./"$name.sh" "$@" >out.raw 2>err.raw;
 		ret=$? &&
 		grep -v \
 		     -e "^Initialized empty.* Git repository" \
 		     -e "^Reinitialized existing.* Git repository" \
-		     out >out+ &&
-		mv out+ out &&
+		     out.raw >out.raw+ &&
+		mv out.raw+ out.raw &&
 		test "$ret" "$cmp_op" "$want_code"
 	)
 }
@@ -114,13 +114,14 @@ run_sub_test_lib_test_err () {
 _check_sub_test_lib_test_common () {
 	name="$1" &&
 	sed -e 's/^> //' -e 's/Z$//' >"$name"/expect.out &&
+	test_decode_color <"$name"/out.raw >"$name"/out &&
 	test_cmp "$name"/expect.out "$name"/out
 }
 
 check_sub_test_lib_test () {
 	name="$1" # stdin is the expected output from the test
 	_check_sub_test_lib_test_common "$name" &&
-	test_must_be_empty "$name"/err
+	test_must_be_empty "$name"/err.raw
 }
 
 check_sub_test_lib_test_out () {
@@ -133,6 +134,7 @@ check_sub_test_lib_test_err () {
 	_check_sub_test_lib_test_common "$name" &&
 	# expected error output is in descriptor 3
 	sed -e 's/^> //' -e 's/Z$//' <&3 >"$name"/expect.err &&
+	test_decode_color <"$name"/err.raw >"$name"/err &&
 	test_cmp "$name"/expect.err "$name"/err
 }
 
