@@ -101,6 +101,11 @@ check_sub_test_lib_test () {
 	test_must_be_empty "$name"/err
 }
 
+check_sub_test_lib_test_out () {
+	name="$1" # stdin is the expected output from the test
+	_check_sub_test_lib_test_common "$name"
+}
+
 check_sub_test_lib_test_err () {
 	name="$1" # stdin is the expected output from the test
 	_check_sub_test_lib_test_common "$name" &&
