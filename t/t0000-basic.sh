@@ -668,7 +668,7 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 	> # passed all 1 test(s)
 	> 1..1
 	EOF
-	grep "echo trace" lazy-prereq-and-tracing/err
+	grep "echo trace" lazy-prereq-and-tracing/err.raw
 '
 
 test_expect_success 'subtest: tests clean up after themselves' '
