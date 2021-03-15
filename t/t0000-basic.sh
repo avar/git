@@ -94,7 +94,7 @@ test_expect_success 'subtest: 2/3 tests passing' '
 	check_sub_test_lib_test partial-pass <<-\EOF
 	> ok 1 - passing test #1
 	> not ok 2 - failing test #2
-	#	false
+	#false
 	> ok 3 - passing test #3
 	> # failed 1 among 3 test(s)
 	> 1..3
@@ -156,7 +156,7 @@ test_expect_success 'subtest: mixed results: pass, failure and a TODO test' '
 	check_sub_test_lib_test mixed-results1 <<-\EOF
 	> ok 1 - passing test
 	> not ok 2 - failing test
-	> #	false
+	> #false
 	> not ok 3 - pretend we have a known breakage # TODO known breakage
 	> # still have 1 known breakage(s)
 	> # failed 1 among remaining 2 test(s)
@@ -184,11 +184,11 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	> ok 3 - passing test
 	> ok 4 - passing test
 	> not ok 5 - failing test
-	> #	false
+	> #false
 	> not ok 6 - failing test
-	> #	false
+	> #false
 	> not ok 7 - failing test
-	> #	false
+	> #false
 	> not ok 8 - pretend we have a known breakage # TODO known breakage
 	> not ok 9 - pretend we have a known breakage # TODO known breakage
 	> ok 10 - pretend we have fixed a known breakage # TODO known breakage vanished
@@ -207,16 +207,15 @@ test_expect_success 'subtest: --verbose option' '
 	test_done
 	EOF
 	check_sub_test_lib_test t1234-verbose <<-\EOF
-	> expecting success of 1234.1 '\''passing test'\'': true
 	> ok 1 - passing test
+	> ###true
 	> Z
-	> expecting success of 1234.2 '\''test with output'\'': echo foo
 	> foo
 	> ok 2 - test with output
+	> ###echo foo
 	> Z
-	> expecting success of 1234.3 '\''failing test'\'': false
 	> not ok 3 - failing test
-	> #	false
+	> #false
 	> Z
 	> # failed 1 among 3 test(s)
 	> 1..3
@@ -230,12 +229,12 @@ test_expect_success 'subtest: --verbose-only option' '
 	check_sub_test_lib_test t1234-verbose <<-\EOF
 	> ok 1 - passing test
 	> Z
-	> expecting success of 1234.2 '\''test with output'\'': echo foo
 	> foo
 	> ok 2 - test with output
+	> ###echo foo
 	> Z
 	> not ok 3 - failing test
-	> #	false
+	> #false
 	> # failed 1 among 3 test(s)
 	> 1..3
 	EOF
@@ -254,13 +253,13 @@ test_expect_success 'setup subtest: --verbose-only output correctness' '
 test_expect_success 'subtest: --verbose output correctness' '
 	run_sub_test_lib_test verbose-only --verbose &&
 	check_sub_test_lib_test verbose-only <<-\EOF
-	> expecting success of verbose.1 '"'"'one'"'"': Z
-	> printf "ok 1 - try to screw with TAP output | "
-	> Z
 	> ok 1 - try to screw with TAP output | ok 1 - one
+	> ###
+	> ###printf "ok 1 - try to screw with TAP output | "
+	> ###
 	> Z
-	> expecting success of verbose.2 '"'"'two'"'"': true
 	> ok 2 - two
+	> ###true
 	> Z
 	> # passed all 2 test(s)
 	> 1..2
@@ -744,7 +743,6 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 
 	check_sub_test_lib_test_out lazy-prereq-and-tracing \
 		<<-\EOF &&
-	> expecting success of lazy.1 '"'"'lazy'"'"': test_have_prereq LAZY && echo trace
 	> checking prerequisite: LAZY
 	> Z
 	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&
@@ -754,6 +752,7 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 	> prerequisite LAZY ok
 	> trace
 	> ok 1 - lazy
+	> ###test_have_prereq LAZY && echo trace
 	> Z
 	> # passed all 1 test(s)
 	> 1..1
@@ -796,15 +795,15 @@ test_expect_success 'subtest: tests clean up even on failures' '
 	EOF
 	check_sub_test_lib_test failing-cleanup <<-\EOF
 	> not ok 1 - tests clean up even after a failure
-	> #	Z
-	> #	touch clean-after-failure &&
-	> #	test_when_finished rm clean-after-failure &&
-	> #	(exit 1)
-	> #	Z
+	> #
+	> #touch clean-after-failure &&
+	> #test_when_finished rm clean-after-failure &&
+	> #(exit 1)
+	> #
 	> not ok 2 - failure to clean up causes the test to fail
-	> #	Z
-	> #	test_when_finished "(exit 2)"
-	> #	Z
+	> #
+	> #test_when_finished "(exit 2)"
+	> #
 	> # failed 2 among 2 test(s)
 	> 1..2
 	EOF
