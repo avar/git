@@ -241,6 +241,28 @@ test_expect_success 'subtest: --verbose-only option' '
 	EOF
 '
 
+test_expect_success 'subtest: skip all with skip_all=*' '
+	write_and_run_sub_test_lib_test skip-all --verbose --color <<-\EOF &&
+	skip_all="cannot run here"
+	test_done
+	EOF
+	check_sub_test_lib_test skip-all <<-\EOF
+	<CYAN>1..0 # SKIP cannot run here<RESET>
+	EOF
+'
+
+test_expect_success 'subtest: skip all GIT_SKIP_TESTS' '
+	(
+		run_sub_test_lib_test full-pass \
+			--skip="full" \
+			 --color --verbose &&
+		check_sub_test_lib_test full-pass <<-\EOF
+		> <CYAN>skipping test full altogether<RESET>
+		> <CYAN>1..0 # SKIP skip all tests in full<RESET>
+		EOF
+	)
+'
+
 test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
 	(
 		run_sub_test_lib_test full-pass \
