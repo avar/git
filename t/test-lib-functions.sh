@@ -1227,6 +1227,7 @@ test_atexit () {
 test_create_repo () {
 	"${GIT_TEST_INSTALLED:-$GIT_EXEC_PATH}/git$X" \
 		init \
+		--quiet \
 		"--template=$GIT_BUILD_DIR/templates/blt/" "$@" >&3 2>&4
 }
 
