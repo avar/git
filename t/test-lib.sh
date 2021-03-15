@@ -792,7 +792,22 @@ test_known_broken_failure_ () {
 		write_junit_xml_testcase "$* (known breakage)"
 	fi
 	test_broken=$(($test_broken+1))
-	say_color_tap bpass "not ok $test_count - $1 # TODO known breakage"
+
+	broken_color="${verbose:+bpass}"
+	reset="$(say_color_reset)"
+	broken_reset=
+	end_reset=
+	if test -n "$broken_color"
+	then
+		broken_reset="$reset"
+	else
+		end_reset="$reset"
+	fi
+	todo=$(
+		say_color_start bwarn &&
+		printf "%s%s" "# TODO known breakage"
+	)
+	say_color_tap "$broken_color" "not ok $test_count - $1$broken_reset $todo$end_reset"
 	shift
 	say_color_tap_comment_lines >&3 3 pass "$*"
 }
