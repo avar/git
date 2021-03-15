@@ -594,6 +594,8 @@ then
 	say_color_bwarn=$(printf "\033[33;1m") # bold brown/yellow
 	say_color_skip=$(printf "\033[34m") # blue
 	say_color_bskip=$(printf "\033[34;1m") # bold blue
+	say_color_trace=$(printf "\033[35m") # magenta
+	say_color_btrace=$(printf "\033[35;1m") # bold magenta
 	say_color_info=$(printf "\033[36m") # cyan
 	say_color_binfo=$(printf "\033[36;1m") # bold cyan
 	say_color_="" # no formatting for normal text
@@ -649,6 +651,9 @@ say_color_tap_comment_level_2='##'
 # - known-bad failing test scripts (test_expect_failure '[...]' 'false')
 # - skipped test scripts (due to GIT_TEST_SKIP or prerequisites)
 say_color_tap_comment_level_3='###'
+# 4th level comments (#### <line>)
+# - lazy prerequisite scripts (test_lazy_prereq '[...]' <script>)
+say_color_tap_comment_level_4='####'
 say_color_tap_comment() {
 	eval "say_level=\$say_color_tap_comment_level_$1"
 	test -z "$say_level" && BUG "comment level $1 unknown"
