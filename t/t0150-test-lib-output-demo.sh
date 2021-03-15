@@ -51,6 +51,23 @@ test_expect_${TEST_LIB_OUTPUT_DEMO_OK:-failure} 'a multi-line failure (set TEST_
 	test_must_be_empty out
 '
 
+test_set_prereq DEMO_PREREQ
+test_expect_success DEMO_PREREQ 'with a non-lazy prerequisite' '
+	echo non-lazy
+'
+
+test_lazy_prereq DEMO_PREREQ_LAZY_A '
+	true
+'
+test_lazy_prereq DEMO_PREREQ_LAZY_B_INNER 'false'
+test_lazy_prereq DEMO_PREREQ_LAZY_B '
+	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
+'
+
+test_expect_success DEMO_PREREQ_LAZY_A,!DEMO_PREREQ_LAZY_B 'with a lazy prerequisites' '
+	echo lazy
+'
+
 # END EXTRACTED TESTS
 
 if test "$TEST_LIB_OUTPUT_DEMO" = "success"
@@ -98,11 +115,13 @@ test_expect_success 'run t0150-fake.sh' '
 	> <RED>#	echo >out &&<RESET>
 	> <RED>#	test_must_be_empty out<RESET>
 	> <RED>#<RESET>
+	> ok 8 - with a non-lazy prerequisite
+	> ok 9 - with a lazy prerequisites
 	> <BLUE># 1 test(s) skipped<RESET>
 	> <YELLOW># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <GREEN># still have 1 known breakage(s)<RESET>
-	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
-	> <CYAN>1..7<RESET>
+	> <RED;BOLD># failed 2 among remaining 7 test(s)<RESET>
+	> <CYAN>1..9<RESET>
 	EOF
 '
 
@@ -156,11 +175,48 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	> #	test_must_be_empty out
 	> #
 	> Z
+	> non-lazy
+	> ok 8 - with a non-lazy prerequisite
+	> ###
+	> ###	echo non-lazy
+	> ###
+	> Z
+	> checking prerequisite: DEMO_PREREQ_LAZY_A
+	> Z
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> 	true
+	> Z
+	> )
+	> prerequisite DEMO_PREREQ_LAZY_A ok
+	> checking prerequisite: DEMO_PREREQ_LAZY_B
+	> Z
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> 	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
+	> Z
+	> )
+	> checking prerequisite: DEMO_PREREQ_LAZY_B_INNER
+	> Z
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false
+	> )
+	> prerequisite DEMO_PREREQ_LAZY_B_INNER not satisfied
+	> prerequisite DEMO_PREREQ_LAZY_B not satisfied
+	> lazy
+	> ok 9 - with a lazy prerequisites
+	> ###
+	> ###	echo lazy
+	> ###
+	> Z
 	> # 1 test(s) skipped
 	> # 1 known breakage(s) vanished; please update test(s)
 	> # still have 1 known breakage(s)
-	> # failed 2 among remaining 5 test(s)
-	> 1..7
+	> # failed 2 among remaining 7 test(s)
+	> 1..9
 	EOF
 '
 
@@ -214,11 +270,48 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> <RED>#	test_must_be_empty out<RESET>
 	> <RED>#<RESET>
 	> Z
+	> non-lazy
+	> <GREEN;BOLD>ok 8 - with a non-lazy prerequisite<RESET>
+	> <GREEN>###<RESET>
+	> <GREEN>###	echo non-lazy<RESET>
+	> <GREEN>###<RESET>
+	> Z
+	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_A<RESET>
+	> <CYAN>
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> 	true
+	> Z
+	> )<RESET>
+	> <CYAN>prerequisite DEMO_PREREQ_LAZY_A ok<RESET>
+	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_B<RESET>
+	> <CYAN>
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> 	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
+	> Z
+	> )<RESET>
+	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_B_INNER<RESET>
+	> <CYAN>
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false
+	> )<RESET>
+	> <CYAN>prerequisite DEMO_PREREQ_LAZY_B_INNER not satisfied<RESET>
+	> <CYAN>prerequisite DEMO_PREREQ_LAZY_B not satisfied<RESET>
+	> lazy
+	> <GREEN;BOLD>ok 9 - with a lazy prerequisites<RESET>
+	> <GREEN>###<RESET>
+	> <GREEN>###	echo lazy<RESET>
+	> <GREEN>###<RESET>
+	> Z
 	> <BLUE># 1 test(s) skipped<RESET>
 	> <YELLOW># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <GREEN># still have 1 known breakage(s)<RESET>
-	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
-	> <CYAN>1..7<RESET>
+	> <RED;BOLD># failed 2 among remaining 7 test(s)<RESET>
+	> <CYAN>1..9<RESET>
 	EOF
 '
 
