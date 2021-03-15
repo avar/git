@@ -165,5 +165,65 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	EOF
 '
 
+test_expect_success 'run t0150-fake.sh --verbose -color' '
+	run_sub_test_lib_test_err t0150-fake --verbose --color &&
+
+	check_sub_test_lib_test t0150-fake <<-\EOF
+	> <CYAN>expecting success of 0150.1 '"'"'successful one-line test'"'"': true<RESET>
+	> ok 1 - successful one-line test
+	> Z
+	> <CYAN>expecting success of 0150.2 '"'"'successful two-line test'"'"': Z
+	> 	true &&
+	> 	# No newline, attempt to damage test output under -v. See
+	> 	# 57e1538ac9b (test-lib: output a newline before "ok" under a TAP
+	> 	# harness, 2010-06-24)
+	> 	printf "hello"
+	> <RESET>
+	> hellook 2 - successful two-line test
+	> Z
+	> <CYAN>checking known breakage of 0150.3 '"'"'unexpectedly passing TODO test'"'"': Z
+	> 	echo A >expected &&
+	> Z
+	> 	# Emit to stdout while we are at it.
+	> 	grep A expected
+	> <RESET>
+	> A
+	> <RED;BOLD>ok 3 - unexpectedly passing TODO test # TODO known breakage vanished<RESET>
+	> Z
+	> <CYAN>checking known breakage of 0150.4 '"'"'failing TODO test'"'"': 
+	> 	echo B >actual &&
+	> 	git diff --no-index --quiet expected actual
+	> <RESET>
+	> <YELLOW>not ok 4 - failing TODO test # TODO known breakage<RESET>
+	> Z
+	> <BLUE>ok 5 # skip we will be skipping this test (GIT_SKIP_TESTS)<RESET>
+	> Z
+	> <CYAN>expecting success of 0150.6 '"'"'an one-line fail (set TEST_LIB_OUTPUT_DEMO=true)'"'"': false<RESET>
+	> <RED;BOLD>not ok 6 - an one-line fail (set TEST_LIB_OUTPUT_DEMO=true)<RESET>
+	> #	false
+	> Z
+	> <CYAN>expecting success of 0150.7 '"'"'a multi-line failure (set TEST_LIB_OUTPUT_DEMO=true)'"'"': Z
+	> 	test_when_finished "rm out" &&
+	> 	# will not be empty!
+	> 	echo >out &&
+	> 	test_must_be_empty out
+	> <RESET>
+	> '"'"'out'"'"' is not empty, it contains:
+	> Z
+	> <RED;BOLD>not ok 7 - a multi-line failure (set TEST_LIB_OUTPUT_DEMO=true)<RESET>
+	> #	
+	> #		test_when_finished "rm out" &&
+	> #		# will not be empty!
+	> #		echo >out &&
+	> #		test_must_be_empty out
+	> #	
+	> Z
+	> <RED;BOLD># 1 known breakage(s) vanished; please update test(s)<RESET>
+	> <YELLOW># still have 1 known breakage(s)<RESET>
+	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
+	> <CYAN>1..7<RESET>
+	EOF
+'
+
 test_done
 
