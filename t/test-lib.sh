@@ -550,17 +550,17 @@ then
 	# substitutions strip trailing newlines).  Given that most
 	# (all?) terminals in common use are related to ECMA-48, this
 	# shouldn't be a problem.
+	say_color_reset=$(printf "\033[0m")
 	say_color_error=$(printf "\033[31m") # red
 	say_color_berror=$(printf "\033[31;1m") # bold red
-	say_color_skip=$(printf "\033[34m") # blue
-	say_color_bskip=$(printf "\033[34;1m") # bold blue
-	say_color_warn=$(printf "\033[33m") # brown/yellow
-	say_color_bwarn=$(printf "\033[33;1m") # bold brown/yellow
 	say_color_pass=$(printf "\033[32m") # green
 	say_color_bpass=$(printf "\033[32;1m") # green
+	say_color_warn=$(printf "\033[33m") # brown/yellow
+	say_color_bwarn=$(printf "\033[33;1m") # bold brown/yellow
+	say_color_skip=$(printf "\033[34m") # blue
+	say_color_bskip=$(printf "\033[34;1m") # bold blue
 	say_color_info=$(printf "\033[36m") # cyan
 	say_color_binfo=$(printf "\033[36;1m") # bold cyan
-	say_color_reset=$(printf "\033[0m")
 	say_color_="" # no formatting for normal text
 	say_color () {
 		test -z "$1" && test -n "$quiet" && return
