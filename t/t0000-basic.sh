@@ -275,6 +275,23 @@ test_expect_failure 'subtest: --verbose-only=1 output correctness' '
 	grep "^ok 1 - one" verbose-only/out.raw
 '
 
+test_expect_success 'subtest: --verbose-only=* globbing' '
+	write_sub_test_lib_test verbose-only-glob <<-\EOF &&
+	test_expect_success "one" "
+		>1-file &&
+		>2-file
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+
+	run_sub_test_lib_test verbose-only-glob --verbose &&
+	cp verbose-only-glob/out.raw expected &&
+	run_sub_test_lib_test verbose-only-glob --verbose-only=* &&
+	cp verbose-only-glob/out.raw actual &&
+	test_cmp expected actual
+'
+
 test_expect_success 'subtest: skip all with skip_all=*' '
 	write_and_run_sub_test_lib_test skip-all --verbose --color <<-\EOF &&
 	skip_all="cannot run here"
