@@ -241,6 +241,40 @@ test_expect_success 'subtest: --verbose-only option' '
 	EOF
 '
 
+test_expect_success 'setup subtest: --verbose-only output correctness' '
+	write_sub_test_lib_test verbose-only <<-\EOF
+	test_expect_success "one" "
+		printf \"ok 1 - try to screw with TAP output | \"
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+'
+
+test_expect_success 'subtest: --verbose output correctness' '
+	run_sub_test_lib_test verbose-only --verbose &&
+	check_sub_test_lib_test verbose-only <<-\EOF
+	> expecting success of verbose.1 '"'"'one'"'"': Z
+	> printf "ok 1 - try to screw with TAP output | "
+	> Z
+	> ok 1 - try to screw with TAP output | ok 1 - one
+	> Z
+	> expecting success of verbose.2 '"'"'two'"'"': true
+	> ok 2 - two
+	> Z
+	> # passed all 2 test(s)
+	> 1..2
+	EOF
+'
+
+test_expect_failure 'subtest: --verbose-only=1 output correctness' '
+	run_sub_test_lib_test verbose-only --verbose-only=1 &&
+
+	# TODO: replace this with check_sub_test_lib_test once it passes
+	grep "^1\.\.2$" verbose-only/out.raw &&
+	grep "^ok 1 - one" verbose-only/out.raw
+'
+
 test_expect_success 'subtest: skip all with skip_all=*' '
 	write_and_run_sub_test_lib_test skip-all --verbose --color <<-\EOF &&
 	skip_all="cannot run here"
