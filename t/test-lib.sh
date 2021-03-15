@@ -597,6 +597,22 @@ say_color_tap() {
 	say_color "$@"
 }
 
+# Comments starting with "#" are TAP syntax, we add our own comment
+# level pseudo-syntax on top of that. As noted here for X number of
+# leading #'s:
+#
+# 1st level comments (# <line>):
+# - main summaries like 'passed X tests' etc.
+say_color_tap_comment_level_1='#'
+say_color_tap_comment() {
+	eval "say_color_tap_comment_level=\$say_color_tap_comment_level_$1"
+	test -z "$say_color_tap_comment_level" && BUG "comment level $1 unknown"
+	shift
+	say_color_tap=$1
+	shift
+	say_color_tap "$say_color_tap" "$say_color_tap_comment_level" "$@"
+}
+
 TERM=dumb
 export TERM
 
@@ -1167,11 +1183,11 @@ test_done () {
 
 	if test "$test_fixed" != 0
 	then
-		say_color berror "# $test_fixed known breakage(s) vanished; please update test(s)"
+		say_color_tap_comment 1 berror "$test_fixed known breakage(s) vanished; please update test(s)"
 	fi
 	if test "$test_broken" != 0
 	then
-		say_color warn "# still have $test_broken known breakage(s)"
+		say_color_tap_comment 1 warn "still have $test_broken known breakage(s)"
 	fi
 	if test "$test_broken" != 0 || test "$test_fixed" != 0
 	then
@@ -1185,7 +1201,7 @@ test_done () {
 	0)
 		if test $test_remaining -gt 0
 		then
-			say_color pass "# passed all $msg"
+			say_color_tap_comment 1 pass "passed all $msg"
 		fi
 
 		# Maybe print SKIP message
@@ -1220,7 +1236,7 @@ test_done () {
 
 	*)
 
-		say_color berror "# failed $test_failure among $msg"
+		say_color_tap_comment 1 berror "failed $test_failure among $msg"
 		say_color_tap "info" "1..$test_count"
 
 		exit 1 ;;
