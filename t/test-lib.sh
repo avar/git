@@ -1350,7 +1350,6 @@ this_test=${0##*/}
 this_test=${this_test%%-*}
 if match_pattern_list "$this_test" $GIT_SKIP_TESTS
 then
-	say_color info >&3 "skipping test $this_test altogether"
 	skip_all="skip all tests in $this_test"
 	test_done
 fi
