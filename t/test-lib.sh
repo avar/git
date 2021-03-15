@@ -601,16 +601,40 @@ say_color_tap() {
 # level pseudo-syntax on top of that. As noted here for X number of
 # leading #'s:
 #
-# 1st level comments (# <line>):
+# 1st level comments (# <line>)
 # - main summaries like 'passed X tests' etc.
+# - failed test scripts (test_expect_success '[...]' 'false')
 say_color_tap_comment_level_1='#'
+# 2nd level comments (## <line>)
+# - known-bad succeding test scripts (test_expect_failure '[...]' 'true')
+say_color_tap_comment_level_2='##'
+# 3rd level comments (### <line>)
+# - succeeding test scripts (test_expect_failure '[...]' 'true')
+# - known-bad failing test scripts (test_expect_failure '[...]' 'false')
+# - skipped test scripts (due to GIT_TEST_SKIP or prerequisites)
+say_color_tap_comment_level_3='###'
 say_color_tap_comment() {
-	eval "say_color_tap_comment_level=\$say_color_tap_comment_level_$1"
-	test -z "$say_color_tap_comment_level" && BUG "comment level $1 unknown"
+	eval "say_level=\$say_color_tap_comment_level_$1"
+	test -z "$say_level" && BUG "comment level $1 unknown"
 	shift
 	say_color_tap=$1
 	shift
-	say_color_tap "$say_color_tap" "$say_color_tap_comment_level" "$@"
+	say_color_tap "$say_color_tap" "$say_level" "$@"
+}
+
+say_color_tap_comment_lines() {
+	eval "say_level=\$say_color_tap_comment_level_$1"
+	test -z "$say_level" && BUG "comment level $1 unknown"
+	shift
+	say_color=$1
+	shift
+	say_start=$(say_color_start "$say_color" "")
+	say_prefix="${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }"
+	say_reset=$(say_color_reset)
+
+	printf '%s\n' "$*" | sed \
+		-e "s/^/${say_prefix}${say_start}${say_level}/" \
+		-e "s/$/${say_reset}/"
 }
 
 TERM=dumb
@@ -718,7 +742,9 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
-	say_color_tap "${verbose:+pass}" "ok $test_count - $@"
+	say_color_tap "${verbose:+bpass}" "ok $test_count - $1"
+	shift
+	say_color_tap_comment_lines >&3 3 pass "$*"
 }
 
 test_failure_ () {
@@ -745,7 +771,7 @@ test_failure_ () {
 	test_failure=$(($test_failure + 1))
 	say_color_tap berror "not ok $test_count - $1"
 	shift
-	printf '%s\n' "$*" | sed -e 's/^/#	/'
+	say_color_tap_comment_lines 1 error "$*"
 	test "$immediate" = "" || { finalize_junit_xml; GIT_EXIT_OK=t; exit 1; }
 }
 
@@ -755,7 +781,9 @@ test_known_broken_ok_ () {
 		write_junit_xml_testcase "$* (breakage fixed)"
 	fi
 	test_fixed=$(($test_fixed+1))
-	say_color berror "ok $test_count - $@ # TODO known breakage vanished"
+	say_color_tap bwarn "ok $test_count - $1 # TODO known breakage vanished"
+	shift
+	say_color_tap_comment_lines >&3 2 warn "$*"
 }
 
 test_known_broken_failure_ () {
@@ -764,7 +792,9 @@ test_known_broken_failure_ () {
 		write_junit_xml_testcase "$* (known breakage)"
 	fi
 	test_broken=$(($test_broken+1))
-	say_color_tap warn "not ok $test_count - $@ # TODO known breakage"
+	say_color_tap bpass "not ok $test_count - $1 # TODO known breakage"
+	shift
+	say_color_tap_comment_lines >&3 3 pass "$*"
 }
 
 test_debug () {
@@ -979,7 +1009,12 @@ test_eval_ () {
 
 	if test "$test_eval_ret_" != 0 && want_trace
 	then
-		say_color berror >&4 "error: last command exited with \$?=$test_eval_ret_"
+		last_command_color=error
+		if test -n "$expecting_failure"
+		then
+			last_command_color=warn
+		fi
+		say_color $last_command_color >&4 "error: last command exited with \$?=$test_eval_ret_"
 	fi
 	return $test_eval_ret_
 }
@@ -1084,6 +1119,8 @@ test_skip () {
 
 		test_skipped=$(($test_skipped + 1))
 		say_color_tap skip "ok $test_count # SKIP $1 ($skipped_reason)"
+		shift
+		say_color_tap_comment_lines >&3 3 skip "$*"
 
 		: true
 		;;
@@ -1189,11 +1226,11 @@ test_done () {
 	fi
 	if test "$test_fixed" != 0
 	then
-		say_color_tap_comment 1 berror "$test_fixed known breakage(s) vanished; please update test(s)"
+		say_color_tap_comment 1 warn "$test_fixed known breakage(s) vanished; please update test(s)"
 	fi
 	if test "$test_broken" != 0
 	then
-		say_color_tap_comment 1 warn "still have $test_broken known breakage(s)"
+		say_color_tap_comment 1 pass "still have $test_broken known breakage(s)"
 	fi
 	if test "$test_broken" != 0 || test "$test_fixed" != 0
 	then
