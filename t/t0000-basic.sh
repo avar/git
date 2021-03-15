@@ -257,7 +257,6 @@ test_expect_success 'subtest: skip all GIT_SKIP_TESTS' '
 			--skip="full" \
 			 --color --verbose &&
 		check_sub_test_lib_test full-pass <<-\EOF
-		> <CYAN>skipping test full altogether<RESET>
 		> <CYAN>1..0 # SKIP skip all tests in full<RESET>
 		EOF
 	)
