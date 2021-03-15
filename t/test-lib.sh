@@ -691,6 +691,7 @@ test_count=0
 test_fixed=0
 test_broken=0
 test_success=0
+test_skipped=0
 
 die () {
 	code=$?
@@ -1101,6 +1102,7 @@ test_skip () {
 				"      <skipped message=\"$message\" />"
 		fi
 
+		test_skipped=$(($test_skipped + 1))
 		say_color_tap skip "ok $test_count # SKIP $1 ($skipped_reason)"
 
 		: true
@@ -1201,6 +1203,10 @@ test_done () {
 		EOF
 	fi
 
+	if test "$test_skipped" != 0
+	then
+		say_color_tap skip "# $test_skipped test(s) skipped"
+	fi
 	if test "$test_fixed" != 0
 	then
 		say_color_tap_comment 1 berror "$test_fixed known breakage(s) vanished; please update test(s)"
