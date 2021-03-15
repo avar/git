@@ -87,7 +87,7 @@ test_expect_success 'run t0150-fake.sh' '
 	> ok 1 - successful one-line test
 	> ok 2 - successful two-line test
 	> <YELLOW;BOLD>ok 3 - unexpectedly passing TODO test # TODO known breakage vanished<RESET>
-	> <GREEN;BOLD>not ok 4 - failing TODO test # TODO known breakage<RESET>
+	> not ok 4 - failing TODO test <YELLOW;BOLD># TODO known breakage<RESET>
 	> <BLUE>ok 5 # SKIP we will be skipping this test (GIT_SKIP_TESTS)<RESET>
 	> <RED;BOLD>not ok 6 - an one-line fail (set TEST_LIB_OUTPUT_DEMO=true)<RESET>
 	> <RED>#false<RESET>
@@ -189,7 +189,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> <YELLOW>##	grep A expected<RESET>
 	> <YELLOW>##<RESET>
 	> Z
-	> <GREEN;BOLD>not ok 4 - failing TODO test # TODO known breakage<RESET>
+	> <GREEN;BOLD>not ok 4 - failing TODO test<RESET> <YELLOW;BOLD># TODO known breakage<RESET>
 	> <GREEN>###<RESET>
 	> <GREEN>###	echo B >actual &&<RESET>
 	> <GREEN>###	git diff --no-index --quiet expected actual<RESET>
