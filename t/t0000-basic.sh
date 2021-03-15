@@ -743,13 +743,12 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 
 	check_sub_test_lib_test_out lazy-prereq-and-tracing \
 		<<-\EOF &&
-	> checking prerequisite: LAZY
-	> Z
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&true
-	> )
-	> prerequisite LAZY ok
+	> #### Checking prerequisite LAZY...
+	> ####
+	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&
+	> ####	(
+	> ####	cd "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&true	)
+	> #### ...prerequisite LAZY ok
 	> trace
 	> ok 1 - lazy
 	> ###test_have_prereq LAZY && echo trace
