@@ -181,31 +181,28 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	> ###	echo non-lazy
 	> ###
 	> Z
-	> checking prerequisite: DEMO_PREREQ_LAZY_A
-	> Z
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
-	> 	true
-	> Z
-	> )
-	> prerequisite DEMO_PREREQ_LAZY_A ok
-	> checking prerequisite: DEMO_PREREQ_LAZY_B
-	> Z
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
-	> 	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
-	> Z
-	> )
-	> checking prerequisite: DEMO_PREREQ_LAZY_B_INNER
-	> Z
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false
-	> )
-	> prerequisite DEMO_PREREQ_LAZY_B_INNER not satisfied
-	> prerequisite DEMO_PREREQ_LAZY_B not satisfied
+	> #### Checking prerequisite DEMO_PREREQ_LAZY_A...
+	> ####
+	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> ####	(
+	> ####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
+	> ####	true
+	> ####	)
+	> #### ...prerequisite DEMO_PREREQ_LAZY_A ok
+	> #### Checking prerequisite DEMO_PREREQ_LAZY_B...
+	> ####
+	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> ####	(
+	> ####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
+	> ####	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
+	> ####	)
+	> #### Checking prerequisite DEMO_PREREQ_LAZY_B_INNER...
+	> ####
+	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&
+	> ####	(
+	> ####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false	)
+	> #### ...prerequisite DEMO_PREREQ_LAZY_B_INNER not ok, returned 1
+	> #### ...prerequisite DEMO_PREREQ_LAZY_B not ok, returned 1
 	> lazy
 	> ok 9 - with a lazy prerequisites
 	> ###
@@ -276,31 +273,28 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> <GREEN>###	echo non-lazy<RESET>
 	> <GREEN>###<RESET>
 	> Z
-	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_A<RESET>
-	> <CYAN>
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&
-	> 	true
-	> Z
-	> )<RESET>
-	> <CYAN>prerequisite DEMO_PREREQ_LAZY_A ok<RESET>
-	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_B<RESET>
-	> <CYAN>
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&
-	> 	test_have_prereq DEMO_PREREQ_LAZY_B_INNER
-	> Z
-	> )<RESET>
-	> <CYAN>checking prerequisite: DEMO_PREREQ_LAZY_B_INNER<RESET>
-	> <CYAN>
-	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&
-	> (
-	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false
-	> )<RESET>
-	> <CYAN>prerequisite DEMO_PREREQ_LAZY_B_INNER not satisfied<RESET>
-	> <CYAN>prerequisite DEMO_PREREQ_LAZY_B not satisfied<RESET>
+	> <MAGENTA>#### Checking prerequisite DEMO_PREREQ_LAZY_A...<RESET>
+	> <MAGENTA>####<RESET>
+	> <MAGENTA>####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&<RESET>
+	> <MAGENTA>####	(<RESET>
+	> <MAGENTA>####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_A" &&<RESET>
+	> <MAGENTA>####	true<RESET>
+	> <MAGENTA>####	)<RESET>
+	> <MAGENTA>#### ...prerequisite DEMO_PREREQ_LAZY_A <RESET><GREEN>ok<RESET>
+	> <MAGENTA>#### Checking prerequisite DEMO_PREREQ_LAZY_B...<RESET>
+	> <MAGENTA>####<RESET>
+	> <MAGENTA>####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&<RESET>
+	> <MAGENTA>####	(<RESET>
+	> <MAGENTA>####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B" &&<RESET>
+	> <MAGENTA>####	test_have_prereq DEMO_PREREQ_LAZY_B_INNER<RESET>
+	> <MAGENTA>####	)<RESET>
+	> <MAGENTA>#### Checking prerequisite DEMO_PREREQ_LAZY_B_INNER...<RESET>
+	> <MAGENTA>####<RESET>
+	> <MAGENTA>####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&<RESET>
+	> <MAGENTA>####	(<RESET>
+	> <MAGENTA>####	cd "$TRASH_DIRECTORY/prereq-test-dir-DEMO_PREREQ_LAZY_B_INNER" &&false	)<RESET>
+	> <MAGENTA>#### ...prerequisite DEMO_PREREQ_LAZY_B_INNER <RESET><RED>not ok, returned 1<RESET>
+	> <MAGENTA>#### ...prerequisite DEMO_PREREQ_LAZY_B <RESET><RED>not ok, returned 1<RESET>
 	> lazy
 	> <GREEN;BOLD>ok 9 - with a lazy prerequisites<RESET>
 	> <GREEN>###<RESET>
