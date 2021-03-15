@@ -530,21 +530,30 @@ test_lazy_prereq () {
 }
 
 test_run_lazy_prereq_ () {
+	say_color_tap_comment >&3 4 trace "Checking prerequisite $1..."
 	script='
-mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
-(
-	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'
-)'
-	say >&3 "checking prerequisite: $1"
-	say >&3 "$script"
+	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
+	(
+	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'	)'
+	say_color_tap_comment_lines >&3 4 trace "$script"
+
 	test_eval_ "$script"
 	eval_ret=$?
 	rm -rf "$TRASH_DIRECTORY/prereq-test-dir-$1"
-	if test "$eval_ret" = 0; then
-		say >&3 "prerequisite $1 ok"
-	else
-		say >&3 "prerequisite $1 not satisfied"
+
+	prereq_msg_color=pass
+	prereq_msg=ok
+	if test "$eval_ret" != 0
+	then
+		prereq_msg_color=error
+		prereq_msg="not ok, returned $eval_ret"
 	fi
+	msg=$(say_color_reset &&
+	      say_color_start $prereq_msg_color &&
+	      printf "%s" "$prereq_msg")
+
+	say_color_tap_comment >&3 4 trace "...prerequisite $1 $msg"
+
 	return $eval_ret
 }
 
