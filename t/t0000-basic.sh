@@ -320,6 +320,7 @@ test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
 		> ok 1 - passing test #1
 		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
 		> ok 3 - passing test #3
+		> # 1 test(s) skipped
 		> # passed all 3 test(s)
 		> 1..3
 		EOF
@@ -344,6 +345,7 @@ test_expect_success 'subtest: skip several with GIT_SKIP_TESTS' '
 		> ok 4 - passing test #4
 		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
+		> # 2 test(s) skipped
 		> # passed all 6 test(s)
 		> 1..6
 		EOF
@@ -361,6 +363,7 @@ test_expect_success 'subtest: sh pattern skipping with GIT_SKIP_TESTS' '
 		> ok 4 # SKIP passing test #4 (GIT_SKIP_TESTS)
 		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
+		> # 4 test(s) skipped
 		> # passed all 6 test(s)
 		> 1..6
 		EOF
@@ -400,6 +403,7 @@ test_expect_success 'subtest: --run basic' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -415,6 +419,7 @@ test_expect_success 'subtest: --run with a range' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 # SKIP passing test #5 (--run)
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -430,6 +435,7 @@ test_expect_success 'subtest: --run with two ranges' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 2 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -445,6 +451,7 @@ test_expect_success 'subtest: --run with a left open range' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 # SKIP passing test #5 (--run)
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -460,6 +467,7 @@ test_expect_success 'subtest: --run with a right open range' '
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -475,6 +483,7 @@ test_expect_success 'subtest: --run with basic negation' '
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 1 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -490,6 +499,7 @@ test_expect_success 'subtest: --run with two negations' '
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 2 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -505,6 +515,7 @@ test_expect_success 'subtest: --run a range and negation' '
 	> ok 4 - passing test #4
 	> ok 5 # SKIP passing test #5 (--run)
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -520,6 +531,7 @@ test_expect_success 'subtest: --run range negation' '
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -535,6 +547,7 @@ test_expect_success 'subtest: --run include, exclude and include' '
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -550,6 +563,7 @@ test_expect_success 'subtest: --run include, exclude and include, comma separate
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -565,6 +579,7 @@ test_expect_success 'subtest: --run exclude and include' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -580,6 +595,7 @@ test_expect_success 'subtest: --run empty selectors' '
 	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -603,6 +619,7 @@ test_expect_success 'subtest: --run substring selector' '
 	> ok 5 # SKIP other test #4 (--run)
 	> ok 6 # SKIP other test #5 (--run)
 	> ok 7 # SKIP other test #6 (--run)
+	> # 6 test(s) skipped
 	> # passed all 7 test(s)
 	> 1..7
 	EOF
@@ -658,6 +675,7 @@ test_expect_success 'subtest: tests respect prerequisites' '
 	ok 4 - multiple prereqs
 	ok 5 # SKIP mixed prereqs (yes,no) (missing DONTHAVEIT of HAVEIT,DONTHAVEIT)
 	ok 6 # SKIP mixed prereqs (no,yes) (missing DONTHAVEIT of DONTHAVEIT,HAVEIT)
+	> # 3 test(s) skipped
 	# passed all 6 test(s)
 	1..6
 	EOF
@@ -682,6 +700,7 @@ test_expect_success 'subtest: tests respect lazy prerequisites' '
 	ok 2 # SKIP negative lazy prereq (missing !LAZY_TRUE)
 	ok 3 # SKIP lazy prereq not satisfied (missing LAZY_FALSE)
 	ok 4 - negative false prereq
+	# 2 test(s) skipped
 	# passed all 4 test(s)
 	1..4
 	EOF

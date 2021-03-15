@@ -97,6 +97,7 @@ test_expect_success 'run t0150-fake.sh' '
 	> #		echo >out &&
 	> #		test_must_be_empty out
 	> #	Z
+	> <BLUE># 1 test(s) skipped<RESET>
 	> <RED;BOLD># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <YELLOW># still have 1 known breakage(s)<RESET>
 	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
@@ -157,6 +158,7 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	> #		test_must_be_empty out
 	> #	Z
 	> Z
+	> # 1 test(s) skipped
 	> # 1 known breakage(s) vanished; please update test(s)
 	> # still have 1 known breakage(s)
 	> # failed 2 among remaining 5 test(s)
@@ -217,6 +219,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> #		test_must_be_empty out
 	> #	
 	> Z
+	> <BLUE># 1 test(s) skipped<RESET>
 	> <RED;BOLD># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <YELLOW># still have 1 known breakage(s)<RESET>
 	> <RED;BOLD># failed 2 among remaining 5 test(s)<RESET>
