@@ -67,8 +67,8 @@ static void *fill_tree_desc_strict(struct tree_desc *desc,
 static int base_name_entries_compare(const struct name_entry *a,
 				     const struct name_entry *b)
 {
-	int istree_a = S_ISDIR(a->mode);
-	int istree_b = S_ISDIR(b->mode);
+	int istree_a = (a->object_type == OBJ_TREE);
+	int istree_b = (b->object_type == OBJ_TREE);
 	return base_name_compare(a->path, tree_entry_len(a), istree_a,
 				 b->path, tree_entry_len(b), istree_b);
 }

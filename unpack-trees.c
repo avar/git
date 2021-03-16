@@ -1003,7 +1003,7 @@ static int do_compare_entry(const struct cache_entry *ce,
 
 static int compare_entry(const struct cache_entry *ce, const struct traverse_info *info, const struct name_entry *n)
 {
-	int istree = S_ISDIR(n->mode);
+	int istree = (n->object_type == OBJ_TREE);
 	int cmp = do_compare_entry(ce, info, n->path, n->pathlen, istree);
 	if (cmp)
 		return cmp;
