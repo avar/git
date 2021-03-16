@@ -862,7 +862,7 @@ static int traverse_trees_recursive(int n, unsigned long dirmask,
 	}
 
 	p = names;
-	while (!p->mode)
+	while (p->object_type == OBJ_NONE)
 		p++;
 
 	newinfo = *info;
@@ -925,7 +925,7 @@ static int traverse_trees_recursive(int n, unsigned long dirmask,
 static int do_compare_entry_piecewise(const struct cache_entry *ce,
 				      const struct traverse_info *info,
 				      const char *name, size_t namelen,
-				      unsigned mode)
+				      unsigned istree)
 {
 	int pathlen, ce_len;
 	const char *ce_name;
@@ -933,7 +933,7 @@ static int do_compare_entry_piecewise(const struct cache_entry *ce,
 	if (info->prev) {
 		int cmp = do_compare_entry_piecewise(ce, info->prev,
 						     info->name, info->namelen,
-						     info->mode);
+						     S_ISDIR(info->mode));
 		if (cmp)
 			return cmp;
 	}
@@ -947,13 +947,13 @@ static int do_compare_entry_piecewise(const struct cache_entry *ce,
 	ce_len -= pathlen;
 	ce_name = ce->name + pathlen;
 
-	return df_name_compare(ce_name, ce_len, S_IFREG, name, namelen, mode);
+	return df_name_compare(ce_name, ce_len, 0, name, namelen, istree);
 }
 
 static int do_compare_entry(const struct cache_entry *ce,
 			    const struct traverse_info *info,
 			    const char *name, size_t namelen,
-			    unsigned mode)
+			    unsigned istree)
 {
 	int pathlen, ce_len;
 	const char *ce_name;
@@ -965,7 +965,7 @@ static int do_compare_entry(const struct cache_entry *ce,
 	 * it is quicker to use the precomputed version.
 	 */
 	if (!info->traverse_path)
-		return do_compare_entry_piecewise(ce, info, name, namelen, mode);
+		return do_compare_entry_piecewise(ce, info, name, namelen, istree);
 
 	cmp = strncmp(ce->name, info->traverse_path, info->pathlen);
 	if (cmp)
@@ -980,12 +980,13 @@ static int do_compare_entry(const struct cache_entry *ce,
 	ce_len -= pathlen;
 	ce_name = ce->name + pathlen;
 
-	return df_name_compare(ce_name, ce_len, S_IFREG, name, namelen, mode);
+	return df_name_compare(ce_name, ce_len, 0, name, namelen, istree);
 }
 
 static int compare_entry(const struct cache_entry *ce, const struct traverse_info *info, const struct name_entry *n)
 {
-	int cmp = do_compare_entry(ce, info, n->path, n->pathlen, n->mode);
+	int istree = (n->object_type == OBJ_TREE);
+	int cmp = do_compare_entry(ce, info, n->path, n->pathlen, istree);
 	if (cmp)
 		return cmp;
 
@@ -1022,8 +1023,9 @@ static struct cache_entry *create_ce_entry(const struct traverse_info *info,
 		is_transient ?
 		make_empty_transient_cache_entry(len) :
 		make_empty_cache_entry(istate, len);
+	unsigned int mode = n->mode;
 
-	ce->ce_mode = create_ce_mode(n->mode);
+	ce->ce_mode = create_ce_mode(mode);
 	ce->ce_flags = create_ce_flags(stage);
 	ce->ce_namelen = len;
 	oidcpy(&ce->oid, &n->oid);
@@ -1241,7 +1243,7 @@ static int unpack_callback(int n, unsigned long mask, unsigned long dirmask, str
 	const struct name_entry *p = names;
 
 	/* Find first entry with a real name (we could use "mask" too) */
-	while (!p->mode)
+	while (p->object_type == OBJ_NONE)
 		p++;
 
 	if (o->debug_unpack)
@@ -1299,7 +1301,7 @@ static int unpack_callback(int n, unsigned long mask, unsigned long dirmask, str
 	if (dirmask) {
 		/* special case: "diff-index --cached" looking at a tree */
 		if (o->diff_index_cached &&
-		    n == 1 && dirmask == 1 && S_ISDIR(names->mode)) {
+		    n == 1 && dirmask == 1 && names->object_type == OBJ_TREE) {
 			int matches;
 			matches = cache_tree_matches_traversal(o->src_index->cache_tree,
 							       names, info);

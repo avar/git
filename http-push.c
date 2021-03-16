@@ -1314,7 +1314,7 @@ static struct object_list **process_tree(struct tree *tree,
 	init_tree_desc(&desc, tree->buffer, tree->size);
 
 	while (tree_entry(&desc, &entry))
-		switch (object_type(entry.mode)) {
+		switch (entry.object_type) {
 		case OBJ_TREE:
 			p = process_tree(lookup_tree(the_repository, &entry.oid),
 					 p);
@@ -1323,9 +1323,11 @@ static struct object_list **process_tree(struct tree *tree,
 			p = process_blob(lookup_blob(the_repository, &entry.oid),
 					 p);
 			break;
-		default:
+		case OBJ_COMMIT:
 			/* Subproject commit - not in this repository */
 			break;
+		default:
+			BUG("unreachable");
 		}
 
 	free_tree_buffer(tree);

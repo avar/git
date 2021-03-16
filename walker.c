@@ -45,21 +45,25 @@ static int process_tree(struct walker *walker, struct tree *tree)
 	init_tree_desc(&desc, tree->buffer, tree->size);
 	while (tree_entry(&desc, &entry)) {
 		struct object *obj = NULL;
+		struct tree *tree;
+		struct blob *blob;
 
-		/* submodule commits are not stored in the superproject */
-		if (S_ISGITLINK(entry.mode))
+		switch (entry.object_type) {
+		case OBJ_COMMIT:
+			/* submodule commits are not stored in the superproject */
 			continue;
-		if (S_ISDIR(entry.mode)) {
-			struct tree *tree = lookup_tree(the_repository,
-							&entry.oid);
+		case OBJ_TREE:
+			tree = lookup_tree(the_repository, &entry.oid);
 			if (tree)
 				obj = &tree->object;
-		}
-		else {
-			struct blob *blob = lookup_blob(the_repository,
-							&entry.oid);
+			break;
+		case OBJ_BLOB:
+			blob = lookup_blob(the_repository, &entry.oid);
 			if (blob)
 				obj = &blob->object;
+			break;
+		default:
+			BUG("unreachable");
 		}
 		if (!obj || process(walker, obj))
 			return -1;

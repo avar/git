@@ -62,13 +62,14 @@ static int show_recursive(const char *base, int baselen, const char *pathname)
 }
 
 static int show_tree(const struct object_id *oid, struct strbuf *base,
-		const char *pathname, unsigned mode, void *context)
+		     const char *pathname,
+		     enum object_type object_type, unsigned mode,
+		     void *context)
 {
 	int retval = 0;
 	int baselen;
-	const char *type = blob_type;
 
-	if (S_ISGITLINK(mode)) {
+	if (object_type == OBJ_COMMIT) {
 		/*
 		 * Maybe we want to have some recursive version here?
 		 *
@@ -78,22 +79,21 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 			retval = READ_TREE_RECURSIVE;
 		 *
 		 */
-		type = commit_type;
-	} else if (S_ISDIR(mode)) {
+	} else if (object_type == OBJ_TREE) {
 		if (show_recursive(base->buf, base->len, pathname)) {
 			retval = READ_TREE_RECURSIVE;
 			if (!(ls_options & LS_SHOW_TREES))
 				return retval;
 		}
-		type = tree_type;
 	}
 	else if (ls_options & LS_TREE_ONLY)
 		return 0;
 
 	if (!(ls_options & LS_NAME_ONLY)) {
+		const char *type = type_name(object_type);
 		if (ls_options & LS_SHOW_SIZE) {
 			char size_text[24];
-			if (!strcmp(type, blob_type)) {
+			if (object_type == OBJ_BLOB) {
 				unsigned long size;
 				if (oid_object_info(the_repository, oid, &size) == OBJ_BAD)
 					xsnprintf(size_text, sizeof(size_text),
