@@ -362,6 +362,28 @@ test_expect_success 'tree entry with duplicate type mismatching objects' '
 	)
 '
 
+test_expect_success 'diff-tree stressing tree-diff.c::tree_entry_pathcmp(), not the same type' '
+	zero=$(test_oid zero) &&
+	git -C duplicate-entry diff-tree broken-commit-1 broken-commit-2 >1-to-2 &&
+	grep "$zero" 1-to-2 >lines &&
+	test_line_count = 2 lines &&
+
+	git -C duplicate-entry diff-tree broken-commit-2 broken-commit-1 >2-to-1 &&
+	grep "$zero" 2-to-1 >lines &&
+	test_line_count = 2 lines
+'
+
+test_expect_success 'diff-tree stressing tree-diff.c::tree_entry_pathcmp(), types not reversed' '
+	blob_ok=$(git -C duplicate-entry rev-parse broken-commit-2:A) &&
+	git -C duplicate-entry diff-tree --diff-filter=A broken-commit-1 broken-commit-2 >1-to-2 &&
+	grep "$blob_ok" 1-to-2 &&
+	test_line_count = 1 1-to-2 &&
+
+	git -C duplicate-entry diff-tree --diff-filter=A broken-commit-2 broken-commit-1 >2-to-1 &&
+	grep "$blob_ok" 2-to-1 &&
+	test_line_count = 1 2-to-1
+'
+
 test_expect_success 'tag pointing to nonexistent' '
 	badoid=$(test_oid deadbeef) &&
 	cat >invalid-tag <<-EOF &&
