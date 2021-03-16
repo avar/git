@@ -2257,8 +2257,8 @@ static int tree_entry_order(const void *a_, const void *b_)
 
 	const struct merged_info *ami = a->util;
 	const struct merged_info *bmi = b->util;
-	return base_name_compare(a->string, strlen(a->string), ami->result.mode,
-				 b->string, strlen(b->string), bmi->result.mode);
+	return base_name_compare(a->string, strlen(a->string), S_ISDIR(ami->result.mode),
+				 b->string, strlen(b->string), S_ISDIR(bmi->result.mode));
 }
 
 static void write_tree(struct object_id *result_oid,

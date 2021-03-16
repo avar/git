@@ -50,6 +50,7 @@ static int tree_entry_pathcmp(struct tree_desc *t1, struct tree_desc *t2)
 {
 	struct name_entry *e1, *e2;
 	int cmp;
+	int istree_e1, istree_e2;
 
 	/* empty descriptors sort after valid tree entries */
 	if (!t1->size)
@@ -58,9 +59,11 @@ static int tree_entry_pathcmp(struct tree_desc *t1, struct tree_desc *t2)
 		return -1;
 
 	e1 = &t1->entry;
+	istree_e1 = (e1->object_type == OBJ_TREE);
 	e2 = &t2->entry;
-	cmp = base_name_compare(e1->path, tree_entry_len(e1), e1->mode,
-				e2->path, tree_entry_len(e2), e2->mode);
+	istree_e2 = (e2->object_type == OBJ_TREE);
+	cmp = base_name_compare(e1->path, tree_entry_len(e1), istree_e1,
+				e2->path, tree_entry_len(e2), istree_e2);
 	return cmp;
 }
 

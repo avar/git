@@ -554,12 +554,12 @@ static int string_list_df_name_compare(const char *one, const char *two)
 	 *
 	 * To achieve this, we sort with df_name_compare and provide
 	 * the mode S_IFDIR so that D/F conflicts will sort correctly.
-	 * We use the mode S_IFDIR for everything else for simplicity,
+	 * We say we have a directory for everything else for simplicity,
 	 * since in other cases any changes in their order due to
 	 * sorting cause no problems for us.
 	 */
-	int cmp = df_name_compare(one, onelen, S_IFDIR,
-				  two, twolen, S_IFDIR);
+	int cmp = df_name_compare(one, onelen, 1, two, twolen, 1);
+
 	/*
 	 * Now that 'foo' and 'foo/bar' compare equal, we have to make sure
 	 * that 'foo' comes before 'foo/bar'.
