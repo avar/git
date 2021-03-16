@@ -3,7 +3,7 @@ _assert_unique_sub_test () {
 
 	# Alert about the copy/paste programming
 	hash=$(git hash-object -w "$name") &&
-	tag=$(git mktag <<-EOF) &&
+	cat >tag.sig <<-EOF &&
 	object $hash
 	type blob
 	tag $hash
@@ -19,6 +19,7 @@ _assert_unique_sub_test () {
 	run_sub_test_lib_test*()
 	EOF
 
+	tag=$(git mktag <tag.sig) &&
 	if ! git update-ref refs/tags/blob-$hash $tag $(test_oid zero) 2>/dev/null
 	then
 		msg=$(git for-each-ref refs/tags/blob-$hash \
