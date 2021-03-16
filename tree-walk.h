@@ -198,6 +198,7 @@ struct traverse_info {
  * get_tree_entry_path(): <no extra argument, just get the common 'path'>
  * get_tree_entry_mode(): unsigned short mode
  * get_tree_entry_type(): enum object_type
+ * get_tree_entry_all(): unsigned int mode, enum object_type
  */
 int get_tree_entry_path(struct repository *, const struct object_id *, const char *,
 			struct object_id *);
@@ -207,6 +208,9 @@ int get_tree_entry_mode(struct repository *, const struct object_id *, const cha
 int get_tree_entry_type(struct repository *, const struct object_id *, const char *,
 			struct object_id *,
 			enum object_type *);
+int get_tree_entry_all(struct repository *, const struct object_id *, const char *,
+		       struct object_id *,
+		       unsigned short *, enum object_type *);
 
 /**
  * Generate the full pathname of a tree entry based from the root of the

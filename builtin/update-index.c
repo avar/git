@@ -599,16 +599,18 @@ static struct cache_entry *read_one_ent(const char *which,
 					struct object_id *ent, const char *path,
 					int namelen, int stage)
 {
+	enum object_type object_type;
 	unsigned short mode;
 	struct object_id oid;
 	struct cache_entry *ce;
 
-	if (get_tree_entry_mode(the_repository, ent, path, &oid, &mode)) {
+	if (get_tree_entry_all(the_repository, ent, path, &oid,
+			       &mode, &object_type)) {
 		if (which)
 			error("%s: not in %s branch.", path, which);
 		return NULL;
 	}
-	if (mode == S_IFDIR) {
+	if (object_type == OBJ_TREE) {
 		if (which)
 			error("%s: not a blob in %s branch.", path, which);
 		return NULL;
