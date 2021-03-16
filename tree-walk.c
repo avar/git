@@ -559,13 +559,6 @@ struct dir_state {
 	struct object_id oid;
 };
 
-static int get_tree_entry_all(struct repository *r,
-			      const struct object_id *tree_oid,
-			      const char *name,
-			      struct object_id *oid,
-			      unsigned short *mode,
-			      enum object_type *object_type);
-
 static int find_tree_entry(struct repository *r, struct tree_desc *t,
 			   const char *name, struct object_id *result,
 			   unsigned short *mode,
@@ -605,7 +598,7 @@ static int find_tree_entry(struct repository *r, struct tree_desc *t,
 	return -1;
 }
 
-static int get_tree_entry_all(struct repository *r,
+int get_tree_entry_all(struct repository *r,
 		       const struct object_id *tree_oid,
 		       const char *name,
 		       struct object_id *oid,
