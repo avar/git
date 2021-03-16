@@ -2133,7 +2133,7 @@ test_expect_success 'combine --ignore-blank-lines with --function-context 2' '
 		--ignore-blank-lines --function-context a b >actual.raw &&
 	sed -n "/@@/,\$p" <actual.raw >actual &&
 	cat <<-\EOF >expect &&
-	@@ -5,11 +6,9 @@ c
+	@@ -5,11 +6,9 @@
 	 function
 	 1
 	 2
