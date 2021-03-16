@@ -86,8 +86,8 @@ static int score_trees(const struct object_id *hash1, const struct object_id *ha
 
 	for (;;) {
 		int cmp;
-		unsigned int one_mode = one.entry.mode;
-		unsigned int two_mode = two.entry.mode;
+		unsigned int one_mode = one.entry.raw_mode;
+		unsigned int two_mode = two.entry.raw_mode;
 
 		if (one.size && two.size)
 			cmp = base_name_entries_compare(&one.entry, &two.entry);
