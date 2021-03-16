@@ -1,3 +1,4 @@
+t4018 header: defprotocol RIGHT do
 defprotocol RIGHT do
   @doc """
   Calculates the size (and not the length!) of a data structure

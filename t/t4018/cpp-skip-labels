@@ -1,3 +1,4 @@
+t4018 header: void RIGHT (void)
 void RIGHT (void)
 {
 repeat:		// C++ comment

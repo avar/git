@@ -1,3 +1,4 @@
+t4018 header: label2: RIGHT {
 / {
 	label_1: node1@ff00 {
 		label2: RIGHT {

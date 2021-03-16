@@ -1,3 +1,4 @@
+t4018 header: final class RIGHT
 final class RIGHT
 {
     const FOO = 'ChangeMe';

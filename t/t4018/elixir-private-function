@@ -1,3 +1,4 @@
+t4018 header: defp function(RIGHT, arg) do
 defp function(RIGHT, arg) do
   # comment
   # comment

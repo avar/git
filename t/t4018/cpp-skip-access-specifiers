@@ -1,3 +1,4 @@
+t4018 header: class RIGHT : public Baseclass
 class RIGHT : public Baseclass
 {
 public:

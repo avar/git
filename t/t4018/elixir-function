@@ -1,3 +1,4 @@
+t4018 header: def function(RIGHT, arg) do
 def function(RIGHT, arg) do
   # comment
   # comment

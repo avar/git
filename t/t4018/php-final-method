@@ -1,3 +1,4 @@
+t4018 header: final public function RIGHT(): string
 class Klass
 {
     final public function RIGHT(): string

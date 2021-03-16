@@ -1,3 +1,4 @@
+t4018 header: pub(super) struct RIGHT<'a> {
 #[derive(Debug)]
 pub(super) struct RIGHT<'a> {
     name: &'a str,

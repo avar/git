@@ -21,6 +21,13 @@ struct userdiff_driver {
 	struct notes_cache *textconv_cache;
 	int textconv_want_cache;
 };
+enum userdiff_driver_type {
+	USERDIFF_DRIVER_TYPE_UNSPECIFIED = 1<<0,
+	USERDIFF_DRIVER_TYPE_BUILTIN = 1<<1,
+	USERDIFF_DRIVER_TYPE_CUSTOM = 1<<2,
+};
+typedef int (*each_userdiff_driver_fn)(struct userdiff_driver *,
+				       enum userdiff_driver_type, void *);
 
 int userdiff_config(const char *k, const char *v);
 struct userdiff_driver *userdiff_find_by_name(const char *name);
@@ -33,5 +40,13 @@ struct userdiff_driver *userdiff_find_by_path(struct index_state *istate,
  */
 struct userdiff_driver *userdiff_get_textconv(struct repository *r,
 					      struct userdiff_driver *driver);
+
+/*
+ * Iterate over each driver of type userdiff_driver_type, or
+ * USERDIFF_DRIVER_TYPE_UNSPECIFIED for all of them. Return non-zero
+ * to exit from the loop.
+ */
+int for_each_userdiff_driver(each_userdiff_driver_fn,
+			     enum userdiff_driver_type, void *);
 
 #endif /* USERDIFF */

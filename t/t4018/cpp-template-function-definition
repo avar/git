@@ -1,3 +1,4 @@
+t4018 header: template<class T> int RIGHT(T arg)
 template<class T> int RIGHT(T arg)
 {
 	ChangeMe;

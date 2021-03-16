@@ -1,3 +1,4 @@
+t4018 header: def fun(RIGHT) do
 defmodule Foo do
   def fun(RIGHT) do
      # Code

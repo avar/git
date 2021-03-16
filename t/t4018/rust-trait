@@ -1,3 +1,4 @@
+t4018 header: unsafe trait RIGHT<T> {
 unsafe trait RIGHT<T> {
     fn len(&self) -> u32;
     fn ChangeMe(&self, n: u32) -> T;

@@ -1,3 +1,4 @@
+t4018 header: class RIGHT:
 if TYPE_CHECKING:
     class RIGHT:
         # comment
