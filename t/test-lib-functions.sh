@@ -481,7 +481,7 @@ write_script () {
 # - Explicitly using test_have_prereq.
 #
 # - Implicitly by specifying the prerequisite tag in the calls to
-#   test_expect_{success,failure} and test_external{,_without_stderr}.
+#   test_expect_{success,failure}
 #
 # The single parameter is the prerequisite tag (a simple word, in all
 # capital letters by convention).
@@ -531,21 +531,30 @@ test_lazy_prereq () {
 }
 
 test_run_lazy_prereq_ () {
+	say_color_tap_comment >&3 4 trace "Checking prerequisite $1..."
 	script='
-mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
-(
-	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'
-)'
-	say >&3 "checking prerequisite: $1"
-	say >&3 "$script"
+	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
+	(
+	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'	)'
+	say_color_tap_comment_lines >&3 4 trace "$script"
+
 	test_eval_ "$script"
 	eval_ret=$?
 	rm -rf "$TRASH_DIRECTORY/prereq-test-dir-$1"
-	if test "$eval_ret" = 0; then
-		say >&3 "prerequisite $1 ok"
-	else
-		say >&3 "prerequisite $1 not satisfied"
+
+	prereq_msg_color=pass
+	prereq_msg=ok
+	if test "$eval_ret" != 0
+	then
+		prereq_msg_color=error
+		prereq_msg="not ok, returned $eval_ret"
 	fi
+	msg=$(say_color_reset &&
+	      say_color_start $prereq_msg_color &&
+	      printf "%s" "$prereq_msg")
+
+	say_color_tap_comment >&3 4 trace "...prerequisite $1 $msg"
+
 	return $eval_ret
 }
 
@@ -640,12 +649,11 @@ test_expect_failure () {
 	export test_prereq
 	if ! test_skip "$@"
 	then
-		say >&3 "checking known breakage of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2" expecting_failure
 		then
-			test_known_broken_ok_ "$1"
+			test_known_broken_ok_ "$@"
 		else
-			test_known_broken_failure_ "$1"
+			test_known_broken_failure_ "$@"
 		fi
 	fi
 	test_finish_
@@ -661,103 +669,15 @@ test_expect_success () {
 	export test_prereq
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting success of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2"
 		then
-			test_ok_ "$1"
+			test_ok_ "$@"
 		else
 			test_failure_ "$@"
 		fi
 	fi
 	test_finish_
 	return 1
-}
-
-# test_external runs external test scripts that provide continuous
-# test output about their progress, and succeeds/fails on
-# zero/non-zero exit code.  It outputs the test output on stdout even
-# in non-verbose mode, and announces the external script with "# run
-# <n>: ..." before running it.  When providing relative paths, keep in
-# mind that all scripts run in "trash directory".
-# Usage: test_external description command arguments...
-# Example: test_external 'Perl API' perl ../path/to/test.pl
-test_external () {
-	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
-	test "$#" = 3 ||
-	BUG "not 3 or 4 parameters to test_external"
-	descr="$1"
-	shift
-	test_verify_prereq
-	export test_prereq
-	if ! test_skip "$descr" "$@"
-	then
-		# Announce the script to reduce confusion about the
-		# test output that follows.
-		say_color "" "# run $test_count: $descr ($*)"
-		# Export TEST_DIRECTORY, TRASH_DIRECTORY and GIT_TEST_LONG
-		# to be able to use them in script
-		export TEST_DIRECTORY TRASH_DIRECTORY GIT_TEST_LONG
-		# Run command; redirect its stderr to &4 as in
-		# test_run_, but keep its stdout on our stdout even in
-		# non-verbose mode.
-		"$@" 2>&4
-		if test "$?" = 0
-		then
-			if test $test_external_has_tap -eq 0; then
-				test_ok_ "$descr"
-			else
-				say_color "" "# test_external test $descr was ok"
-				test_success=$(($test_success + 1))
-			fi
-		else
-			if test $test_external_has_tap -eq 0; then
-				test_failure_ "$descr" "$@"
-			else
-				say_color error "# test_external test $descr failed: $@"
-				test_failure=$(($test_failure + 1))
-			fi
-		fi
-	fi
-}
-
-# Like test_external, but in addition tests that the command generated
-# no output on stderr.
-test_external_without_stderr () {
-	# The temporary file has no (and must have no) security
-	# implications.
-	tmp=${TMPDIR:-/tmp}
-	stderr="$tmp/git-external-stderr.$$.tmp"
-	test_external "$@" 4> "$stderr"
-	test -f "$stderr" || error "Internal error: $stderr disappeared."
-	descr="no stderr: $1"
-	shift
-	say >&3 "# expecting no stderr from previous command"
-	if test ! -s "$stderr"
-	then
-		rm "$stderr"
-
-		if test $test_external_has_tap -eq 0; then
-			test_ok_ "$descr"
-		else
-			say_color "" "# test_external_without_stderr test $descr was ok"
-			test_success=$(($test_success + 1))
-		fi
-	else
-		if test "$verbose" = t
-		then
-			output=$(echo; echo "# Stderr is:"; cat "$stderr")
-		else
-			output=
-		fi
-		# rm first in case test_failure exits.
-		rm "$stderr"
-		if test $test_external_has_tap -eq 0; then
-			test_failure_ "$descr" "$@" "$output"
-		else
-			say_color error "# test_external_without_stderr test $descr failed: $@: $output"
-			test_failure=$(($test_failure + 1))
-		fi
-	fi
 }
 
 # debugging-friendly alternatives to "test [-f|-d|-e]"
@@ -772,7 +692,6 @@ test_path_is_file () {
 }
 
 test_path_is_dir () {
-	test "$#" -ne 1 && BUG "1 param"
 	if ! test -d "$1"
 	then
 		echo "Directory $1 doesn't exist"
@@ -791,7 +710,6 @@ test_path_exists () {
 
 # Check if the directory exists and is empty as expected, barf otherwise.
 test_dir_is_empty () {
-	test "$#" -ne 1 && BUG "1 param"
 	test_path_is_dir "$1" &&
 	if test -n "$(ls -a1 "$1" | egrep -v '^\.\.?$')"
 	then
@@ -803,7 +721,6 @@ test_dir_is_empty () {
 
 # Check if the file exists and has a size greater than zero
 test_file_not_empty () {
-	test "$#" = 2 && BUG "2 param"
 	if ! test -s "$1"
 	then
 		echo "'$1' is not a non-empty file."
@@ -812,7 +729,6 @@ test_file_not_empty () {
 }
 
 test_path_is_missing () {
-	test "$#" -ne 1 && BUG "1 param"
 	if test -e "$1"
 	then
 		echo "Path exists:"
@@ -849,7 +765,6 @@ test_line_count () {
 }
 
 test_file_size () {
-	test "$#" -ne 1 && BUG "1 param"
 	test-tool path-utils file-size "$1"
 }
 
@@ -1022,7 +937,6 @@ test_expect_code () {
 # - not all diff versions understand "-u"
 
 test_cmp () {
-	test "$#" -ne 2 && BUG "2 param"
 	eval "$GIT_TEST_CMP" '"$@"'
 }
 
@@ -1052,7 +966,6 @@ test_cmp_config () {
 # test_cmp_bin - helper to compare binary files
 
 test_cmp_bin () {
-	test "$#" -ne 2 && BUG "2 param"
 	cmp "$@"
 }
 
@@ -1113,7 +1026,6 @@ verbose () {
 # otherwise.
 
 test_must_be_empty () {
-	test "$#" -ne 1 && BUG "1 param"
 	test_path_is_file "$1" &&
 	if test -s "$1"
 	then
@@ -1262,9 +1174,9 @@ test_create_repo () {
 	mkdir -p "$repo"
 	(
 		cd "$repo" || error "Cannot setup test environment"
-		"${GIT_TEST_INSTALLED:-$GIT_EXEC_PATH}/git$X" -c \
-			init.defaultBranch="${GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME-master}" \
+		"${GIT_TEST_INSTALLED:-$GIT_EXEC_PATH}/git$X" \
 			init \
+			--quiet \
 			"--template=$GIT_BUILD_DIR/templates/blt/" >&3 2>&4 ||
 		error "cannot run git init -- have you built things yet?"
 		mv .git/hooks .git/hooks-disabled
