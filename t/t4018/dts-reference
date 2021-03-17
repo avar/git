@@ -1,3 +1,4 @@
+t4018 header: &RIGHT {
 &label_1 {
 	TEST = <455>;
 };
