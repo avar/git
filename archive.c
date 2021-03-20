@@ -137,8 +137,9 @@ static int check_attr_export_subst(const struct attr_check *check)
 }
 
 static int write_archive_entry(const struct object_id *oid, const char *base,
-		int baselen, const char *filename, unsigned mode,
-		void *context)
+			       int baselen, const char *filename,
+			       unsigned mode,
+			       void *context)
 {
 	static struct strbuf path = STRBUF_INIT;
 	struct archiver_context *c = context;
@@ -228,8 +229,9 @@ static int write_directory(struct archiver_context *c)
 }
 
 static int queue_or_write_archive_entry(const struct object_id *oid,
-		struct strbuf *base, const char *filename,
-		unsigned mode, void *context)
+					struct strbuf *base, const char *filename,
+					enum object_type object_type, unsigned mode,
+					void *context)
 {
 	struct archiver_context *c = context;
 
@@ -241,7 +243,7 @@ static int queue_or_write_archive_entry(const struct object_id *oid,
 		c->bottom = next;
 	}
 
-	if (S_ISDIR(mode)) {
+	if (object_type == OBJ_TREE) {
 		size_t baselen = base->len;
 		const struct attr_check *check;
 
@@ -375,13 +377,14 @@ struct path_exists_context {
 };
 
 static int reject_entry(const struct object_id *oid, struct strbuf *base,
-			const char *filename, unsigned mode,
+			const char *filename,
+			enum object_type object_type, unsigned mode,
 			void *context)
 {
 	int ret = -1;
 	struct path_exists_context *ctx = context;
 
-	if (S_ISDIR(mode)) {
+	if (object_type == OBJ_TREE) {
 		struct strbuf sb = STRBUF_INIT;
 		strbuf_addbuf(&sb, base);
 		strbuf_addstr(&sb, filename);
@@ -472,14 +475,14 @@ static void parse_treeish_arg(const char **argv,
 
 	if (prefix) {
 		struct object_id tree_oid;
-		unsigned short mode;
+		enum object_type object_type;
 		int err;
 
-		err = get_tree_entry(ar_args->repo,
-				     &tree->object.oid,
-				     prefix, &tree_oid,
-				     &mode);
-		if (err || !S_ISDIR(mode))
+		err = get_tree_entry_type(ar_args->repo,
+					  &tree->object.oid,
+					  prefix, &tree_oid,
+					  &object_type);
+		if (err || object_type != OBJ_TREE)
 			die(_("current working directory is untracked"));
 
 		tree = parse_tree_indirect(&tree_oid);
