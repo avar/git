@@ -1232,8 +1232,7 @@ test_expect_success 'test_must_fail rejects a non-git command with env' '
 '
 
 test_expect_success 'test_commit --no-tag fails with a <tag> argument' '
-	run_sub_test_lib_test_err \
-		test_commit-bug "test_commit-bug with --no-tag" <<-\EOF &&
+	write_and_run_sub_test_lib_test_err test_commit-bug <<-\EOF &&
 	test_expect_success "setup #1" "test_commit message1 file1 contents1"
 	test_expect_success "setup #2" "test_commit message2 file2 contents2 tag2"
 	test_expect_success "setup #3" "test_commit --no-tag message3 file3 contents3"
