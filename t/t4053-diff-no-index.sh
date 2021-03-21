@@ -16,7 +16,12 @@ test_expect_success 'setup' '
 	echo 1 >non/git/b
 '
 
-test_expect_success 'git diff --no-index directories' '
+test_expect_success 'git diff --no-index --exit-code' '
+	git diff --no-index --exit-code a/1 non/git/a &&
+	test_expect_code 1 git diff --no-index --exit-code a/1 a/2
+'
+
+Test_expect_success 'git diff --no-index directories' '
 	test_expect_code 1 git diff --no-index a b >cnt &&
 	test_line_count = 14 cnt
 '
@@ -142,6 +147,36 @@ test_expect_success 'diff --no-index allows external diff' '
 		git diff --no-index non/git/a non/git/b >actual &&
 	echo external >expect &&
 	test_cmp expect actual
+'
+
+test_expect_success 'diff --no-index normalizes mode: no changes' '
+	echo foo >x &&
+	cp x y &&
+	git diff --no-index x y >out &&
+	test_must_be_empty out
+'
+
+test_expect_success 'diff --no-index normalizes mode: chmod +x' '
+	chmod +x y &&
+	cat >expected <<-\EOF &&
+	diff --git a/x b/y
+	old mode 100644
+	new mode 100755
+	EOF
+	test_expect_code 1 git diff --no-index x y >actual &&
+	test_cmp expected actual
+'
+
+test_expect_success 'diff --no-index normalizes: mode not like git mode' '
+	chmod 666 x &&
+	chmod 777 y &&
+	cat >expected <<-\EOF &&
+	diff --git a/x b/y
+	old mode 100644
+	new mode 100755
+	EOF
+	test_expect_code 1 git diff --no-index x y >actual &&
+	test_cmp expected actual
 '
 
 test_done
