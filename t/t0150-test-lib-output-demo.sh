@@ -68,6 +68,10 @@ test_expect_success DEMO_PREREQ_LAZY_A,!DEMO_PREREQ_LAZY_B 'with a lazy prerequi
 	echo lazy
 '
 
+test_expect_success 'repository creation' '
+	test_create_repo a-repo
+'
+
 # END EXTRACTED TESTS
 
 if test "$TEST_LIB_OUTPUT_DEMO" = "success"
@@ -117,11 +121,12 @@ test_expect_success 'run t0150-fake.sh' '
 	> <RED>#<RESET>
 	> ok 8 - with a non-lazy prerequisite
 	> ok 9 - with a lazy prerequisites
+	> ok 10 - repository creation
 	> <BLUE># 1 test(s) skipped<RESET>
 	> <YELLOW># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <GREEN># still have 1 known breakage(s)<RESET>
-	> <RED;BOLD># failed 2 among remaining 7 test(s)<RESET>
-	> <CYAN>1..9<RESET>
+	> <RED;BOLD># failed 2 among remaining 8 test(s)<RESET>
+	> <CYAN>1..10<RESET>
 	EOF
 '
 
@@ -129,6 +134,7 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	run_sub_test_lib_test_err t0150-fake --verbose &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
+	> #### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'
 	> ok 1 - successful one-line test
 	> ###true
 	> Z
@@ -209,11 +215,16 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	> ###	echo lazy
 	> ###
 	> Z
+	> ok 10 - repository creation
+	> ###
+	> ###	test_create_repo a-repo
+	> ###
+	> Z
 	> # 1 test(s) skipped
 	> # 1 known breakage(s) vanished; please update test(s)
 	> # still have 1 known breakage(s)
-	> # failed 2 among remaining 7 test(s)
-	> 1..9
+	> # failed 2 among remaining 8 test(s)
+	> 1..10
 	EOF
 '
 
@@ -221,6 +232,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	run_sub_test_lib_test_err t0150-fake --verbose --color &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
+	> <MAGENTA>#### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'<RESET>
 	> <GREEN;BOLD>ok 1 - successful one-line test<RESET>
 	> <GREEN>###true<RESET>
 	> Z
@@ -301,11 +313,16 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> <GREEN>###	echo lazy<RESET>
 	> <GREEN>###<RESET>
 	> Z
+	> <GREEN;BOLD>ok 10 - repository creation<RESET>
+	> <GREEN>###<RESET>
+	> <GREEN>###	test_create_repo a-repo<RESET>
+	> <GREEN>###<RESET>
+	> Z
 	> <BLUE># 1 test(s) skipped<RESET>
 	> <YELLOW># 1 known breakage(s) vanished; please update test(s)<RESET>
 	> <GREEN># still have 1 known breakage(s)<RESET>
-	> <RED;BOLD># failed 2 among remaining 7 test(s)<RESET>
-	> <CYAN>1..9<RESET>
+	> <RED;BOLD># failed 2 among remaining 8 test(s)<RESET>
+	> <CYAN>1..10<RESET>
 	EOF
 '
 
