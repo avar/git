@@ -754,7 +754,7 @@ test_path_is_file () {
 	if ! test -f "$1"
 	then
 		echo "File $1 doesn't exist"
-		false
+		return 1
 	fi
 }
 
@@ -763,7 +763,7 @@ test_path_is_dir () {
 	if ! test -d "$1"
 	then
 		echo "Directory $1 doesn't exist"
-		false
+		return 1
 	fi
 }
 
@@ -772,7 +772,7 @@ test_path_exists () {
 	if ! test -e "$1"
 	then
 		echo "Path $1 doesn't exist"
-		false
+		return 1
 	fi
 }
 
@@ -794,7 +794,7 @@ test_file_not_empty () {
 	if ! test -s "$1"
 	then
 		echo "'$1' is not a non-empty file."
-		false
+		return 1
 	fi
 }
 
