@@ -134,7 +134,7 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	run_sub_test_lib_test_err t0150-fake --verbose &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
-	> #### Created test for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'
+	> #### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'
 	> ok 1 - successful one-line test
 	> ###true
 	> Z
@@ -215,7 +215,6 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	> ###	echo lazy
 	> ###
 	> Z
-	> ##### Created repository '"'"'a-repo'"'"'
 	> ok 10 - repository creation
 	> ###
 	> ###	test_create_repo a-repo
@@ -233,7 +232,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	run_sub_test_lib_test_err t0150-fake --verbose --color &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
-	> <MAGENTA>#### Created test for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'<RESET>
+	> <MAGENTA>#### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'<RESET>
 	> <GREEN;BOLD>ok 1 - successful one-line test<RESET>
 	> <GREEN>###true<RESET>
 	> Z
@@ -314,7 +313,6 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	> <GREEN>###	echo lazy<RESET>
 	> <GREEN>###<RESET>
 	> Z
-	> <MAGENTA>##### Created repository '"'"'a-repo'"'"'<RESET>
 	> <GREEN;BOLD>ok 10 - repository creation<RESET>
 	> <GREEN>###<RESET>
 	> <GREEN>###	test_create_repo a-repo<RESET>
