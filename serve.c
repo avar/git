@@ -33,6 +33,13 @@ static int object_format_advertise(struct repository *r,
 	return 1;
 }
 
+static int session_id_startup_config(const char *var, const char *value, void *data)
+{
+	if (!strcmp(var, "transfer.advertisesid"))
+		advertise_sid = git_config_bool(var, value);
+	return 0;
+}
+
 static int session_id_advertise(struct repository *r, struct strbuf *value)
 {
 	if (!advertise_sid)
@@ -53,6 +60,24 @@ struct protocol_capability {
 	 * specify this capability.
 	 */
 	const char *name;
+
+	/*
+	 * A git_config() callback that'll be called only once for the
+	 * lifetime of the process, possibly over many different
+	 * requests. Used for reading config that's expected to be
+	 * static.
+	 *
+	 * The "command" or "advertise" callbacks themselves are
+	 * expected to read config that needs to be more current than
+	 * that, or which is dependent on request data.
+	 */
+	int (*startup_config)(const char *var, const char *value, void *data);
+
+	/*
+	 * A boolean to check if we've called our "startup_config"
+	 * callback.
+	 */
+	int have_startup_config;
 
 	/*
 	 * Function queried to see if a capability should be advertised.
@@ -81,6 +106,7 @@ static struct protocol_capability capabilities[] = {
 	},
 	{
 		.name = "ls-refs",
+		.startup_config = ls_refs_startup_config,
 		.advertise = ls_refs_advertise,
 		.command = ls_refs,
 	},
@@ -99,6 +125,7 @@ static struct protocol_capability capabilities[] = {
 	},
 	{
 		.name = "session-id",
+		.startup_config = session_id_startup_config,
 		.advertise = session_id_advertise,
 	},
 	{
@@ -108,9 +135,20 @@ static struct protocol_capability capabilities[] = {
 	},
 };
 
+static void read_startup_config(struct protocol_capability *command)
+{
+	if (!command->startup_config)
+		return;
+	if (command->have_startup_config++)
+		return;
+	git_config(command->startup_config, NULL);
+}
+
 static int call_advertise(struct protocol_capability *command,
 			  struct repository *r, struct strbuf *value)
 {
+	read_startup_config(command);
+
 	return command->advertise(r, value);
 }
 
@@ -118,6 +156,9 @@ static int call_command(struct protocol_capability *command,
 			struct repository *r, struct strvec *keys,
 			struct packet_reader *request)
 {
+
+	read_startup_config(command);
+
 	return command->command(r, keys, request);
 }
 
@@ -318,8 +359,6 @@ static int process_request(void)
 /* Main serve loop for protocol version 2 */
 void serve(struct serve_options *options)
 {
-	git_config_get_bool("transfer.advertisesid", &advertise_sid);
-
 	if (options->advertise_capabilities || !options->stateless_rpc) {
 		/* serve by default supports v2 */
 		packet_write_fmt(1, "version 2\n");
