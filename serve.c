@@ -32,6 +32,13 @@ static int object_format_advertise(struct repository *r,
 	return 1;
 }
 
+static int session_id_configure(const char *var, const char *value, void *data)
+{
+	if (!strcmp(var, "transfer.advertisesid"))
+		advertise_sid = git_config_bool(var, value);
+	return 0;
+}
+
 static int session_id_advertise(struct repository *r, struct strbuf *value)
 {
 	if (!advertise_sid)
@@ -48,6 +55,13 @@ struct protocol_capability {
 	 * specify this capability.
 	 */
 	const char *name;
+
+	/*
+	 * A git_config() callback. If defined it'll be dispatched too
+	 * sometime before the other functions are called, giving the
+	 * capability a chance to configure itself.
+	 */
+	int (*configure)(const char *var, const char *value, void *data);
 
 	/*
 	 * Function queried to see if a capability should be advertised.
@@ -78,6 +92,7 @@ static struct protocol_capability capabilities[] = {
 	},
 	{
 		.name = "ls-refs",
+		.configure = ls_refs_configure,
 		.advertise = ls_refs_advertise,
 		.command = ls_refs,
 	},
@@ -96,9 +111,26 @@ static struct protocol_capability capabilities[] = {
 	},
 	{
 		.name = "session-id",
+		.configure = session_id_configure,
 		.advertise = session_id_advertise,
 	},
 };
+
+static int git_serve_config(const char *var, const char *value, void *data)
+{
+	int i;
+	for (i = 0; i < ARRAY_SIZE(capabilities); i++) {
+		struct protocol_capability *c = &capabilities[i];
+		config_fn_t fn = c->configure;
+		int ret;
+		if (!fn)
+			continue;
+		ret = fn(var, value, data);
+		if (ret)
+			return ret;
+	}
+	return 0;
+}
 
 static void advertise_capabilities(void)
 {
@@ -297,7 +329,7 @@ static int process_request(void)
 /* Main serve loop for protocol version 2 */
 void serve(struct serve_options *options)
 {
-	git_config_get_bool("transfer.advertisesid", &advertise_sid);
+	git_config(git_serve_config, NULL);
 
 	if (options->advertise_capabilities || !options->stateless_rpc) {
 		/* serve by default supports v2 */
