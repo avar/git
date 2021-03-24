@@ -1,0 +1,203 @@
+Bundle URIs
+===========
+
+This feature allows servers to optimistically pre-seed clients with
+"git bundle" URIs. A client supporting this can ask to know about
+configured bundle URLs before the "ls-refs" and/or "fetch" part of the
+dialog.
+
+It is then expected to fetch the bundle(s), and run the equivalent of
+"git bundle list-heads" on them to discover (hopefully recent) OIDs to
+send when requesting the objects it wants.
+
+To a server such a client's negotiation dialog will be the same as a
+client performing an incremental fetch with a repository with local
+refs at the tips of OIDs advertised in the bundle.
+
+This method of fetching saves on both client and server resources. The
+common case is that the majority of the downloaded objects can be
+downloaded as a static file, can be cached, and offloaded to a CDN.
+
+Bundle URIs support offloading resources both on initial clones, and
+on incremental fetches, as discussed below.
+
+Protocol
+--------
+
+The server and client both advertise a `bundle-uris` capability. Such
+a server is expected to return zero or more bundle URL in response to
+a `bundle-uris` request.
+
+The output of `bundle-uris` is as follows:
+
+    output = *bundle-uri-line
+	     flush-pkt
+    bundle-uri = Any URI the client supports
+    bundle-tag = Any printable ASCII characters except space
+    bundle-uri-line = PKT-LINE(bundle-uri *(SP bundle-tag) *(SP reserved) LF)
+    reserved = <other positional fields reserved for future use>
+
+E.g.:
+
+    my-first-tag https://git.example.com/last-weeks-repo.bundle
+    my-second-tag https://git.example.com/yesterdays-repo.bundle
+    my-second-tag ssh://git.example.com/yesterdays-repo.bundle
+
+The "my-first-tag" or "my-second-tag" tag is free-form and
+optional. If provided it indicates that the bundles of a given tag
+point to identical files, but e.g. on different servers, under
+different supported URI schemas etc.
+
+The client SHOULD round-robin randomly between the provided bundles of
+a given tag, or use other best-practice selection schemas considerate
+of server resources, e.g. it might prefer a mirror close to itself,
+omit URI schemas it doesn't support etc.
+
+A client MAY entirely ignore bundles it's been told about and proceed
+with the rest of the negotiation dialog as if though it's negotiating
+a fresh clone or normal incremental fetch. This is intended to
+facilitate a graceful degradation if bundles URIs cannot be retrieved
+etc.
+
+A server MUST NOT make any assumptions about a client having received
+bundles for anything later in the dialog, which sets this feature
+apart from the "Packfile URIs" facility.
+
+A server MUST only send a sequence of bundles which when put together
+are closed under reachability.
+
+A client MUST conduct any subsequent dialog with the server, having
+retrieved zero or more bundles in order from the start to the end of
+the list, i.e. it's OK to punt on further bundle fetching partway
+through the list of bundles.
+
+This is to facilitate the common heuristic of e.g. having a "big"
+bundle with all repository data up until a month ago, and several
+incremental bundles after that (with possibly overlapping and
+redundant objects). A client MAY decide to e.g. only fetch the "big"
+bundle and proceed from there.
+
+Goals and comparison with Packfile URIs
+---------------------------------------
+
+The earlier Packfile URIs facility is theoretically more efficient
+than Bundle URIs, but requires a much closer cooperation between CDN
+and client.
+
+I.e. the server MUST know what objects exist in the packfile URI it's
+pointing to, failure to do so will not only result in a client error
+(the packfile hash won't match), but even if it got past that would
+likely result in a corrupt repository with tips pointing to
+unreachable objects.
+
+By comparison the bundle URIs are meant to be a "dumb" solution
+friendly to e.g. having a weekly cronjob take a snapshot of a git
+repository, that snapshot being uploaded to a network of FTP mirrors
+(which may be inconsistent or out of date).
+
+The server does not need to know what state the side-channel download
+is at, because the client will first validate it and negotiate with
+the server using what it discovers.
+
+Security
+--------
+
+The omission of something equivalent to the packfile <sha1> in the
+Packfile URIs protocol is intentional, as having it would require
+closer server and CDN cooperation than some server operators are
+comfortable with.
+
+Furthermore, it is not needed for security. The server doesn't need to
+trust its CDN. If the server were to attempt to send harmful content
+to the client, the result would not validate against the server's
+provided ref tips gotten from ls-refs.
+
+The lack of a such a hash does leave room open to a malicious CDN
+operation to be annoying however. E.g. they could inject irrelevant
+objects into the bundles, which would enlarge the downloaded
+repository until a "gc" would eventually throw them away.
+
+In practice the lack of a hash is considered to be a non-issue. Anyone
+concerned about such security is going to be pointing to an "ssh" or
+"https" URL they control from their end-to-end encrypted
+client<->server dialog.
+
+If anyone really cares it can be added in the future as a new field on
+the space-separated bundle-uri-line.
+
+Server design
+-------------
+
+A server can rather trivially made compatible with this protocol
+extension by knowing how to advertise a static list of
+`bundle-uris`. The client will then do its thing of downloading the
+bundles, and finally proceed with the rest of the dialog.
+
+A server running git.git's version of upload-pack can be configured
+with one or more `uploadpack.bundleURIs=[<tag> ]<uri>` entries.
+
+By comparison the packfile-uris implementation is more complex on the
+server-side. The server needs to know which objects are in the URIs
+it's pointing to, do a full negotiation with the client, and then
+prune out the objects present in the pointed-to URIs from its own PACK
+response.
+
+Client design
+-------------
+
+The client MAY ask for configured bundles after it sees that the
+server supports a `bundle-uris` capability. As with packfile URIs the
+git.git client MAY prune the returned list using its
+`fetch.URIProtocols` configuration.
+
+A client SHOULD make the extraction of ref tips from the provided
+bundles otherwise invisible and side-effect free to the user. I.e. on
+failure, ctrl+c etc. the user shouldn't be left with a repository in
+the funny state of having ref tips at whatever values happened to be
+gleamed from the bundles.
+
+Under the hood the git.git client feeds the tips advertised in the
+bundles to its negotiation machinery, after having extracted the
+bundles to its local object store.
+
+Demo
+----
+
+This whole thing is just a way to generalize something that can be
+done manually without this feature by ad-hoc fetching from a bundle.
+
+First we create a bundle from a git.git checkout with:
+
+    git bundle create /tmp/git.git-master-upto-v2.31.0.bundle v2.31.0
+
+You don't need to run that, I've made one for you. Then for comparison
+time a normal clone of git.git:
+
+	# Runs in ~25 seconds on my laptop
+	time (
+		 rm -rf /tmp/git-clone.git &&
+		 git clone --bare https://github.com/git/git.git /tmp/git-clone.git
+	)
+
+V.s. what bundle-uris is approximately doing under the hood:
+
+	time (
+		rm -rf /tmp/git-bundle.git &&
+		git init --bare /tmp/git-bundle.git &&
+		cd /tmp/git-bundle.git &&
+		time wget https://vm.nix.is/~avar/noindex/git.git-master-upto-v2.31.0.bundle &&
+		time git bundle unbundle git.git-master-upto-v2.31.0.bundle &&
+		git cat-file -t 98164e9585e02e31dcf1377a553efe076c15f8c6 2>/dev/null ||
+			echo "ok: Do not have post-v2.31.0 objects" &&
+		git remote add origin https://github.com/git/git.git &&
+		git update-ref refs/heads/master a5828ae6b52137b913b978e16cd2334482eb4c1f 0000000000000000000000000000000000000000 &&
+		time git fetch
+	)
+
+There's almost no overall time savings. It takes me 8 seconds to wget
+the file, 11 seconds to unpack it (mainly making the *.idx), and 4
+seconds to do the incremental fetch.
+
+But the point mainly isn't to speed things up overall, but to be
+gentler on server resources. In the common in-the-wild case the
+incremental fetch is even cheaper (I didn't include any tags etc.).
