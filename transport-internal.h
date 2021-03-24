@@ -27,6 +27,11 @@ struct transport_vtable {
 				     struct transport_ls_refs_options *transport_options);
 
 	/**
+	 * Returns a list of the remote side's bundle URIs.
+	 **/
+	struct string_list *(*get_bundle_uris)(struct transport *transport);
+
+	/**
 	 * Fetch the objects for the given refs. Note that this gets
 	 * an array, and should ignore the list structure.
 	 *
