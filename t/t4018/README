@@ -1,15 +1,61 @@
-How to write RIGHT test cases
-=============================
+t4018 header: There are two ways of writing tests in this directory. In both cases
+How to write test cases
+=======================
 
-Insert the word "ChangeMe" (exactly this form) at a distance of
-at least two lines from the line that must appear in the hunk header.
+There are two ways of writing tests in this directory. In both cases
+"LANG" is the userdiff driver name, e.g. "perl" or "cpp".
 
-The text that must appear in the hunk header must contain the word
-"right", but in all upper-case, like in the title above.
+The word "ChangeMe" below the line that must appear in the hunk header
+(we run the diff with -U0). See below sections.
 
-This text is a bit twisted and out of order, but it is itself a
-test case for the default hunk header pattern. Know what you are doing
-if you change it.
+t4018 header: The content of the "EOF_TEST" argument is used as-is, with the
+"LANG.sh" test cases
+====================
 
-BTW, this tests that the head line goes to the hunk header, not the line
-of equal signs.
+These tests use the normal test-lib.sh syntax and environment, and are
+sourced by t4018-diff-funcname.sh. The "test_diff_funcname()" function
+is a thin wrapper around the "test_expect_success()" function. See
+t/README.
+
+The content of the "EOF_TEST" argument is used as-is, with the
+exception of the "ChangeMe" token discussed above.
+
+The advantage of using this over the "LANG-whatever" test cases (see
+below) are:
+
+ - The ability to do custom test setup/teardown, e.g. using
+   "test_config" before the test is run.
+
+ - The description of the test is a string, and doesn't need to be a
+   valid filename.
+
+ - All the tests for a given driver are present in one file. As
+   demonstrated with the two "t4018 header" lines in this file this is
+   also possible with the "LANG-whatever" tests, but those N tests in
+   one file won't benefit from different test descriptions.
+
+"LANG-whatever" test cases
+==========================
+
+Create test cases called "LANG-whatever" in this directory, where
+"whatever" is a brief description of the test.
+
+You can also stick all the tests into one "LANG" file. See "t4018
+description" below.
+
+Any line starting with "t4018" is a control line for the test:
+
+ - The "t4018 header:" line above specifies what text must appear in
+   the hunk header. We strip away the starting "@@ [...] @@" part of
+   the line for ease of not having to hardcode the line numbers and
+   offsets.
+
+ - The "t4018 description:" line above the test is a convention to add
+   a human-readable description for the test. Unlike in the case of
+   the LANG.sh test cases these descriptions don't make it to
+   "test_expect_success", and won't be seen in the test output.
+
+In many of the test cases the header line includes the token "RIGHT",
+this used to be part of the test syntax, but isn't anymore. Now we
+care about the "t4018 header:" line, not whatever line contains a
+"RIGHT" token.
