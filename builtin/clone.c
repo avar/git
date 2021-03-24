@@ -1290,6 +1290,7 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 		strvec_push(&transport_ls_refs_options.ref_prefixes,
 			    "refs/tags/");
 
+	transport_get_bundle_uris(transport);
 	refs = transport_get_remote_refs(transport, &transport_ls_refs_options);
 
 	if (refs) {

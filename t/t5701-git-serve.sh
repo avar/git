@@ -28,6 +28,26 @@ test_expect_success 'test capability advertisement' '
 	test_cmp expect actual
 '
 
+test_expect_success 'test capability advertisement with uploadpack.packfileURI' '
+	test_config uploadpack.blobPackfileUri FAKE &&
+
+	sed "s/\\(fetch=shallow\\)/\\1 packfile-uris/" <expect >expect.new &&
+	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
+		--advertise-capabilities >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect.new actual
+'
+
+test_expect_success 'test capability advertisement with uploadpack.bundleURIs' '
+	test_config uploadpack.bundleURIs FAKE &&
+
+	awk "/^fetch=shallow$/ { print \"bundle-uris\" }1" <expect >expect.new &&
+	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
+		--advertise-capabilities >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect.new actual
+'
+
 test_expect_success 'stateless-rpc flag does not list capabilities' '
 	# Empty request
 	test-tool pkt-line pack >in <<-EOF &&
@@ -238,6 +258,50 @@ test_expect_success 'unexpected lines are not allowed in fetch request' '
 		test_must_fail test-tool serve-v2 --stateless-rpc
 	) <in >/dev/null 2>err &&
 	grep "unexpected line: .this-is-not-a-command." err
+'
+
+# Test the basics of bundle-uris
+#
+test_expect_success 'basics of bundle-uris' '
+	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uris
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	$(git config uploadpack.bundleURIs)
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc <in >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'basics of bundle-uris -- multiple URLs' '
+	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
+	git config --add uploadpack.bundleURIs https://example.com/test2.bundle &&
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uris
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	$(git config --get-all uploadpack.bundleURIs)
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc <in >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'clone and dump bundle URIs' '
+	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
+	GIT_TRACE_PACKET="$(pwd)/log" git -c protocol.version=2 clone "file://$PWD" my-clone
 '
 
 test_done

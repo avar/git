@@ -5,6 +5,7 @@
 #include "version.h"
 #include "strvec.h"
 #include "ls-refs.h"
+#include "bundle-uris.h"
 #include "serve.h"
 #include "upload-pack.h"
 
@@ -89,6 +90,11 @@ static struct protocol_capability capabilities[] = {
 	{
 		.name = "agent",
 		.advertise = agent_advertise,
+	},
+	{
+		.name = "bundle-uris",
+		.advertise = bundle_uris_advertise,
+		.command = bundle_uris,
 	},
 	{
 		.name = "ls-refs",
