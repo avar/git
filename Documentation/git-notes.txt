@@ -44,7 +44,7 @@ using the `--notes` option. Such notes are added as a patch commentary
 after a three dash separator line.
 
 To change which notes are shown by 'git log', see the
-"notes.displayRef" configuration in linkgit:git-log[1].
+"notes.displayRef" configuration in linkgit:git-config[1].
 
 See the "notes.rewrite.<command>" configuration for a way to carry
 notes across commands that rewrite commits.
