@@ -294,6 +294,15 @@ fetched, making it impossible to check out that submodule later without
 having to do a fetch again. This is expected to be fixed in a future Git
 version.
 
+CONFIGURATION
+-------------
+
+include::templates/configuration-include-rest-heading.txt[]
+
+include::config/fetch.txt[]
+
+include::config/remote.txt[]
+
 SEE ALSO
 --------
 linkgit:git-pull[1]
