@@ -284,7 +284,13 @@ docdep_prereqs = \
 	mergetools-list.made $(mergetools_txt) \
 	cmd-list.made $(cmds_txt)
 
-doc.dep : $(docdep_prereqs) $(wildcard *.txt) $(wildcard config/*.txt) build-docdep.perl
+DOC_DEPS = $(wildcard *.txt)
+DOC_DEPS += $(wildcard config/*.txt)
+DOC_DEPS += $(wildcard config/*/*.txt)
+DOC_DEPS += $(wildcard includes/*.txt)
+DOC_DEPS += $(wildcard templates/*.txt)
+
+doc.dep : $(docdep_prereqs) $(DOC_DEPS)  build-docdep.perl
 	$(QUIET_GEN)$(RM) $@+ $@ && \
 	$(PERL_PATH) ./build-docdep.perl >$@+ $(QUIET_STDERR) && \
 	mv $@+ $@
