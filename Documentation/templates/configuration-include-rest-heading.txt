@@ -1,3 +1,4 @@
-The discussion above this line is unique to this documentation, but
-everything below is included from section(s) in linkgit:git-config[1]
-applicable to this command:
+Everything above this line in this section is unique to this
+documentation.
+
+include::configuration-include-heading.txt[]
