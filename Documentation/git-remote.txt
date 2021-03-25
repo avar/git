@@ -255,6 +255,8 @@ include::templates/configuration-include-heading.txt[]
 
 include::config/remote.txt[]
 
+include::config/remotes.txt[]
+
 SEE ALSO
 --------
 linkgit:git-fetch[1]
