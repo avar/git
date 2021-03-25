@@ -47,6 +47,7 @@ MAN7_TXT += gitworkflows.txt
 HOWTO_TXT += $(wildcard howto/*.txt)
 
 DOC_DEP_TXT += $(wildcard *.txt)
+DOC_DEP_TXT += $(wildcard includes/*.txt)
 DOC_DEP_TXT += $(wildcard config/*.txt)
 
 ifdef MAN_FILTER
@@ -474,3 +475,4 @@ endif
 .DELETE_ON_ERROR:
 
 .PHONY: FORCE
+
