@@ -316,14 +316,9 @@ core.notesRef::
 	This setting can be overridden through the environment and
 	command line.
 
-notes.displayRef::
-	Which ref (or refs, if a glob or specified more than once), in
-	addition to the default set by `core.notesRef` or
-	`GIT_NOTES_REF`, to read notes from when showing commit
-	messages with the 'git log' family of commands.
-	This setting can be overridden on the command line or by the
-	`GIT_NOTES_DISPLAY_REF` environment variable.
-	See linkgit:git-log[1].
+include::templates/configuration-include-rest-heading.txt[]
+
+include::config/notes.txt[]
 
 
 ENVIRONMENT
