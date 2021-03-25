@@ -219,6 +219,13 @@ linkgit:git-format-patch[1],
 linkgit:git-apply[1],
 linkgit:git-show[1]
 
+CONFIGURATION
+-------------
+
+include::templates/configuration-include-heading.txt[]
+
+include::config/diff.txt[]
+
 GIT
 ---
 Part of the linkgit:git[1] suite

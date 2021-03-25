@@ -229,6 +229,14 @@ MAPPING AUTHORS
 See linkgit:gitmailmap[5].
 
 
+CONFIGURATION
+-------------
+
+include::templates/configuration-include-heading.txt[]
+
+include::config/blame.txt[]
+
+
 SEE ALSO
 --------
 linkgit:git-annotate[1]
