@@ -44,7 +44,8 @@ OPTIONS
 	otherwise, `auto`.
 +
 This output may be colored. See `color.ui` in linkgit:git-config[1]
-and `color.decorate` there and in the "CONFIGURATION" section below.
+and `color.logDecorate` (also known as `color.decorate`) there and in
+the "CONFIGURATION" section below.
 
 --decorate-refs=<pattern>::
 --decorate-refs-exclude=<pattern>::
