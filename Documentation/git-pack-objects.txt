@@ -414,16 +414,8 @@ over user-wide config, and so forth).
 CONFIGURATION
 -------------
 
-Various configuration variables affect packing. Those variables and
-more are discussed in linkgit:git-config[1].
+include::templates/configuration-include-pack.txt[]
 
-The below documentation is selectively included from
-linkgit:git-config[1]. It should be all the configuration variables
-relevant to "pack-objects", but given how spread out they are when in
-doubt consult linkgit:git-config[1] for the full listing:
-
-include::config/core/bigFileThreshold.txt[]
-include::config/pack.txt[]
 include::config/uploadpack/pack-objects.txt[]
 
 
