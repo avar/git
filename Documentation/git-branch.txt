@@ -308,6 +308,8 @@ include::templates/configuration-include-rest-heading.txt[]
 
 include::config/branch.txt[]
 
+include::config/color/branch.txt[]
+
 EXAMPLES
 --------
 

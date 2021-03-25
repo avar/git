@@ -236,6 +236,8 @@ include::templates/configuration-include-heading.txt[]
 
 include::config/blame.txt[]
 
+include::config/color/blame.txt[]
+
 
 SEE ALSO
 --------
