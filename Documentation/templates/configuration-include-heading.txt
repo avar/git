@@ -1,0 +1,2 @@
+The below documentation is the same as what's found in
+linkgit:git-config[1]:
