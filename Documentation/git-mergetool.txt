@@ -101,6 +101,9 @@ success of the resolution after the custom tool has exited.
 
 CONFIGURATION
 -------------
+
+include::templates/configuration-include-heading.txt[]
+
 include::config/mergetool.txt[]
 
 TEMPORARY FILES
