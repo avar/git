@@ -414,12 +414,18 @@ over user-wide config, and so forth).
 CONFIGURATION
 -------------
 
-Various configuration variables affect packing, see
-linkgit:git-config[1] (search for "pack" and "delta").
+Various configuration variables affect packing. Those variables and
+more are discussed in linkgit:git-config[1].
 
-Notably, delta compression is not used on objects larger than the
-`core.bigFileThreshold` configuration variable and on files with the
-attribute `delta` set to false.
+The below documentation is selectively included from
+linkgit:git-config[1]. It should be all the configuration variables
+relevant to "pack-objects", but given how spread out they are when in
+doubt consult linkgit:git-config[1] for the full listing:
+
+include::config/core/bigFileThreshold.txt[]
+include::config/pack.txt[]
+include::config/uploadpack/pack-objects.txt[]
+
 
 SEE ALSO
 --------
