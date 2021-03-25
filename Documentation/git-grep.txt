@@ -38,13 +38,6 @@ are lists of one or more search expressions separated by newline
 characters.  An empty string as search expression matches all lines.
 
 
-CONFIGURATION
--------------
-
-include::templates/configuration-include-heading.txt[]
-
-include::config/grep.txt[]
-
 OPTIONS
 -------
 --cached::
@@ -337,6 +330,13 @@ When grepping the object store (with `--cached` or giving tree objects), running
 with multiple threads might perform slower than single threaded if `--textconv`
 is given and there're too many text conversions. So if you experience low
 performance in this case, it might be desirable to use `--threads=1`.
+
+CONFIGURATION
+-------------
+
+include::templates/configuration-include-heading.txt[]
+
+include::config/grep.txt[]
 
 GIT
 ---
