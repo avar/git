@@ -48,6 +48,7 @@ MAN7_TXT += gitworkflows.txt
 HOWTO_TXT += $(wildcard howto/*.txt)
 
 INCLUDE_TARGETS_TXT += $(wildcard *.txt)
+INCLUDE_TARGETS_TXT += $(wildcard includes/*.txt)
 INCLUDE_TARGETS_TXT += $(wildcard config/*.txt)
 
 # For linting
@@ -499,3 +500,4 @@ doc-l10n install-l10n::
 endif
 
 .PHONY: FORCE
+
