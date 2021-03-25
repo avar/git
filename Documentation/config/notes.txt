@@ -3,6 +3,9 @@ notes.mergeStrategy::
 	conflicts.  Must be one of `manual`, `ours`, `theirs`, `union`, or
 	`cat_sort_uniq`.  Defaults to `manual`.  See "NOTES MERGE STRATEGIES"
 	section of linkgit:git-notes[1] for more information on each strategy.
++
+This setting can be overridden by passing the `--strategy` option to
+linkgit:git-notes[1].
 
 notes.<name>.mergeStrategy::
 	Which merge strategy to choose when doing a notes merge into
