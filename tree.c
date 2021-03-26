@@ -40,7 +40,7 @@ int read_tree_at(struct repository *r,
 		}
 
 		switch (fn(&entry.oid, base,
-			   entry.path, entry.object_type, entry.mode, context)) {
+			   entry.path, entry.object_type, entry.raw_mode, context)) {
 		case 0:
 			continue;
 		case READ_TREE_RECURSIVE:
