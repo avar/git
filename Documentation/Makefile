@@ -49,6 +49,9 @@ HOWTO_TXT += $(wildcard howto/*.txt)
 
 INCLUDE_TARGETS_TXT += $(wildcard *.txt)
 INCLUDE_TARGETS_TXT += $(wildcard config/*.txt)
+INCLUDE_TARGETS_TXT += $(wildcard config/*/*.txt)
+INCLUDE_TARGETS_TXT += $(wildcard includes/*.txt)
+INCLUDE_TARGETS_TXT += $(wildcard templates/*.txt)
 
 # For linting
 ALL_TXT += $(MAN1_TXT)
