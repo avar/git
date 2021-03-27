@@ -1274,8 +1274,6 @@ static int retry_bad_packed_offset(struct repository *r,
 	nth_packed_object_id(&oid, p, pack_pos_to_index(p, pos));
 	mark_bad_packed_object(p, oid.hash);
 	type = oid_object_info(r, &oid, NULL);
-	if (type <= OBJ_NONE)
-		return OBJ_BAD;
 	return type;
 }
 
