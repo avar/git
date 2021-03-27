@@ -241,11 +241,13 @@ int force_object_loose(const struct object_id *oid, time_t mtime);
  *
  * Returns 0 on success, negative on error (details may be written to stderr).
  */
+struct object_info;
 int read_loose_object(const char *path,
 		      const struct object_id *expected_oid,
-		      enum object_type *type,
-		      unsigned long *size,
-		      void **contents);
+		      struct object_id *real_oid,
+		      void **contents,
+		      struct object_info *oi,
+		      unsigned int oi_flags);
 
 /* Retry packed storage after checking packed and loose storage */
 #define HAS_OBJECT_RECHECK_PACKED 1
@@ -476,5 +478,16 @@ int for_each_object_in_pack(struct packed_git *p,
 			    enum for_each_object_flags flags);
 int for_each_packed_object(each_packed_object_fn, void *,
 			   enum for_each_object_flags flags);
+
+int unpack_loose_header(git_zstream *stream, unsigned char *map,
+			unsigned long mapsize, void *buffer,
+			unsigned long bufsiz);
+int parse_loose_header(const char *hdr, struct object_info *oi,
+		       unsigned int flags);
+int check_object_signature(struct repository *r, const struct object_id *oid,
+			   void *buf, unsigned long size, const char *type,
+			    struct object_id *roid);
+int finalize_object_file(const char *tmpfile, const char *filename);
+int check_and_freshen_file(const char *fn, int freshen);
 
 #endif /* OBJECT_STORE_H */

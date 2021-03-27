@@ -74,6 +74,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 	struct strbuf sb = STRBUF_INIT;
 	unsigned flags = OBJECT_INFO_LOOKUP_REPLACE;
 	const char *path = force_path;
+	int ret;
 
 	if (unknown_type)
 		flags |= OBJECT_INFO_ALLOW_UNKNOWN_TYPE;
@@ -92,7 +93,8 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 	switch (opt) {
 	case 't':
 		oi.type_name = &sb;
-		if (oid_object_info_extended(the_repository, &oid, &oi, flags) < 0)
+		ret = oid_object_info_extended(the_repository, &oid, &oi, flags);
+		if (!unknown_type && ret < 0)
 			die("git cat-file: could not get object info");
 		if (sb.len) {
 			printf("%s\n", sb.buf);
@@ -103,7 +105,8 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 
 	case 's':
 		oi.sizep = &size;
-		if (oid_object_info_extended(the_repository, &oid, &oi, flags) < 0)
+		ret = oid_object_info_extended(the_repository, &oid, &oi, flags);
+		if (!unknown_type && ret < 0)
 			die("git cat-file: could not get object info");
 		printf("%"PRIuMAX"\n", (uintmax_t)size);
 		return 0;
