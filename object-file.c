@@ -1324,7 +1324,7 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 	 */
 	if ((flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE) && (type < 0))
 		type = 0;
-	else if (type == OBJ_BAD)
+	else if (type < 0)
 		die(_("invalid object type"));
 	if (oi->typep)
 		*oi->typep = type;
@@ -1584,7 +1584,7 @@ enum object_type oid_object_info(struct repository *r,
 	oi.sizep = sizep;
 	if (oid_object_info_extended(r, oid, &oi,
 				      OBJECT_INFO_LOOKUP_REPLACE) < 0)
-		return OBJ_BAD;
+		return -1;
 	return type;
 }
 
@@ -2264,7 +2264,7 @@ int read_pack_header(int fd, struct pack_header *header)
 void assert_oid_type(const struct object_id *oid, enum object_type expect)
 {
 	enum object_type type = oid_object_info(the_repository, oid, NULL);
-	if (type == OBJ_BAD)
+	if (type < 0)
 		die(_("%s is not a valid object"), oid_to_hex(oid));
 	if (type != expect)
 		die(_("%s is not a valid '%s' object"), oid_to_hex(oid),
