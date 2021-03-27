@@ -241,11 +241,11 @@ int force_object_loose(const struct object_id *oid, time_t mtime);
  *
  * Returns 0 on success, negative on error (details may be written to stderr).
  */
+struct object_info;
 int read_loose_object(const char *path,
 		      const struct object_id *expected_oid,
-		      enum object_type *type,
-		      unsigned long *size,
 		      void **contents,
+		      struct object_info *oi,
 		      unsigned int oi_flags);
 
 /* Retry packed storage after checking packed and loose storage */
