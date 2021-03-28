@@ -2711,12 +2711,15 @@ FIND_SOURCE_FILES = ( \
 	)
 
 $(ETAGS_TARGET): FORCE
-	$(RM) $(ETAGS_TARGET)
-	$(FIND_SOURCE_FILES) | xargs etags -a -o $(ETAGS_TARGET)
+	echo $(ALL_SOURCE_FILES)
+	$(QUIET_GEN)$(RM) "$(ETAGS_TARGET)+" && \
+	$(FIND_SOURCE_FILES) | xargs etags -a -o "$(ETAGS_TARGET)+" && \
+	mv "$(ETAGS_TARGET)+" "$(ETAGS_TARGET)"
 
 tags: FORCE
-	$(RM) tags
-	$(FIND_SOURCE_FILES) | xargs ctags -a
+	$(QUIET_GEN)$(RM) tags+ && \
+	$(FIND_SOURCE_FILES) | xargs ctags -a -o tags+ && \
+	mv tags+ tags
 
 cscope:
 	$(RM) cscope*
