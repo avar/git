@@ -35,7 +35,7 @@ const char *type_name(unsigned int type)
 	return object_type_strings[type];
 }
 
-int type_from_string_gently(const char *str, size_t len, int gentle)
+int type_from_string_gently(const char *str, size_t len)
 {
 	int i;
 
@@ -46,17 +46,15 @@ int type_from_string_gently(const char *str, size_t len, int gentle)
 		if (!strncmp(str, object_type_strings[i], len) &&
 		    object_type_strings[i][len] == '\0')
 			return i;
-
-	if (gentle)
-		return -1;
-
-	die(_("invalid object type \"%.*s\""), (int)len, str);
+	return -1;
 }
 
 int type_from_string(const char *str)
 {
 	size_t len = strlen(str);
-	int ret = type_from_string_gently(str, len, 0);
+	int ret = type_from_string_gently(str, len);
+	if (ret < 0)
+		die(_("invalid object type \"%s\""), str);
 	return ret;
 }
 
