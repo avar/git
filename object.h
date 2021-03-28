@@ -93,7 +93,7 @@ struct object {
 };
 
 const char *type_name(unsigned int type);
-int type_from_string_gently(const char *str, ssize_t, int gentle);
+int type_from_string_gently(const char *str, ssize_t len);
 int type_from_string(const char *str);
 
 /*
