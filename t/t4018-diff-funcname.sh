@@ -8,6 +8,13 @@ test_description='Test custom diff function name patterns'
 . ./test-lib.sh
 
 test_expect_success 'setup' '
+	# Make sure additions to builtin_drivers are sorted
+	test_when_finished "rm builtin-drivers.sorted" &&
+	test-tool userdiff list-builtin-drivers >builtin-drivers &&
+	test_file_not_empty builtin-drivers &&
+	sort <builtin-drivers >builtin-drivers.sorted &&
+	test_cmp builtin-drivers.sorted builtin-drivers &&
+
 	# a non-trivial custom pattern
 	git config diff.custom1.funcname "!static
 !String
@@ -26,29 +33,7 @@ test_expect_success 'setup' '
 '
 
 diffpatterns="
-	ada
-	bash
-	bibtex
-	cpp
-	csharp
-	css
-	dts
-	elixir
-	fortran
-	fountain
-	golang
-	html
-	java
-	markdown
-	matlab
-	objc
-	pascal
-	perl
-	php
-	python
-	ruby
-	rust
-	tex
+	$(cat builtin-drivers)
 	custom1
 	custom2
 	custom3
@@ -101,13 +86,7 @@ test_expect_success 'setup hunk header tests' '
 # check each individual file
 for i in $(git ls-files)
 do
-	if grep broken "$i" >/dev/null 2>&1
-	then
-		result=failure
-	else
-		result=success
-	fi
-	test_expect_$result "hunk header: $i" "
+	test_expect_success "hunk header: $i" "
 		git diff -U1 $i >actual &&
 		grep '@@ .* @@.*RIGHT' actual
 	"
