@@ -127,6 +127,9 @@ void oid_is_type_or_die(const struct object_id *oid, enum object_type want,
 			enum object_type *type);
 int oid_is_type_or_error(const struct object_id *oid, enum object_type want,
 			 enum object_type *type);
+char* oid_is_type_or_die_msg(const struct object_id *oid,
+			     enum object_type want,
+			     enum object_type *type);
 
 /*
  * Returns the object, having parsed it to find out what it is.
