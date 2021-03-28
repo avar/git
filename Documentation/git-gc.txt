@@ -103,14 +103,6 @@ more time, and the resulting space/delta optimization may or may not
 be worth it. Not using this at all is the right trade-off for most
 users and their repositories.
 
-CONFIGURATION
--------------
-
-The below documentation is the same as what's found in
-linkgit:git-config[1]:
-
-include::config/gc.txt[]
-
 NOTES
 -----
 
@@ -157,6 +149,13 @@ linkgit:git-prune[1]
 linkgit:git-reflog[1]
 linkgit:git-repack[1]
 linkgit:git-rerere[1]
+
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/gc.txt[]
 
 GIT
 ---
