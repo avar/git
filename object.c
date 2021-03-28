@@ -39,9 +39,6 @@ int type_from_string_gently(const char *str, ssize_t len, int gentle)
 {
 	int i;
 
-	if (len < 0)
-		len = strlen(str);
-
 	for (i = 1; i < ARRAY_SIZE(object_type_strings); i++)
 		if (!strncmp(str, object_type_strings[i], len) &&
 		    object_type_strings[i][len] == '\0')
@@ -51,6 +48,13 @@ int type_from_string_gently(const char *str, ssize_t len, int gentle)
 		return -1;
 
 	die(_("invalid object type \"%s\""), str);
+}
+
+int type_from_string(const char *str)
+{
+	size_t len = strlen(str);
+	int ret = type_from_string_gently(str, len, 0);
+	return ret;
 }
 
 /*
