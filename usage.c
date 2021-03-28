@@ -55,12 +55,13 @@ static NORETURN void usage_builtin(const char *err, va_list params)
 	exit(129);
 }
 
+/*
+ * We call trace2_cmd_error_va() in the below functions first and
+ * expect it to va_copy 'params' before using it (because an 'ap' can
+ * only be walked once).
+ */
 static NORETURN void die_builtin(const char *err, va_list params)
 {
-	/*
-	 * We call this trace2 function first and expect it to va_copy 'params'
-	 * before using it (because an 'ap' can only be walked once).
-	 */
 	trace2_cmd_error_va(err, params);
 
 	vreportf("fatal: ", err, params);
@@ -68,12 +69,15 @@ static NORETURN void die_builtin(const char *err, va_list params)
 	exit(128);
 }
 
+static void bug_builtin(const char *err, va_list params)
+{
+	trace2_cmd_error_va(err, params);
+
+	vreportf("bug: ", err, params);
+}
+
 static void error_builtin(const char *err, va_list params)
 {
-	/*
-	 * We call this trace2 function first and expect it to va_copy 'params'
-	 * before using it (because an 'ap' can only be walked once).
-	 */
 	trace2_cmd_error_va(err, params);
 
 	vreportf("error: ", err, params);
@@ -81,10 +85,6 @@ static void error_builtin(const char *err, va_list params)
 
 static void warn_builtin(const char *warn, va_list params)
 {
-	/*
-	 * We call this trace2 function first and expect it to va_copy 'params'
-	 * before using it (because an 'ap' can only be walked once).
-	 */
 	trace2_cmd_error_va(warn, params);
 
 	vreportf("warning: ", warn, params);
@@ -116,6 +116,7 @@ static int die_is_recursing_builtin(void)
  * (ugh), so keep things static. */
 static NORETURN_PTR report_fn usage_routine = usage_builtin;
 static NORETURN_PTR report_fn die_routine = die_builtin;
+static report_fn bug_routine = bug_builtin;
 static report_fn error_routine = error_builtin;
 static report_fn warn_routine = warn_builtin;
 static int (*die_is_recursing)(void) = die_is_recursing_builtin;
@@ -125,9 +126,20 @@ void set_die_routine(NORETURN_PTR report_fn routine)
 	die_routine = routine;
 }
 
+
+void set_bug_routine(report_fn routine)
+{
+	bug_routine = routine;
+}
+
 void set_error_routine(report_fn routine)
 {
 	error_routine = routine;
+}
+
+report_fn get_bug_routine(void)
+{
+	return bug_routine;
 }
 
 report_fn get_error_routine(void)
@@ -226,6 +238,16 @@ int error_errno(const char *fmt, ...)
 
 	va_start(params, fmt);
 	error_routine(fmt_with_err(buf, sizeof(buf), fmt), params);
+	va_end(params);
+	return -1;
+}
+
+int bug(const char *err, ...)
+{
+	va_list params;
+
+	va_start(params, err);
+	bug_routine(err, params);
 	va_end(params);
 	return -1;
 }
