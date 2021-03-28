@@ -3001,9 +3001,11 @@ static int read_oid_strbuf(struct merge_options *opt,
 	if (!buf)
 		return err(opt, _("cannot read object %s"), oid_to_hex(oid));
 	if (type != OBJ_BLOB) {
-		const char* msg = oid_is_type_or_die_msg(oid, OBJ_BLOB, &type);
+		char *msg = oid_is_type_or_die_msg(oid, OBJ_BLOB, &type);
+		int ret = err(opt, "%s", msg);
 		free(buf);
-		return err(opt, _("object %s is not a blob"), oid_to_hex(oid));
+		free(msg);
+		return ret;
 	}
 	strbuf_attach(dst, buf, size, size + 1);
 	return 0;
