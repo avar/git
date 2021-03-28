@@ -408,6 +408,8 @@ static int sort_ambiguous(const void *a, const void *b, void *ctx)
 	enum object_type b_type = oid_object_info(sort_ambiguous_repo, b, NULL);
 	enum object_type a_type_sort;
 	enum object_type b_type_sort;
+	const enum object_type tag_type_offs = OBJ_TAG - OBJ_NONE;
+	assert(tag_type_offs == 4);
 
 	/*
 	 * Sorts by hash within the same object type, just as
@@ -425,8 +427,8 @@ static int sort_ambiguous(const void *a, const void *b, void *ctx)
 	 * cleverly) do that with modulus, since the enum assigns 1 to
 	 * commit, so tag becomes 0.
 	 */
-	a_type_sort = a_type % 4;
-	b_type_sort = b_type % 4;
+	a_type_sort = a_type % tag_type_offs;
+	b_type_sort = b_type % tag_type_offs;
 	return a_type_sort > b_type_sort ? 1 : -1;
 }
 
