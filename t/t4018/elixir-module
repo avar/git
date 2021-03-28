@@ -1,3 +1,4 @@
+t4018 header: defmodule RIGHT do
 defmodule RIGHT do
   @moduledoc """
   Foo bar
