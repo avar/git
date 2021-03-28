@@ -93,8 +93,8 @@ struct object {
 };
 
 const char *type_name(unsigned int type);
-int type_from_string_gently(const char *str, ssize_t, int gentle);
-#define type_from_string(str) type_from_string_gently(str, -1, 0)
+int type_from_string_gently(const char *str, size_t, int gentle);
+int type_from_string(const char *str);
 
 /*
  * Return the current number of buckets in the object hashmap.
