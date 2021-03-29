@@ -334,15 +334,16 @@ all::
 # Define INSTALL_SYMLINKS if you prefer to have everything that can be
 # symlinked between bin/ and libexec/ to use relative symlinks between
 # the two. This option overrides NO_CROSS_DIRECTORY_HARDLINKS and
-# NO_INSTALL_HARDLINKS which will also use symlinking by indirection
-# within the same directory in some cases, INSTALL_SYMLINKS will
+# NO_INSTALL_HARDLINKS. This will not produce any indirect symlinks, we will
 # always symlink to the final target directly.
 #
 # Define NO_CROSS_DIRECTORY_HARDLINKS if you plan to distribute the installed
 # programs as a tar, where bin/ and libexec/ might be on different file systems.
 #
-# Define NO_INSTALL_HARDLINKS if you prefer to use either symbolic links or
-# copies to install built-in git commands e.g. git-cat-file.
+# Define NO_INSTALL_HARDLINKS if you'd like to have programs in bin/
+# and libexec/ either symlinked (we try with INSTALL_SYMLINKS first),
+# or if that fails fall back on a "cp" instead of a "ln". Useful for
+# when you don't want hardlinks at all.
 #
 # Define SKIP_DASHED_BUILT_INS if you do not need the dashed versions of the
 # built-ins to be linked/copied at all.
@@ -3040,33 +3041,30 @@ endif
 	} && \
 	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
 		$(RM) "$$bindir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
+		test -n "$(INSTALL_SYMLINKS)$(NO_INSTALL_HARDLINKS)" && \
 		ln -s "git$X" "$$bindir/$$p" || \
 		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
 		  ln "$$bindir/git$X" "$$bindir/$$p" 2>/dev/null || \
-		  ln -s "git$X" "$$bindir/$$p" 2>/dev/null || \
 		  cp "$$bindir/git$X" "$$bindir/$$p" || exit; }; \
 	done && \
 	for p in $(BUILT_INS); do \
 		$(RM) "$$execdir/$$p" && \
 		if test -z "$(SKIP_DASHED_BUILT_INS)"; \
 		then \
-			test -n "$(INSTALL_SYMLINKS)" && \
+			test -n "$(INSTALL_SYMLINKS)$(NO_INSTALL_HARDLINKS)" && \
 			ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" "$$execdir/$$p" || \
 			{ test -z "$(NO_INSTALL_HARDLINKS)" && \
 			  ln "$$execdir/git$X" "$$execdir/$$p" 2>/dev/null || \
-			  ln -s "git$X" "$$execdir/$$p" 2>/dev/null || \
 			  cp "$$execdir/git$X" "$$execdir/$$p" || exit; }; \
 		fi \
 	done && \
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
 		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
+		test -n "$(INSTALL_SYMLINKS)$(NO_INSTALL_HARDLINKS)" && \
 		ln -s "git-remote-http$X" "$$execdir/$$p" || \
 		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
 		  ln "$$execdir/git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  ln -s "git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
 		  cp "$$execdir/git-remote-http$X" "$$execdir/$$p" || exit; } \
 	done && \
 	./check_bindir "z$$bindir" "z$$execdir" "$$bindir/git-add$X"
