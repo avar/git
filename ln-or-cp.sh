@@ -40,11 +40,10 @@ link="$2"
 hardlink_or_cp () {
 	if test -z "$no_install_hardlinks" -a -z "$no_cross_directory_hardlinks"
 	then
-		if ! ln "$target" "$link"
+		if ! ln -f "$target" "$link"
 		then
 			cp "$target" "$link"
 		fi
-
 	else
 		cp "$target" "$link"
 	fi
@@ -53,7 +52,7 @@ hardlink_or_cp () {
 main_with_fallbacks () {
 	if test -n "$install_symlinks" -o -n "$no_install_hardlinks"
 	then
-		if ! ln -s "$symlink_target" "$link"
+		if ! ln -f -s "$symlink_target" "$link"
 		then
 			hardlink_or_cp
 		fi
