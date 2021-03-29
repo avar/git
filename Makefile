@@ -345,6 +345,13 @@ all::
 # or if that fails fall back on a "cp" instead of a "ln". Useful for
 # when you don't want hardlinks at all.
 #
+# Define INSTALL_FALLBACK_LN_CP if you'd like your
+# "INSTALL_SYMLINKS=Y" to fall back on hardlinks if we can't run "ln
+# -s", and for "ln" to fall back on "NO_INSTALL_HARDLINKS=Y" if we
+# can't perform a "ln" and need to fall-back to a "cp". This used to
+# be the default behavior, but we'll now error if we can't satisfy
+# your INSTALL_SYMLINKS, NO_INSTALL_HARDLINKS etc. settings.
+#
 # Define SKIP_DASHED_BUILT_INS if you do not need the dashed versions of the
 # built-ins to be linked/copied at all.
 #
@@ -3029,6 +3036,7 @@ endif
 	{ test "$$bindir/" = "$$execdir/" || \
 	  for p in git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS)); do \
 		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
 			--no-cross-directory-hardlinks "$(NO_CROSS_DIRECTORY_HARDLINKS)" \
@@ -3038,6 +3046,7 @@ endif
 	} && \
 	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
 		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
 			--symlink-target "git$X" \
@@ -3047,6 +3056,7 @@ endif
 		if test -z "$(SKIP_DASHED_BUILT_INS)"; \
 		then \
 			./ln-or-cp.sh \
+				--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
 				--install-symlinks "$(INSTALL_SYMLINKS)" \
 				--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
 				--symlink-target "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" \
@@ -3056,6 +3066,7 @@ endif
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
 		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
 			--symlink-target "git-remote-http$X" \
