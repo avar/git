@@ -1,5 +1,6 @@
 #!/bin/sh
 
+install_fallback_ln_cp=
 install_symlinks=
 no_install_hardlinks=
 no_cross_directory_hardlinks=
@@ -7,6 +8,10 @@ symlink_target=
 while test $# != 0
 do
 	case "$1" in
+	--install-fallback-ln-cp)
+		install_fallback_ln_cp="$2"
+		shift
+		;;
 	--install-symlinks)
 		install_symlinks="$2"
 		shift
@@ -50,12 +55,29 @@ hardlink_or_cp () {
 }
 
 
-if test -n "$install_symlinks" -o -n "$no_install_hardlinks"
+if test -z "$install_fallback_ln_cp"
 then
-	if ! ln -f -s "$symlink_target" "$link"
+	# The stricter mode, where we know what we want
+	if test -n "$no_install_hardlinks" -a -z "$install_symlinks"
 	then
-		hardlink_or_cp
+		cp "$target" "$link"
+	elif test -n "$install_symlinks" -o -n "$no_cross_directory_hardlinks"
+	then
+		ln -f -s "$symlink_target" "$link"
+	elif test -n "$no_install_hardlinks"
+	then
+		cp "$target" "$link"
+	else
+		ln -f "$target" "$link"
 	fi
 else
-	hardlink_or_cp
+	if test -n "$install_symlinks" -o -n "$no_install_hardlinks"
+	then
+		if ! ln -f -s "$symlink_target" "$link"
+		then
+			hardlink_or_cp
+		fi
+	else
+		hardlink_or_cp
+	fi
 fi
