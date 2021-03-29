@@ -337,6 +337,11 @@ all::
 # NO_INSTALL_HARDLINKS. This will not produce any indirect symlinks, we will
 # always symlink to the final target directly.
 #
+# NO_INSTALL_HARDLINKS which will also use symlinking by indirection
+# within the same directory in some cases, INSTALL_SYMLINKS will
+# always symlink to the final target directly. This option also
+# affects dashed built-ins in the build directory pre-installation.
+#
 # Define NO_CROSS_DIRECTORY_HARDLINKS if you plan to distribute the installed
 # programs as a tar, where bin/ and libexec/ might be on different file systems.
 #
@@ -2227,9 +2232,12 @@ version.sp version.s version.o: EXTRA_CPPFLAGS = \
 		GIT_CEILING_DIRECTORIES="$(CURDIR)/.." \
 		git rev-parse -q --verify HEAD 2>/dev/null)"'
 
+$(BUILT_INS): GIT-LNCPFLAGS
 $(BUILT_INS): git$X
 	$(QUIET_BUILT_IN) \
-	./ln-or-cp.sh $< $@
+	./ln-or-cp.sh \
+		--install-symlinks "$(INSTALL_SYMLINKS)" \
+	$< $@
 
 config-list.h: generate-configlist.sh
 
@@ -2582,9 +2590,11 @@ git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
 
+$(REMOTE_CURL_ALIASES): GIT-LNCPFLAGS
 $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 	$(QUIET_LNCP) \
 	./ln-or-cp.sh \
+		--install-symlinks "$(INSTALL_SYMLINKS)" \
 		$< $@
 
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
@@ -2774,6 +2784,10 @@ GIT-LDFLAGS: FORCE
 		echo >&2 "    * new link flags"; \
 		echo "$$FLAGS" >GIT-LDFLAGS; \
             fi
+
+GIT-LNCPFLAGS: FORCE
+	@echo INSTALL_SYMLINKS=\''$(subst ','\'',$(subst ','\'',$(INSTALL_SYMLINKS)))'\' >$@+
+	@if cmp $@+ $@ >/dev/null 2>&1; then $(RM) $@+; else mv $@+ $@; fi
 
 # We need to apply sq twice, once to protect from the shell
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
