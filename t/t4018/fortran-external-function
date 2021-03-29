@@ -1,3 +1,4 @@
+t4018 header: function RIGHT(a, b) result(c)
 function RIGHT(a, b) result(c)
 
 integer, intent(in) :: ChangeMe
