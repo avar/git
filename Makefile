@@ -2204,8 +2204,7 @@ version.sp version.s version.o: EXTRA_CPPFLAGS = \
 
 $(BUILT_INS): GIT-LNCPFLAGS
 $(BUILT_INS): git$X
-	$(QUIET_BUILT_IN)$(RM) $@ && \
-	./ln-or-cp.sh \
+	$(QUIET_BUILT_IN)./ln-or-cp.sh \
 		--install-symlinks "$(INSTALL_SYMLINKS)" \
 		$< $@
 
@@ -2559,8 +2558,7 @@ git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
 
 $(REMOTE_CURL_ALIASES): GIT-LNCPFLAGS
 $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
-	$(QUIET_LNCP)$(RM) $@ && \
-	./ln-or-cp.sh \
+	$(QUIET_LNCP)./ln-or-cp.sh \
 		--install-symlinks "$(INSTALL_SYMLINKS)" \
 		$< $@
 
@@ -3022,7 +3020,6 @@ endif
 	destdir_from_execdir_SQ=$$(echo '$(gitexecdir_relative_SQ)' | sed -e 's|[^/][^/]*|..|g') && \
 	{ test "$$bindir/" = "$$execdir/" || \
 	  for p in git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS)); do \
-		$(RM) "$$execdir/$$p" && \
 		./ln-or-cp.sh \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
@@ -3032,7 +3029,6 @@ endif
 	  done; \
 	} && \
 	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
-		$(RM) "$$bindir/$$p" && \
 		./ln-or-cp.sh \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
@@ -3040,7 +3036,6 @@ endif
 			"$$bindir/git$X" "$$bindir/$$p"; \
 	done && \
 	for p in $(BUILT_INS); do \
-		$(RM) "$$execdir/$$p" && \
 		if test -z "$(SKIP_DASHED_BUILT_INS)"; \
 		then \
 			./ln-or-cp.sh \
@@ -3052,7 +3047,6 @@ endif
 	done && \
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
-		$(RM) "$$execdir/$$p" && \
 		./ln-or-cp.sh \
 			--install-symlinks "$(INSTALL_SYMLINKS)" \
 			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
