@@ -348,6 +348,12 @@ static void fake_fatal(const char *err, va_list params)
 	vreportf("fatal: ", err, params);
 }
 
+static void child_bug_fn(const char *err, va_list params)
+{
+	const char msg[] = "bug() should not be called in child\n";
+	xwrite(2, msg, sizeof(msg) - 1);
+}
+
 static void child_error_fn(const char *err, va_list params)
 {
 	const char msg[] = "error() should not be called in child\n";
@@ -371,9 +377,12 @@ static void NORETURN child_die_fn(const char *err, va_list params)
 static void child_err_spew(struct child_process *cmd, struct child_err *cerr)
 {
 	static void (*old_errfn)(const char *err, va_list params);
+	static void (*old_bugfn)(const char *err, va_list params);
 
 	old_errfn = get_error_routine();
 	set_error_routine(fake_fatal);
+	old_bugfn = get_bug_routine();
+	set_bug_routine(fake_fatal);
 	errno = cerr->syserr;
 
 	switch (cerr->err) {
@@ -399,6 +408,7 @@ static void child_err_spew(struct child_process *cmd, struct child_err *cerr)
 		error_errno("cannot exec '%s'", cmd->argv[0]);
 		break;
 	}
+	set_bug_routine(old_bugfn);
 	set_error_routine(old_errfn);
 }
 
@@ -789,6 +799,7 @@ fail_pipe:
 		 * called, they can take stdio locks and malloc.
 		 */
 		set_die_routine(child_die_fn);
+		set_error_routine(child_bug_fn);
 		set_error_routine(child_error_fn);
 		set_warn_routine(child_warn_fn);
 
