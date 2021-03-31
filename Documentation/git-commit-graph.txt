@@ -143,6 +143,14 @@ $ git rev-parse HEAD | git commit-graph write --stdin-commits --append
 ------------------------------------------------
 
 
+CONFIGURATION
+-------------
+
+include::templates/configuration-include-heading.txt[]
+
+include::config/commitgraph.txt[]
+
+
 GIT
 ---
 Part of the linkgit:git[1] suite
