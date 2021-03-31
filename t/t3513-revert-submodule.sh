@@ -30,7 +30,12 @@ git_revert () {
 	git revert HEAD
 }
 
-KNOWN_FAILURE_NOFF_MERGE_DOESNT_CREATE_EMPTY_SUBMODULE_DIR=1
+if test "$GIT_TEST_MERGE_ALGORITHM" = ort
+then
+	:  # No special additional KNOWN_FAILURE knobs to set
+else
+	KNOWN_FAILURE_NOFF_MERGE_DOESNT_CREATE_EMPTY_SUBMODULE_DIR=1
+fi
 test_submodule_switch_func "git_revert"
 
 test_done
