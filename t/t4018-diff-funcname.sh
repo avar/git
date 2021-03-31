@@ -15,33 +15,30 @@ test_expect_success 'setup' '
 	sort <builtin-drivers >builtin-drivers.sorted &&
 	test_cmp builtin-drivers.sorted builtin-drivers &&
 
-	# a non-trivial custom pattern
-	git config diff.custom1.funcname "!static
-!String
-[^ 	].*s.*" &&
-
-	# a custom pattern which matches to end of line
-	git config diff.custom2.funcname "......Beer\$" &&
-
-	# alternation in pattern
-	git config diff.custom3.funcname "Beer$" &&
-	git config diff.custom3.xfuncname "^[ 	]*((public|static).*)$" &&
+	# Do not add anything to this list. New built-in drivers should have
+	# tests
+	cat >drivers-no-tests <<-\EOF &&
+	bibtex
+	csharp
+	html
+	objc
+	pascal
+	tex
+	EOF
 
 	# for regexp compilation tests
 	echo A >A.java &&
 	echo B >B.java
 '
 
-diffpatterns="
-	$(cat builtin-drivers)
-	custom1
-	custom2
-	custom3
-"
-
-for p in $diffpatterns
+for p in $(cat builtin-drivers)
 do
-	test_expect_success "builtin $p pattern compiles" '
+	P=$(echo $p | tr 'a-z' 'A-Z')
+	if grep -q $p drivers-no-tests
+	then
+		test_set_prereq NO_TEST_FOR_DRIVER_$P
+	fi
+	test_expect_success NO_TEST_FOR_DRIVER_$P "builtin $p pattern compiles" '
 		echo "*.java diff=$p" >.gitattributes &&
 		test_expect_code 1 git diff --no-index \
 			A.java B.java 2>msg &&
@@ -64,32 +61,112 @@ test_expect_success 'last regexp must not be negated' '
 	test_i18ngrep ": Last expression must not be negated:" msg
 '
 
+diffpatterns="
+	$(cat builtin-drivers)
+	custom
+"
+
 test_expect_success 'setup hunk header tests' '
 	for i in $diffpatterns
 	do
-		echo "$i-* diff=$i"
+		echo "$i* diff=$i"
 	done > .gitattributes &&
 
-	# add all test files to the index
-	(
-		cd "$TEST_DIRECTORY"/t4018 &&
-		git --git-dir="$TRASH_DIRECTORY/.git" add .
-	) &&
-
-	# place modified files in the worktree
-	for i in $(git ls-files)
-	do
-		sed -e "s/ChangeMe/IWasChanged/" <"$TEST_DIRECTORY/t4018/$i" >"$i" || return 1
-	done
+	cp -R "$TEST_DIRECTORY"/t4018 . &&
+	git init t4018 &&
+	git -C t4018 add .
 '
 
+do_change_me () {
+	file=$1
+	sed -e "s/ChangeMe/IWasChanged/" <"$file" >tmp &&
+	mv tmp "$file"
+}
+
+last_diff_context_line () {
+	file=$1
+	sed -n -e "s/^.*@@$//p" -e "s/^.*@@ //p" <$file
+}
+
 # check each individual file
-for i in $(git ls-files)
+for i in $(git -C t4018 ls-files -- ':!*.sh')
 do
+	test_expect_success "setup hunk header: $i" "
+		grep -v '^t4018' \"t4018/$i\" >\"t4018/$i.content\" &&
+		sed -n -e 's/^t4018 header: //p' <\"t4018/$i\" >\"t4018/$i.header\" &&
+		cp \"t4018/$i.content\" \"$i\" &&
+
+		# add test file to the index
+		git add \"$i\" &&
+		do_change_me \"$i\"
+	"
+
 	test_expect_success "hunk header: $i" "
-		git diff -U1 $i >actual &&
-		grep '@@ .* @@.*RIGHT' actual
+		git diff -U0 $i >diff &&
+		last_diff_context_line diff >ctx &&
+		test_cmp t4018/$i.header ctx
 	"
 done
+
+test_diff_funcname () {
+	desc=$1
+	diff_opts=${2:--U0} &&
+	cat <&8 >arg.header &&
+	cat <&9 >arg.test &&
+	what=$(cat arg.what) &&
+
+	test_expect_success "setup: $desc" '
+		cp arg.test "$what" &&
+		cp arg.header expected &&
+		git add "$what" &&
+		do_change_me "$what"
+	'
+
+	test_expect_success "$desc" '
+		git diff $diff_opts "$what" >diff &&
+		last_diff_context_line diff >actual &&
+		test_cmp expected actual
+	'
+
+	test_expect_success "$desc -U9001" '
+		git diff -U9001 "$what" >diff &&
+		last_diff_context_line diff >actual &&
+		echo >blank &&
+		test_cmp blank actual
+	'
+
+	test_expect_success "teardown: $desc" '
+		# In case any custom config was set immediately before
+		# the test itself in the test file
+		test_unconfig "diff.$what.funcname" &&
+		test_unconfig "diff.$what.xfuncname"
+	'
+}
+
+>drivers-had-no-tests
+for what in $diffpatterns
+do
+	test="$TEST_DIRECTORY/t4018/$what.sh"
+	if ! test -e "$test"
+	then
+		git -C t4018 ls-files ':!*.sh' "$what*" >other-tests &&
+		if ! test -s other-tests
+		then
+			echo $what >>drivers-had-no-tests
+		fi
+		continue
+	fi &&
+
+	test_expect_success "setup: hunk header for $what" '
+		echo "$what diff=$what" >.gitattributes &&
+		echo "$what" >arg.what
+	'
+
+	. "$test"
+done
+
+test_expect_success 'we should not have new built-in drivers without tests' '
+	test_cmp drivers-no-tests drivers-had-no-tests
+'
 
 test_done
