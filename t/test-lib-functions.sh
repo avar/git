@@ -171,6 +171,10 @@ debug () {
 #	Run all git commands in directory <dir>
 #   --notick
 #	Do not call test_tick before making a commit
+#   --annotated-tag
+#	Create an annotated tag with "-a -m <message>". Calls
+#	test_tick between making the commit and tag unless --notick is
+#	given.
 #   --append
 #	Use ">>" instead of ">" when writing "<contents>" to "<file>"
 #   --printf
@@ -198,6 +202,7 @@ test_commit () {
 	signoff= &&
 	indir= &&
 	no_tag= &&
+	annotated_tag= &&
 	while test $# != 0
 	do
 		case "$1" in
@@ -230,6 +235,9 @@ test_commit () {
 		--no-tag)
 			no_tag=yes
 			;;
+		--annotated-tag)
+			annotated_tag=yes
+			;;
 		*)
 			break
 			;;
@@ -257,7 +265,15 @@ test_commit () {
 		BUG "expect no <tag> parameter with --no-tag"
 	elif test -z "$no_tag"
 	then
-		git ${indir:+ -C "$indir"} tag "${4:-$1}"
+		if test -n "$annotated_tag"
+		then
+			if test -z "$notick"
+			then
+				test_tick
+			fi &&
+			test_tick
+		fi &&
+		git ${indir:+ -C "$indir"} tag ${annotated_tag:+ -a -m "$1"} "${4:-$1}"
 	fi
 }
 
@@ -633,6 +649,7 @@ test_expect_failure () {
 		fi
 	fi
 	test_finish_
+	return 1
 }
 
 test_expect_success () {
@@ -653,6 +670,7 @@ test_expect_success () {
 		fi
 	fi
 	test_finish_
+	return 1
 }
 
 # test_external runs external test scripts that provide continuous
