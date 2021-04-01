@@ -50,7 +50,7 @@ check_verify_failure () {
 		rm -rf bad-tag &&
 
 		git init --bare bad-tag &&
-		git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig
+		bad_tag=$(git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig)
 	'
 
 	test_expect_success "hash-object & fsck unreachable: $subject" '
@@ -74,6 +74,16 @@ check_verify_failure () {
 		# Unlike when we fsck unreachable content above this
 		# will always fail.
 		test_must_fail git -C bad-tag fsck
+	'
+
+	test_expect_success "for-each-ref: $subject" '
+		echo "$bad_tag" >"bad-tag/$tag_ref" &&
+
+		printf "%s tag\t%s\n" "$bad_tag" "$tag_ref" >expected &&
+		git -C bad-tag for-each-ref "$tag_ref" >actual &&
+		test_cmp expected actual &&
+
+		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
 	'
 }
 
