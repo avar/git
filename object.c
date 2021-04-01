@@ -195,13 +195,19 @@ void *object_as_type(struct object *obj, enum object_type type)
 	} else if (obj->type == OBJ_NONE) {
 		if (type == OBJ_COMMIT)
 			init_commit_node((struct commit *) obj);
-		else
+		else {
 			obj->type = type;
+		}
 		return obj;
 	} else {
-		error(_(object_type_mismatch_msg),
-		      oid_to_hex(&obj->oid),
-		      type_name(obj->type), type_name(type));
+		if (obj->parsed)
+			error(_(object_type_mismatch_msg),
+			      oid_to_hex(&obj->oid),
+			      type_name(obj->type), type_name(type));
+		else
+			error(_("I really have no idea what %s is, maybe a %s or %s?"),
+			      oid_to_hex(&obj->oid),
+			      type_name(obj->type), type_name(type));
 		return NULL;
 	}
 }
