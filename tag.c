@@ -113,8 +113,10 @@ struct tag *lookup_tag_type(struct repository *r, const struct object_id *oid,
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
 		enum object_type want = OBJ_TAG;
-		if (oid_is_type_or_error(oid, obj->type, &want))
+		if (oid_is_type_or_error(oid, obj->type, &want)) {
+			obj->parsed = 1;
 			return NULL;
+		}
 	}
 	return object_as_type(obj, OBJ_TAG);
 }
@@ -151,11 +153,13 @@ void release_tag_memory(struct tag *t)
 
 int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, unsigned long size)
 {
+	struct object *obj;
 	struct object_id oid;
 	enum object_type type;
 	const char *bufptr = data;
 	const char *tail = bufptr + size;
 	const char *nl;
+	enum object_type tagged_type = OBJ_NONE;
 
 	if (item->object.parsed)
 		return 0;
@@ -186,7 +190,10 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 		return -1;
 	bufptr = nl + 1;
 
-	if (type == OBJ_BLOB) {
+	obj = lookup_object(r, &oid);
+	if (obj && obj->parsed) {
+		tagged_type = obj->type;
+	} else if (type == OBJ_BLOB) {
 		item->tagged = (struct object *)lookup_blob(r, &oid);
 	} else if (type == OBJ_TREE) {
 		item->tagged = (struct object *)lookup_tree(r, &oid);
