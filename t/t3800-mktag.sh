@@ -58,7 +58,13 @@ check_verify_failure () {
 		# The update-ref command itself might fail, but we are
 		# not testing that
 		echo "$bad_tag" >"bad-tag/.git/$tag_ref" &&
-		test_must_fail git -C bad-tag fsck
+		test_must_fail git -C bad-tag fsck &&
+
+		printf "%s tag\t%s\n" "$bad_tag" "$tag_ref" >expected &&
+		git -C bad-tag for-each-ref "$tag_ref" >actual &&
+		test_cmp expected actual &&
+		# segfaults!
+		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
 	'
 }
 
