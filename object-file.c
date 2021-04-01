@@ -1314,7 +1314,7 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 		type_len++;
 	}
 
-	type = type_from_string_gently(type_buf, type_len, 1);
+	type = type_from_string_gently(type_buf, type_len);
 	if (oi->type_name)
 		strbuf_add(oi->type_name, type_buf, type_len);
 	/*
@@ -1572,11 +1572,9 @@ int oid_object_info_extended(struct repository *r, const struct object_id *oid,
 	return ret;
 }
 
-
-/* returns enum object_type or negative */
-int oid_object_info(struct repository *r,
-		    const struct object_id *oid,
-		    unsigned long *sizep)
+enum object_type oid_object_info(struct repository *r,
+				 const struct object_id *oid,
+				 unsigned long *sizep)
 {
 	enum object_type type;
 	struct object_info oi = OBJECT_INFO_INIT;
