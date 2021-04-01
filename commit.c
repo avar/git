@@ -73,9 +73,11 @@ struct commit *lookup_commit_type(struct repository *r, const struct object_id *
 		return create_object(r, oid, alloc_commit_node(r));
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
-		enum object_type want = OBJ_COMMIT;
-		if (oid_is_type_or_error(oid, obj->type, &want))
+		enum object_type want = obj->type;
+		if (oid_is_type_or_error(oid, OBJ_COMMIT, &want)) {
+			obj->parsed = 1;
 			return NULL;
+		}
 	}
 	return object_as_type(obj, OBJ_COMMIT);
 }
