@@ -13,6 +13,7 @@ struct blob *lookup_blob(struct repository *r, const struct object_id *oid);
 struct blob *lookup_blob_type(struct repository *r,
 			      const struct object_id *oid,
 			      enum object_type type);
+
 /**
  * Blobs do not contain references to other objects and do not have
  * structured data that needs parsing. However, code may use the
