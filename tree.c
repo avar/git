@@ -111,8 +111,10 @@ struct tree *lookup_tree_type(struct repository *r, const struct object_id *oid,
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
 		enum object_type want = OBJ_TREE;
-		if (oid_is_type_or_error(oid, obj->type, &want))
+		if (oid_is_type_or_error(oid, obj->type, &want)) {
+			obj->type = want;
 			return NULL;
+		}
 	}
 	return object_as_type(obj, OBJ_TREE);
 }
