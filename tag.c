@@ -113,8 +113,10 @@ struct tag *lookup_tag_type(struct repository *r, const struct object_id *oid,
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
 		enum object_type want = OBJ_TAG;
-		if (oid_is_type_or_error(oid, obj->type, &want))
+		if (oid_is_type_or_error(oid, obj->type, &want)) {
+			obj->type = want;
 			return NULL;
+		}
 	}
 	return object_as_type(obj, OBJ_TAG);
 }
@@ -203,17 +205,15 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 			     type_name(type), oid_to_hex(&item->object.oid));
 	}
 
-	if (!item->tagged)
+	if (type != item->tagged->type)
+		error("object %s declared as type %s but it's a %s",
+		      oid_to_hex(&oid),
+		      type_name(type),
+		      type_name(obj->type));
+	if (!item->tagged || type != item->tagged->type)
 		return error("bad tag pointer to %s in %s",
 			     oid_to_hex(&oid),
 			     oid_to_hex(&item->object.oid));
-
-	if (type != item->tagged->type)
-		return error("bad tag pointer to %s in %s, declared as 'type %s' but it's a 'type %s'",
-			     oid_to_hex(&oid),
-			     oid_to_hex(&item->object.oid),
-			     type_name(type),
-			     type_name(obj->type));
 
 	if (bufptr + 4 < tail && starts_with(bufptr, "tag "))
 		; 		/* good */

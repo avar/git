@@ -198,15 +198,16 @@ void *object_as_type(struct object *obj, enum object_type type)
 		else
 			obj->type = type;
 		return obj;
+	} else if (obj->parsed) {
+		error(_(object_type_mismatch_msg),
+		      oid_to_hex(&obj->oid),
+		      type_name(obj->type), type_name(type));
 	} else {
-		/* Sure it's bad, but we still parsed it */
-		//obj->parsed = 1;
-		if (!quiet)
-			error(_(object_type_mismatch_msg),
-			      oid_to_hex(&obj->oid),
-			      type_name(type), type_name(obj->type));
-		return NULL;
+		error(_(object_type_mismatch_msg),
+		      oid_to_hex(&obj->oid),
+		      type_name(type), type_name(obj->type));
 	}
+	return NULL;
 }
 
 struct object *lookup_unknown_object(struct repository *r, const struct object_id *oid)
