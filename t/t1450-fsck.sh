@@ -314,7 +314,7 @@ test_expect_success 'tree entry with type mismatch' '
 	commit=$(git commit-tree $tree) &&
 	git update-ref refs/heads/type_mismatch $commit &&
 	test_must_fail git fsck >out 2>&1 &&
-	test_i18ngrep "is a tree, not a blob" out &&
+	test_i18ngrep "is a blob, not a tree" out &&
 	test_i18ngrep ! "dangling blob" out
 '
 
