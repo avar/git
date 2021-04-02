@@ -221,6 +221,7 @@ static void mark_unreachable_referents(const struct object_id *oid)
 		enum object_type type = oid_object_info(the_repository,
 							&obj->oid, NULL);
 		if (type > 0)
+			/* this is only used to emit the error, but does it actually happen? */
 			obj->type = type;
 	}
 
