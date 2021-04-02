@@ -116,13 +116,9 @@ struct tree *lookup_tree_type(struct repository *r,
 		return create_tree(r, oid);
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
-		enum object_type want = obj->type;
-		/*if (want != obj->typae && obj->parsed)
-			return NULL;*/
-		if (oid_is_type_or_error(oid, OBJ_TREE, &want)) {
-			obj->parsed = 1;
+		enum object_type want = OBJ_TREE;
+		if (oid_is_type_or_error(oid, obj->type, &want))
 			return NULL;
-		}
 	}
 	return object_as_type(obj, OBJ_TREE);
 }
