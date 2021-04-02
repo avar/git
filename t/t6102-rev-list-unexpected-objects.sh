@@ -22,7 +22,7 @@ test_expect_failure 'traverse unexpected non-blob entry (lone)' '
 
 test_expect_success 'traverse unexpected non-blob entry (seen)' '
 	test_must_fail git rev-list --objects $tree $broken_tree >output 2>&1 &&
-	test_i18ngrep "is not a commit" output
+	test_i18ngrep "is not a blob" output
 '
 
 test_expect_success 'setup unexpected non-tree entry' '
@@ -219,7 +219,7 @@ test_expect_success 'traverse unexpected non-tag tag (tree seen to blob)' '
 test_expect_success 'traverse unexpected non-tag tag (blob seen to blob)' '
 	test_must_fail git rev-list --objects $blob $commit_tag_blob 2>err &&
 	cat >expected <<-EOF &&
-	error: object $blob declared as type commit but it'"'"'s a blob
+	error: object $blob is a blob, not a commit
 	error: bad tag pointer to $blob in $commit_tag_blob
 	fatal: bad object $commit_tag_blob
 	EOF
@@ -227,7 +227,7 @@ test_expect_success 'traverse unexpected non-tag tag (blob seen to blob)' '
 
 	test_must_fail git rev-list --objects $blob $tag_tag_blob 2>err &&
 	cat >expected <<-EOF &&
-	error: object $blob declared as type tag but it'"'"'s a blob
+	error: object $blob is a blob, not a tag
 	error: bad tag pointer to $blob in $tag_tag_blob
 	fatal: bad object $tag_tag_blob
 	EOF
