@@ -207,10 +207,10 @@ void *object_as_type(struct object *obj, enum object_type type)
 		return obj;
 	} else {
 		error(obj->parsed
-			      ? _(object_type_mismatch_msg)
-			      : _(object_maybe_type_mismatch_msg),
-			      oid_to_hex(&obj->oid),
-			      type_name(obj->type), type_name(type));
+		      ? _(object_type_mismatch_msg)
+		      : _(object_maybe_type_mismatch_msg),
+		      oid_to_hex(&obj->oid),
+		      type_name(obj->type), type_name(type));
 		return NULL;
 	}
 }
