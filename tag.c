@@ -112,8 +112,8 @@ struct tag *lookup_tag_type(struct repository *r, const struct object_id *oid,
 		return create_tag(r, oid);
 	if (type != OBJ_NONE &&
 	    obj->type != OBJ_NONE) {
-		enum object_type want = OBJ_TAG;
-		if (oid_is_type_or_error(oid, obj->type, &want)) {
+		enum object_type want = obj->type;
+		if (oid_is_type_or_error(oid, OBJ_TAG, &want)) {
 			obj->parsed = 1;
 			return NULL;
 		}
