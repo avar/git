@@ -195,8 +195,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 	if (type == OBJ_BLOB) {
 		struct blob *blob = lookup_blob(r, oid);
 		if (blob) {
-			if (parse_blob_buffer(blob, buffer, size))
-				return NULL;
+			blob->object.parsed = 1;
 			obj = &blob->object;
 		}
 	} else if (type == OBJ_TREE) {
@@ -262,12 +261,16 @@ struct object *parse_object(struct repository *r, const struct object_id *oid)
 	if ((obj && obj->type == OBJ_BLOB && repo_has_object_file(r, oid)) ||
 	    (!obj && repo_has_object_file(r, oid) &&
 	     oid_object_info(r, oid, NULL) == OBJ_BLOB)) {
+		if (!obj) {
+			struct blob *blob = create_blob(r, oid);
+			obj = &blob->object;
+		}
 		if (check_object_signature(r, repl, NULL, 0, NULL) < 0) {
 			error(_("hash mismatch %s"), oid_to_hex(oid));
 			return NULL;
 		}
-		parse_blob_buffer(lookup_blob(r, oid), NULL, 0);
-		return lookup_object(r, oid);
+		obj->parsed = 1;
+		return obj;
 	}
 
 	buffer = repo_read_object_file(r, oid, &type, &size);
