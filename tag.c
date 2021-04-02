@@ -151,6 +151,7 @@ void release_tag_memory(struct tag *t)
 
 int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, unsigned long size)
 {
+	struct object *obj;
 	struct object_id oid;
 	enum object_type type;
 	const char *bufptr = data;
@@ -186,7 +187,10 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 		return -1;
 	bufptr = nl + 1;
 
-	if (type == OBJ_BLOB) {
+	obj = lookup_object(r, &oid);
+	if (obj) {
+		item->tagged = obj;
+	} else if (type == OBJ_BLOB) {
 		item->tagged = (struct object *)lookup_blob(r, &oid);
 	} else if (type == OBJ_TREE) {
 		item->tagged = (struct object *)lookup_tree(r, &oid);
@@ -203,6 +207,13 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 		return error("bad tag pointer to %s in %s",
 			     oid_to_hex(&oid),
 			     oid_to_hex(&item->object.oid));
+
+	if (type != item->tagged->type)
+		return error("bad tag pointer to %s in %s, declared as 'type %s' but it's a 'type %s'",
+			     oid_to_hex(&oid),
+			     oid_to_hex(&item->object.oid),
+			     type_name(type),
+			     type_name(obj->type));
 
 	if (bufptr + 4 < tail && starts_with(bufptr, "tag "))
 		; 		/* good */
