@@ -23,7 +23,6 @@ struct blob *lookup_blob_type(struct repository *r,
 		enum object_type want = OBJ_BLOB;
 		if (oid_is_type_or_error(oid, obj->type, &want)) {
 			obj->parsed = 1;
-			obj->type = OBJ_BLOB;
 			return NULL;
 		}
 	}
