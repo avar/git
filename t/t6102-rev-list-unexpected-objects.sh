@@ -22,7 +22,7 @@ test_expect_failure 'traverse unexpected non-blob entry (lone)' '
 
 test_expect_success 'traverse unexpected non-blob entry (seen)' '
 	test_must_fail git rev-list --objects $tree $broken_tree >output 2>&1 &&
-	test_i18ngrep "is not a blob" output
+	test_i18ngrep "is not a commit" output
 '
 
 test_expect_success 'setup unexpected non-tree entry' '
@@ -54,7 +54,7 @@ test_expect_success 'traverse unexpected non-commit parent (lone)' '
 test_expect_success 'traverse unexpected non-commit parent (seen)' '
 	test_must_fail git rev-list --objects $blob $broken_commit \
 		>output 2>&1 &&
-	test_i18ngrep "not a blob" output
+	test_i18ngrep "not a commit" output
 '
 
 test_expect_success 'setup unexpected non-tree root' '

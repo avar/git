@@ -154,6 +154,7 @@ void *create_object(struct repository *r, const struct object_id *oid, void *o)
 }
 
 static const char *object_type_mismatch_msg = N_("object %s is a %s, not a %s");
+static const char *object_maybe_type_mismatch_msg = N_("object %s is referred to as a %s, not a %s");
 
 void oid_is_type_or_die(const struct object_id *oid,
 			enum object_type want,
@@ -202,12 +203,13 @@ void *object_as_type(struct object *obj, enum object_type type)
 		error(_(object_type_mismatch_msg),
 		      oid_to_hex(&obj->oid),
 		      type_name(obj->type), type_name(type));
+		return NULL;
 	} else {
-		error(_(object_type_mismatch_msg),
+		error(_(object_maybe_type_mismatch_msg),
 		      oid_to_hex(&obj->oid),
-		      type_name(type), type_name(obj->type));
+		      type_name(obj->type), type_name(type));
+		return NULL;
 	}
-	return NULL;
 }
 
 struct object *lookup_unknown_object(struct repository *r, const struct object_id *oid)
