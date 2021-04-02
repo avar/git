@@ -7,24 +7,15 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 . ./test-lib.sh
 
-numbers="1 2 3 4 5 6 7 8 9 10"
-
 test_expect_success 'setup' '
-
-	> file &&
-	git add file &&
-	test_tick &&
-	git commit -m initial &&
-
+	numbers="1 2 3 4 5 6 7 8 9 10" &&
+	test_commit initial &&
 	for i in $numbers
 	do
 		git checkout -b branch$i main &&
-		> file$i &&
-		git add file$i &&
-		test_tick &&
-		git commit -m branch$i || return 1
+		test_commit branch$i &&
+		echo branch$i >>branches
 	done
-
 '
 
 cat > expect << EOF
@@ -53,15 +44,14 @@ cat > expect << EOF
 EOF
 
 test_expect_success 'show-branch with more than 8 branches' '
-
-	git show-branch $(for i in $numbers; do echo branch$i; done) > out &&
+	git show-branch $(cat branches) >out &&
 	test_cmp expect out
 
 '
 
 test_expect_success 'show-branch with showbranch.default' '
 	for i in $numbers; do
-		git config --add showbranch.default branch$i
+		test_config showbranch.default branch$i --add
 	done &&
 	git show-branch >out &&
 	test_cmp expect out
