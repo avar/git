@@ -188,7 +188,7 @@ char* oid_is_type_or_die_msg(const struct object_id *oid,
 	return strbuf_detach(&sb, NULL);
 }
 
-void *object_as_type(struct object *obj, enum object_type type, int quiet)
+void *object_as_type(struct object *obj, enum object_type type)
 {
 	if (obj->type == type) {
 		return obj;
@@ -199,10 +199,9 @@ void *object_as_type(struct object *obj, enum object_type type, int quiet)
 			obj->type = type;
 		return obj;
 	} else {
-		if (!quiet)
-			error(_(object_type_mismatch_msg),
-			      oid_to_hex(&obj->oid),
-			      type_name(obj->type), type_name(type));
+		error(_(object_type_mismatch_msg),
+		      oid_to_hex(&obj->oid),
+		      type_name(obj->type), type_name(type));
 		return NULL;
 	}
 }

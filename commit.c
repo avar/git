@@ -76,7 +76,7 @@ struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_commit(r, oid);
-	return object_as_type(obj, OBJ_COMMIT, 0);
+	return object_as_type(obj, OBJ_COMMIT);
 }
 
 struct commit *lookup_commit_reference_by_name(const char *name)
