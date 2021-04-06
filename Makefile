@@ -2271,6 +2271,7 @@ PERL_DEFINES += $(PERL_PATH_SQ)
 PERL_DEFINES += $(PERLLIB_EXTRA_SQ)
 PERL_DEFINES += $(perllibdir_SQ)
 PERL_DEFINES += $(RUNTIME_PREFIX)
+PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
 
 # Support Perl runtime prefix. In this mode, a different header is installed
 # into Perl scripts.
