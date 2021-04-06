@@ -10,8 +10,9 @@ struct blob {
 };
 
 struct blob *lookup_blob(struct repository *r, const struct object_id *oid);
-
-int parse_blob_buffer(struct blob *item, void *buffer, unsigned long size);
+struct blob *lookup_blob_type(struct repository *r,
+			      const struct object_id *oid,
+			      enum object_type type);
 
 /**
  * Blobs do not contain references to other objects and do not have
@@ -21,5 +22,6 @@ int parse_blob_buffer(struct blob *item, void *buffer, unsigned long size);
  * parse_blob_buffer() is used (by object.c) to flag that the object
  * has been read successfully from the database.
  **/
+int parse_blob_buffer(struct blob *item);
 
 #endif /* BLOB_H */
