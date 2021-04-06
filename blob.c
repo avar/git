@@ -15,5 +15,5 @@ struct blob *lookup_blob(struct repository *r, const struct object_id *oid)
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_blob(r, oid);
-	return object_as_type(obj, OBJ_BLOB, 0);
+	return object_as_type(obj, OBJ_BLOB);
 }
