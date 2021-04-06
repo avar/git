@@ -38,9 +38,11 @@ struct commit *lookup_commit_reference_gently(struct repository *r,
 		return NULL;
 
 	if (obj->type != OBJ_COMMIT) {
-		enum object_type want = OBJ_COMMIT;
+		if (obj->type <= 0)
+			BUG("noes");
 		if (!quiet)
-			oid_is_type_or_error(oid, OBJ_COMMIT, &want);
+			fprintf(stderr, "noes ohes");/*
+			oid_is_type_or_error(oid, OBJ_COMMIT, &obj->type);*/
 		return NULL;
 	}
 	return (struct commit *)obj;
@@ -68,7 +70,7 @@ struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_object(r, oid, alloc_commit_node(r));
-	return object_as_type(obj, OBJ_COMMIT, 0);
+	return object_as_type(obj, OBJ_COMMIT);
 }
 
 struct commit *lookup_commit_reference_by_name(const char *name)
