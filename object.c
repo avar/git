@@ -190,16 +190,15 @@ char* oid_is_type_or_die_msg(const struct object_id *oid,
 
 void *object_as_type(struct object *obj, enum object_type type, int quiet)
 {
-	if (obj->type == type)
+	if (obj->type == type) {
 		return obj;
-	else if (obj->type == OBJ_NONE) {
+	} else if (obj->type == OBJ_NONE) {
 		if (type == OBJ_COMMIT)
 			init_commit_node((struct commit *) obj);
 		else
 			obj->type = type;
 		return obj;
-	}
-	else {
+	} else {
 		if (!quiet)
 			error(_(object_type_mismatch_msg),
 			      oid_to_hex(&obj->oid),
