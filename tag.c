@@ -205,11 +205,7 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 			     type_name(type), oid_to_hex(&item->object.oid));
 	}
 
-	if (type != item->tagged->type)
-		error("object %s is a %s, not a %s",
-		      oid_to_hex(&oid),
-		      type_name(obj->type),
-		      type_name(type));
+	oid_is_type_or_error(&oid, item->tagged->type, &type);
 		      
 	if (!item->tagged || type != item->tagged->type)
 		return error("bad tag pointer to %s in %s",
