@@ -739,18 +739,18 @@ sub config_int {
 =item config_regexp ( RE )
 
 Retrieve the list of configuration key names matching the regular
-expression C<RE>. The return value is a list of strings matching
-this regex.
+expression C<RE>. The return value is an ARRAY of key-value pairs.
 
 =cut
 
 sub config_regexp {
 	my ($self, $regex) = _maybe_self(@_);
 	try {
-		my @cmd = ('config', '--name-only', '--get-regexp', $regex);
+		my @cmd = ('config', '--null', '--get-regexp', $regex);
 		unshift @cmd, $self if $self;
-		my @matches = command(@cmd);
-		return @matches;
+		my $data = command(@cmd);
+		my (@kv) = map { split /\n/, $_, 2 } split /\0/, $data;
+		return @kv;
 	} catch Git::Error::Command with {
 		my $E = shift;
 		if ($E->value() == 1) {
