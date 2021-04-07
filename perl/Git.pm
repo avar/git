@@ -754,8 +754,8 @@ sub config_regexp {
 	} catch Git::Error::Command with {
 		my $E = shift;
 		if ($E->value() == 1) {
-			my @matches = ();
-			return @matches;
+			# Key(s) not found.
+			return;
 		} else {
 			throw $E;
 		}
