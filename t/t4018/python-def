@@ -1,3 +1,4 @@
+t4018 header: def RIGHT(pi: int = 3.14):
 def RIGHT(pi: int = 3.14):
     while True:
         break

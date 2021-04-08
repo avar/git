@@ -1,3 +1,4 @@
+t4018 header: async def RIGHT(self, x: int):
 class Foo:
     async def RIGHT(self, x: int):
         return [
