@@ -8,10 +8,6 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 . "$TEST_DIRECTORY"/lib-bundle.sh
 . "$TEST_DIRECTORY"/lib-bitmap.sh
 
-objpath () {
-	echo ".git/objects/$(echo "$1" | sed -e 's|\(..\)|\1/|')"
-}
-
 # show objects present in pack ($1 should be associated *.idx)
 list_packed_objects () {
 	git show-index <"$1" >object-list &&
