@@ -87,10 +87,10 @@ static void insert_obj_hash(struct object *obj, struct object **hash, unsigned i
 struct object *lookup_object(struct repository *r, const struct object_id *oid)
 {
 	unsigned int i, first;
-	struct object *obj;
+	struct object *obj = NULL;
 
 	if (!r->parsed_objects->obj_hash)
-		return NULL;
+		return obj;
 
 	first = i = hash_obj(oid, r->parsed_objects->obj_hash_size);
 	while ((obj = r->parsed_objects->obj_hash[i]) != NULL) {
@@ -195,7 +195,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 	if (type == OBJ_BLOB) {
 		struct blob *blob = lookup_blob(r, oid);
 		if (blob) {
-			if (parse_blob_buffer(blob, buffer, size))
+			if (parse_blob_buffer(blob))
 				return NULL;
 			obj = &blob->object;
 		}
@@ -266,7 +266,7 @@ struct object *parse_object(struct repository *r, const struct object_id *oid)
 			error(_("hash mismatch %s"), oid_to_hex(oid));
 			return NULL;
 		}
-		parse_blob_buffer(lookup_blob(r, oid), NULL, 0);
+		parse_blob_buffer(lookup_blob(r, oid));
 		return lookup_object(r, oid);
 	}
 
