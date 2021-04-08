@@ -1043,7 +1043,7 @@ static void gen_message_id(struct rev_info *info,
 
 	/* Figure out the right format width for START/END */
 	strbuf_addf(&tmp, "%d", total);
-	strbuf_addf(&fmt, "%%s-%%0%zud.%%0%zud-%%s-%%s-%%s", tmp.len, tmp.len);
+	strbuf_addf(&fmt, "%%s-%%0%1$lud.%%0%1$lud-%%s-%%s-%%s", (unsigned long)tmp.len);
 	strbuf_reset(&tmp);
 
 	/* Have a pretty timestamp in the Message-Id */
