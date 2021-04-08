@@ -72,7 +72,7 @@ test_expect_success 'get an error for missing tree object' '
 	git -C r5 commit -m "foo" &&
 	git -C r5 rev-parse HEAD^{tree} >tree &&
 	tree="$(cat tree)" &&
-	rm r5/"$(test_oid_to_path $tree)" &&
+	rm r5/"$(test_oid_to_objects_path $tree)" &&
 	test_must_fail git -C r5 pack-objects --revs --stdout 2>bad_tree <<-EOF &&
 	HEAD
 	EOF

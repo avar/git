@@ -5,7 +5,7 @@ test_description='partial clone'
 . ./test-lib.sh
 
 delete_object () {
-	rm -v "$1"/"$(test_oid_to_objects_path $2)"
+	rm "$1"/"$(test_oid_to_objects_path $2)"
 }
 
 pack_as_from_promisor () {
