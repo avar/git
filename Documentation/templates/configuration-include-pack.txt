@@ -1,0 +1,10 @@
+Various configuration variables affect packing. Those variables and
+more are discussed in linkgit:git-config[1].
+
+The below documentation is selectively included from
+linkgit:git-config[1]. It should be all the configuration variables
+relevant to this command, but some may have been missed. When in doubt
+doubt consult linkgit:git-config[1] for the full listing:
+
+include::../config/core/bigFileThreshold.txt[]
+include::../config/pack.txt[]

@@ -1,0 +1,6 @@
+color.showBranch::
+	A boolean to enable/disable color in the output of
+	linkgit:git-show-branch[1]. May be set to `always`,
+	`false` (or `never`) or `auto` (or `true`), in which case colors are used
+	only when the output is to a terminal. If unset, then the
+	value of `color.ui` is used (`auto` by default).
