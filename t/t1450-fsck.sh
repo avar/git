@@ -45,7 +45,7 @@ sha1_file () {
 }
 
 remove_object () {
-	rm "$(sha1_file "$1")"
+	test_rm_loose_oid "$1"
 }
 
 test_expect_success 'object with bad sha1' '
