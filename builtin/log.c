@@ -1027,13 +1027,39 @@ static void get_patch_ids(struct rev_info *rev, struct patch_ids *ids)
 	o2->flags = flags2;
 }
 
-static void gen_message_id(struct rev_info *info, char *base)
+static void gen_message_id(struct rev_info *info,
+			   const char *what,
+			   int nr,
+			   int total,
+			   const struct object_id *oid)
 {
+
 	struct strbuf buf = STRBUF_INIT;
-	strbuf_addf(&buf, "%s.%"PRItime".git.%s", base,
-		    (timestamp_t) time(NULL),
+	struct strbuf fmt = STRBUF_INIT;
+	struct strbuf tmp = STRBUF_INIT;
+	struct tm tm;
+	time_t now = time(NULL);
+
+	/* Figure out the right format width for START/END */
+	strbuf_addf(&tmp, "%d", total);
+	strbuf_addf(&fmt, "%%s-%%0%zud.%%0%zud-%%s-%%s-%%s", tmp.len, tmp.len);
+	strbuf_reset(&tmp);
+
+	/* Have a pretty timestamp in the Message-Id */
+	strbuf_addftime(&tmp, "%Y%m%dT%H%M%SZ", gmtime_r(&now, &tm), 0, 0);
+
+	/* Create it! */
+	strbuf_addf(&buf, fmt.buf, what, nr, total,
+		    /*
+		     * Short OID in Message-ID, cover letters get the
+		     * null_oid (for width consistency of all
+		     * Message-ID's in the series.
+		     */
+		    find_unique_abbrev(oid, DEFAULT_ABBREV),
+		    tmp.buf,
 		    git_committer_info(IDENT_NO_NAME|IDENT_NO_DATE|IDENT_STRICT));
 	info->message_id = strbuf_detach(&buf, NULL);
+	strbuf_release(&fmt);
 }
 
 static void print_signature(FILE *file)
@@ -2139,14 +2165,14 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	rev.numbered_files = just_numbers;
 	rev.patch_suffix = fmt_patch_suffix;
 	if (cover_letter) {
+		total++;
+		start_number--;
 		if (thread)
-			gen_message_id(&rev, "cover");
+			gen_message_id(&rev, "cover", 0, total, &null_oid);
 		make_cover_letter(&rev, !!output_directory,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
 		print_signature(rev.diffopt.file);
-		total++;
-		start_number--;
 		/* interdiff/range-diff in cover-letter; omit from patches */
 		rev.idiff_oid1 = NULL;
 		rev.rdiff1 = NULL;
@@ -2193,7 +2219,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 					string_list_append(rev.ref_message_ids,
 							   rev.message_id);
 			}
-			gen_message_id(&rev, oid_to_hex(&commit->object.oid));
+			gen_message_id(&rev, "patch", rev.nr, total, &commit->object.oid);
 		}
 
 		if (output_directory &&
