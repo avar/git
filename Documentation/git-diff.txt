@@ -209,6 +209,15 @@ $ git diff -R                          <2>
     rewrites (very expensive).
 <2> Output diff in reverse.
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/diff.txt[]
+
+include::config/color/diff.txt[]
+
 SEE ALSO
 --------
 diff(1),
@@ -218,15 +227,6 @@ linkgit:gitdiffcore[7],
 linkgit:git-format-patch[1],
 linkgit:git-apply[1],
 linkgit:git-show[1]
-
-CONFIGURATION
--------------
-
-include::includes/cmd-config-section-all.txt[]
-
-include::config/diff.txt[]
-
-include::config/color/diff.txt[]
 
 GIT
 ---
