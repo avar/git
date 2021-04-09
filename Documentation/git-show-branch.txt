@@ -202,7 +202,7 @@ topologically related with each other.
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/showbranch.txt[]
 

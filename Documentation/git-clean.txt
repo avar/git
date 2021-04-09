@@ -136,7 +136,7 @@ help::
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/clean.txt[]
 

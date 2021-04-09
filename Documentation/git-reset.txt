@@ -501,7 +501,7 @@ working index HEAD target         working index HEAD
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/reset.txt[]
 

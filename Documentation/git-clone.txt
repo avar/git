@@ -361,7 +361,7 @@ $ git clone --bare -l /home/proj/.git /pub/scm/proj.git
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/init.txt[]
 
