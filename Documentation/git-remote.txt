@@ -251,7 +251,7 @@ $ git merge origin
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/remote.txt[]
 
