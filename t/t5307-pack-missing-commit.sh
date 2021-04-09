@@ -14,9 +14,7 @@ test_expect_success setup '
 		git tag "tag$i"
 	done &&
 	obj=$(git rev-parse --verify tag3) &&
-	fanout=$(expr "$obj" : "\(..\)") &&
-	remainder=$(expr "$obj" : "..\(.*\)") &&
-	rm -f ".git/objects/$fanout/$remainder"
+	test_rm_loose_oid "$obj"
 '
 
 test_expect_success 'check corruption' '
