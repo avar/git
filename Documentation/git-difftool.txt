@@ -119,7 +119,7 @@ CONFIGURATION
 'git difftool' falls back to 'git mergetool' config variables when the
 difftool equivalents have not been defined.
 
-include::templates/configuration-include-rest-heading.txt[]
+include::includes/cmd-config-section-rest.txt[]
 
 include::config/diff/difftool.txt[]
 
