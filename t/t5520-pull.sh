@@ -738,9 +738,8 @@ test_expect_success 'pull --rebase fails on corrupt HEAD' '
 	(
 		cd corrupt &&
 		test_commit one &&
-		git rev-parse --verify HEAD >head &&
-		obj=$(sed "s#^..#&/#" head) &&
-		rm -f .git/objects/$obj &&
+		head=$(git rev-parse --verify HEAD) &&
+		test_rm_loose_oid "$head" &&
 		test_must_fail git pull --rebase
 	)
 '
