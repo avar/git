@@ -254,7 +254,7 @@ has no effect when `--index` or `--cached` is in use.
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-heading.txt[]
+include::includes/cmd-config-section-all.txt[]
 
 include::config/apply.txt[]
 
