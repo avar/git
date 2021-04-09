@@ -203,7 +203,7 @@ i18n.logOutputEncoding::
 	Defaults to the value of `i18n.commitEncoding` if set, and UTF-8
 	otherwise.
 
-include::templates/configuration-include-rest-heading.txt[]
+include::includes/cmd-config-section-rest.txt[]
 
 include::config/log.txt[]
 

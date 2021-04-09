@@ -316,7 +316,7 @@ core.notesRef::
 	This setting can be overridden through the environment and
 	command line.
 
-include::templates/configuration-include-rest-heading.txt[]
+include::includes/cmd-config-section-rest.txt[]
 
 include::config/notes.txt[]
 

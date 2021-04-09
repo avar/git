@@ -297,7 +297,7 @@ version.
 CONFIGURATION
 -------------
 
-include::templates/configuration-include-rest-heading.txt[]
+include::includes/cmd-config-section-rest.txt[]
 
 include::config/fetch.txt[]
 
