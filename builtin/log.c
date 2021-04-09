@@ -2164,10 +2164,10 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	rev.numbered_files = just_numbers;
 	rev.patch_suffix = fmt_patch_suffix;
 	if (cover_letter) {
-		total++;
+		int old_total = total++;
 		start_number--;
 		if (thread)
-			gen_message_id(&rev, "cover", 0, total, &null_oid);
+			gen_message_id(&rev, "cover", 0, old_total, &null_oid);
 		make_cover_letter(&rev, !!output_directory,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
@@ -2181,6 +2181,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	if (show_progress)
 		progress = start_delayed_progress(_("Generating patches"), total);
 	while (0 <= --nr) {
+		int msgid_total = cover_letter ? total - 1 : total;
 		int shown;
 		display_progress(progress, total - nr);
 		commit = list[nr];
@@ -2218,7 +2219,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 					string_list_append(rev.ref_message_ids,
 							   rev.message_id);
 			}
-			gen_message_id(&rev, "patch", rev.nr, total, &commit->object.oid);
+			gen_message_id(&rev, "patch", rev.nr, msgid_total, &commit->object.oid);
 		}
 
 		if (output_directory &&
