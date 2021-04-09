@@ -411,18 +411,7 @@ You probably do not need to adjust this value.
 +
 Common unit suffixes of 'k', 'm', or 'g' are supported.
 
-core.bigFileThreshold::
-	Files larger than this size are stored deflated, without
-	attempting delta compression.  Storing large files without
-	delta compression avoids excessive memory usage, at the
-	slight expense of increased disk usage. Additionally files
-	larger than this size are always treated as binary.
-+
-Default is 512 MiB on all platforms.  This should be reasonable
-for most projects as source code and other text files can still
-be delta compressed, but larger binary media files won't be.
-+
-Common unit suffixes of 'k', 'm', or 'g' are supported.
+include::core/bigFileThreshold.txt[]
 
 core.excludesFile::
 	Specifies the pathname to the file that contains patterns to
