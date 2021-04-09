@@ -283,7 +283,7 @@ sub signal_handler {
 	require Term::ANSIColor;
 
 	# Make text normal
-	print Term::AnsiColor::color("reset"), "\n";
+	print Term::ANSIColor::color("reset"), "\n";
 
 	# SMTP password masked
 	system "stty echo";
