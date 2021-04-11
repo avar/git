@@ -231,10 +231,12 @@ test_expect_success 'setup log -G --pickaxe-patch' '
 	test_write_lines A B C D E F G >file &&
 	git add file &&
 	git commit --allow-empty-message file &&
-	sed -i -e "s/B/2/" file &&
+	sed "s/B/2/" <file >tmp &&
+	mv tmp file &&
 	git add file &&
 	git commit --allow-empty-message file &&
-	sed -i -e "s/D/4/" file &&
+	sed -e "s/D/4/" <file >tmp &&
+	mv tmp file &&
 	git add file &&
 	git commit --allow-empty-message file &&
 	git rm file &&
