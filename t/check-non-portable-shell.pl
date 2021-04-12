@@ -35,6 +35,7 @@ while (<>) {
 	next if $line =~ s/\\$//;
 
 	$_ = $line;
+	# Portability issues
 	/\bcp\s+-a/ and err 'cp -a is not portable';
 	/\bsed\s+-[^efn]\s+/ and err 'sed option not portable (use only -n, -e, -f)';
 	/\becho\s+-[neE]/ and err 'echo with option is not portable (use printf)';
@@ -48,6 +49,9 @@ while (<>) {
 	/\bexport\s+[A-Za-z0-9_]*=/ and err '"export FOO=bar" is not portable (use FOO=bar && export FOO)';
 	/^\s*([A-Z0-9_]+=(\w*|(["']).*?\3)\s+)+(\w+)/ and exists($func{$4}) and
 		err '"FOO=bar shell_func" assignment extends beyond "shell_func"';
+	# Coding style preferences
+	/\btest\s+-[a-z]\s+.*?\s+-a\s+/ and err '"test A && test B" preferred to "test A -a B"';
+	/\btest\s+-[a-z]\s+.*?\s+-o\s+/ and err '"test A || test B" preferred to "test A -o B"';
 	$line = '';
 	# this resets our $. for each file
 	close ARGV if eof;
