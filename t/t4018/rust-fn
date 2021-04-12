@@ -1,3 +1,4 @@
+t4018 header: pub(self) fn RIGHT<T>(x: &[T]) where T: Debug {
 pub(self) fn RIGHT<T>(x: &[T]) where T: Debug {
     let _ = x;
     // a comment
