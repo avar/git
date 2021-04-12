@@ -345,6 +345,7 @@ log -SF master --max-count=1
 log -SF master --max-count=2
 log -GF master
 log -GF -p master
+log -GF -p --pickaxe-patch master
 log -GF -p --pickaxe-all master
 log -IA -IB -I1 -I2 -p master
 log --decorate --all
