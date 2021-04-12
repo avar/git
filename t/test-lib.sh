@@ -402,7 +402,7 @@ then
 		"$GIT_TEST_TEE_OUTPUT_FILE"
 	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
 	exit
-elif test -n "$verbose" -a -n "$HARNESS_ACTIVE"
+elif test -n "$verbose" && test -n "$HARNESS_ACTIVE"
 then
 	mkdir -p "$TEST_RESULTS_DIR"
 	(
