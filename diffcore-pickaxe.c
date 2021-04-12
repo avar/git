@@ -224,7 +224,6 @@ static void compile_pickaxe(struct diff_options *o)
 			o->pickaxe_grep_opt.fixed = 1;
 
 		append_grep_pattern(&o->pickaxe_grep_opt, needle, "diffcore-pickaxe", 0, GREP_PATTERN);
-		fprintf(stderr, "compiling for %s\n", needle);
 		compile_grep_patterns(&o->pickaxe_grep_opt);
 
 		if (opts & DIFF_PICKAXE_KIND_G)
