@@ -149,6 +149,18 @@ test_diff_funcname () {
 		test_cmp blank actual
 	'
 
+	test_expect_success "$desc -W" '
+		git diff -U0 -W "$what" >W-U0-diff &&
+		echo >W-U0-expected &&
+		last_diff_context_line W-U0-diff >W-U0-actual &&
+		test_cmp W-U0-expected W-U0-actual
+	'
+
+	test_expect_success "$desc -W interaction with -U<n>" '
+		git diff -U9001 "$what" >W-U9001-diff &&
+		grep "^@@ -1," W-U9001-diff
+	'
+
 	test_expect_success "teardown: $desc" '
 		# In case any custom config was set immediately before
 		# the test itself in the test file
