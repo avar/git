@@ -73,4 +73,25 @@ test_expect_success 'blame does not crash with conflicted file in stages 1,3' '
 	git blame file1
 '
 
+test_expect_success 'setup second case' '
+	git merge --abort
+'
+
+test_expect_success 'blame on directory/file conflict' '
+	mkdir d &&
+	test_commit second &&
+	test_commit d/file &&
+	test_must_fail git blame d 2>expected &&
+	grep "unsupported file type d" expected &&
+
+	git reset --hard second &&
+	>d &&
+	git add d &&
+	git commit -m"a not-a-dir" &&
+	test_must_fail git merge d/file &&
+
+	test_must_fail git blame d 2>actual &&
+	test_cmp expected actual
+'
+
 test_done
