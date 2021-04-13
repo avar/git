@@ -234,19 +234,6 @@ int pretend_object_file(void *, unsigned long, enum object_type,
 
 int force_object_loose(const struct object_id *oid, time_t mtime);
 
-/*
- * Open the loose object at path, check its hash, and return the contents,
- * type, and size. If the object is a blob, then "contents" may return NULL,
- * to allow streaming of large blobs.
- *
- * Returns 0 on success, negative on error (details may be written to stderr).
- */
-int read_loose_object(const char *path,
-		      const struct object_id *expected_oid,
-		      enum object_type *type,
-		      unsigned long *size,
-		      void **contents);
-
 /* Retry packed storage after checking packed and loose storage */
 #define HAS_OBJECT_RECHECK_PACKED 1
 
@@ -388,6 +375,21 @@ int oid_object_info_extended(struct repository *r,
 			     struct object_info *, unsigned flags);
 
 /*
+ * Open the loose object at path, check its hash, and return the contents,
+ * use the "oi" argument to assert things about the object, or e.g. populate its
+ * type, and size. If the object is a blob, then "contents" may return NULL,
+ * to allow streaming of large blobs.
+ *
+ * Returns 0 on success, negative on error (details may be written to stderr).
+ */
+int read_loose_object(const char *path,
+		      const struct object_id *expected_oid,
+		      struct object_id *real_oid,
+		      void **contents,
+		      struct object_info *oi,
+		      unsigned int oi_flags);
+
+/*
  * Iterate over the files in the loose-object parts of the object
  * directory "path", triggering the following callbacks:
  *
@@ -476,5 +478,16 @@ int for_each_object_in_pack(struct packed_git *p,
 			    enum for_each_object_flags flags);
 int for_each_packed_object(each_packed_object_fn, void *,
 			   enum for_each_object_flags flags);
+
+int unpack_loose_header(git_zstream *stream, unsigned char *map,
+			unsigned long mapsize, void *buffer,
+			unsigned long bufsiz);
+int parse_loose_header(const char *hdr, struct object_info *oi,
+		       unsigned int flags);
+int check_object_signature(struct repository *r, const struct object_id *oid,
+			   void *buf, unsigned long size, const char *type,
+			   struct object_id *real_oidp);
+int finalize_object_file(const char *tmpfile, const char *filename);
+int check_and_freshen_file(const char *fn, int freshen);
 
 #endif /* OBJECT_STORE_H */
