@@ -698,6 +698,13 @@ and "0" meaning they were not.
 Only one parameter should be set to "1" when the hook runs.  The hook
 running passing "1", "1" should not be possible.
 
+SEE ALSO
+--------
+
+The `uploadpack.packObjectsHook` configuration variable can configure
+a hook for linkgit:git-pack-objects[1] to use, but not in a way that
+uses the hook facility discussed above.
+
 GIT
 ---
 Part of the linkgit:git[1] suite
