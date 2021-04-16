@@ -72,8 +72,17 @@ static void mktree_line(char *buf, int nul_term_line, int allow_missing)
 	char *ptr, *ntr;
 	const char *p;
 	unsigned mode;
-	enum object_type mode_type; /* object type derived from mode */
-	enum object_type obj_type; /* object type derived from sha */
+	/*
+	 * For a line like:
+	 *
+	 *     <mode> SP <type> SP <object> SP <object size> TAB <file>"
+	 *
+	 * We'll discover and validate the type from all of <mode>,
+	 * <type> and <object>
+	 */
+	enum object_type mode_type;
+	enum object_type type_type;
+	enum object_type obj_type;
 	char *path, *to_free = NULL;
 	struct object_id oid;
 
@@ -108,10 +117,13 @@ static void mktree_line(char *buf, int nul_term_line, int allow_missing)
 	 * These should all agree.
 	 */
 	mode_type = object_type(mode);
-	if (mode_type != type_from_string_gently(ptr, ntr - ptr, 0)) {
+	type_type = type_from_string_gently(ptr, ntr - ptr, 1);
+	if (type_type < 0)
+		die("entry '%s' object type '%.*s' is invalid (our derived mode type is '%s')",
+			path, (int)(ntr - ptr), ptr, type_name(mode_type));
+	else if (mode_type != type_type)
 		die("entry '%s' object type (%s) doesn't match mode type (%s)",
 			path, ptr, type_name(mode_type));
-	}
 
 	/* Check the type of object identified by sha1 */
 	obj_type = oid_object_info(the_repository, &oid, NULL);
