@@ -58,6 +58,16 @@ test_expect_success 'allow missing object with --missing' '
 	test_cmp tree.missing actual
 '
 
+test_expect_success 'invalid object type' '
+	sed "s/tree/whee/g" <top >bad-type &&
+	test_must_fail git mktree <bad-type >out 2>err &&
+	test_must_be_empty out &&
+	cat >expected <<-\EOF &&
+	fatal: invalid object type "whee"
+	EOF
+	test_cmp expected err
+'
+
 test_expect_success 'mktree refuses to read ls-tree -r output (1)' '
 	test_must_fail git mktree <all >actual
 '
