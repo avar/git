@@ -94,7 +94,6 @@ struct object {
 
 const char *type_name(unsigned int type);
 enum object_type type_from_string_gently(const char *str, size_t len);
-enum object_type type_from_string(const char *str);
 
 /*
  * Return the current number of buckets in the object hashmap.

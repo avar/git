@@ -49,15 +49,6 @@ enum object_type type_from_string_gently(const char *str, size_t len)
 	return -1;
 }
 
-enum object_type type_from_string(const char *str)
-{
-	size_t len = strlen(str);
-	enum object_type ret = type_from_string_gently(str, len);
-	if (ret < 0)
-		die(_("invalid object type \"%s\""), str);
-	return ret;
-}
-
 /*
  * Return a numerical hash value between 0 and n-1 for the object with
  * the specified sha1.  n must be a power of 2.  Please note that the
