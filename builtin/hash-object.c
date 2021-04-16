@@ -130,12 +130,10 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 			errstr = "Can't specify files with --stdin-paths";
 		else if (vpath)
 			errstr = "Can't use --stdin-paths with --path";
-	}
-	else {
-		if (hashstdin > 1)
-			errstr = "Multiple --stdin arguments are not supported";
-		if (vpath && no_filters)
-			errstr = "Can't use --path with --no-filters";
+	} else if (hashstdin > 1) {
+		errstr = "Multiple --stdin arguments are not supported";
+	} else if (vpath && no_filters) {
+		errstr = "Can't use --path with --no-filters";
 	}
 
 	if (errstr) {
