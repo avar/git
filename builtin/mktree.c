@@ -95,9 +95,6 @@ static void mktree_line(char *buf, int nul_term_line, int allow_missing)
 	if (S_ISGITLINK(mode))
 		allow_missing = 1;
 
-
-	*ntr++ = 0; /* now at the beginning of SHA1 */
-
 	path = (char *)p + 1;  /* at the beginning of name */
 	if (!nul_term_line && path[0] == '"') {
 		struct strbuf p_uq = STRBUF_INIT;
@@ -111,7 +108,7 @@ static void mktree_line(char *buf, int nul_term_line, int allow_missing)
 	 * These should all agree.
 	 */
 	mode_type = object_type(mode);
-	if (mode_type != type_from_string(ptr)) {
+	if (mode_type != type_from_string_gently(ptr, ntr - ptr, 0)) {
 		die("entry '%s' object type (%s) doesn't match mode type (%s)",
 			path, ptr, type_name(mode_type));
 	}
