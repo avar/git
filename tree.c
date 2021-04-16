@@ -102,11 +102,16 @@ int cmp_cache_name_compare(const void *a_, const void *b_)
 				  ce2->name, ce2->ce_namelen, ce_stage(ce2));
 }
 
+static struct tree *create_tree(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_tree_node(r));
+}
+
 struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_tree_node(r));
+		return create_tree(r, oid);
 	return object_as_type(obj, OBJ_TREE, 0);
 }
 
