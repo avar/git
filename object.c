@@ -188,20 +188,17 @@ struct object *lookup_unknown_object(const struct object_id *oid)
 
 struct object *parse_object_buffer(struct repository *r, const struct object_id *oid, enum object_type type, unsigned long size, void *buffer, int *eaten_p)
 {
-	struct object *obj;
 	*eaten_p = 0;
 
-	obj = NULL;
 	if (type == OBJ_BLOB) {
 		struct blob *blob = lookup_blob(r, oid);
 		if (blob) {
 			blob->object.parsed = 1;
-			obj = &blob->object;
+			return &blob->object;
 		}
 	} else if (type == OBJ_TREE) {
 		struct tree *tree = lookup_tree(r, oid);
 		if (tree) {
-			obj = &tree->object;
 			if (!tree->buffer)
 				tree->object.parsed = 0;
 			if (!tree->object.parsed) {
@@ -209,6 +206,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 					return NULL;
 				*eaten_p = 1;
 			}
+			return &tree->object;
 		}
 	} else if (type == OBJ_COMMIT) {
 		struct commit *commit = lookup_commit(r, oid);
@@ -219,20 +217,19 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 				set_commit_buffer(r, commit, buffer, size);
 				*eaten_p = 1;
 			}
-			obj = &commit->object;
+			return &commit->object;
 		}
 	} else if (type == OBJ_TAG) {
 		struct tag *tag = lookup_tag(r, oid);
 		if (tag) {
 			if (parse_tag_buffer(r, tag, buffer, size))
 			       return NULL;
-			obj = &tag->object;
+			return &tag->object;
 		}
 	} else {
 		warning(_("object %s has unknown type id %d"), oid_to_hex(oid), type);
-		obj = NULL;
 	}
-	return obj;
+	return NULL;
 }
 
 struct object *parse_object_or_die(const struct object_id *oid,
