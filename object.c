@@ -50,7 +50,7 @@ int type_from_string_gently(const char *str, ssize_t len, int gentle)
 	if (gentle)
 		return -1;
 
-	die(_("invalid object type \"%s\""), str);
+	die(_("invalid object type \"%.*s\""), (int)len, str);
 }
 
 /*
