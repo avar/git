@@ -31,8 +31,9 @@ static int hash_literally(struct object_id *oid, int fd, const char *type, unsig
 	return ret;
 }
 
-static void hash_fd(int fd, const char *type, size_t type_len,
-		    const char *path, unsigned flags, int literally)
+static void hash_fd(int fd, enum object_type otype, const char *type,
+		    size_t type_len, const char *path, unsigned flags,
+		    int literally)
 {
 	struct stat st;
 	struct object_id oid;
@@ -40,8 +41,8 @@ static void hash_fd(int fd, const char *type, size_t type_len,
 	if (fstat(fd, &st) < 0 ||
 	    (literally
 	     ? hash_literally(&oid, fd, type, flags)
-	     : index_fd(the_repository->index, &oid, fd, &st,
-			type_from_string(type), path, flags)))
+	     : index_fd(the_repository->index, &oid, fd, &st, otype, path,
+			flags)))
 		die((flags & HASH_WRITE_OBJECT)
 		    ? "Unable to add %s to database"
 		    : "Unable to hash %s", path);
@@ -49,17 +50,19 @@ static void hash_fd(int fd, const char *type, size_t type_len,
 	maybe_flush_or_die(stdout, "hash to stdout");
 }
 
-static void hash_object(const char *path, const char *type, size_t type_len,
+static void hash_object(const char *path, enum object_type otype,
+			const char *type, size_t type_len,
 			const char *vpath, unsigned flags, int literally)
 {
 	int fd;
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		die_errno("Cannot open '%s'", path);
-	hash_fd(fd, type, type_len, vpath, flags, literally);
+	hash_fd(fd, otype, type, type_len, vpath, flags, literally);
 }
 
-static void hash_stdin_paths(const char *type, size_t type_len, int no_filters,
+static void hash_stdin_paths(enum object_type otype, const char *type,
+			     size_t type_len, int no_filters,
 			     unsigned flags, int literally)
 {
 	struct strbuf buf = STRBUF_INIT;
@@ -74,7 +77,7 @@ static void hash_stdin_paths(const char *type, size_t type_len, int no_filters,
 			strbuf_swap(&buf, &unquoted);
 		}
 		vpath = no_filters ? NULL : buf.buf;
-		hash_object(buf.buf, type, type_len, vpath , flags, literally);
+		hash_object(buf.buf, otype, type, type_len, vpath , flags, literally);
 	}
 	strbuf_release(&buf);
 	strbuf_release(&unquoted);
@@ -89,6 +92,7 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 	};
 	const char *type = blob_type;
 	size_t type_len;
+	enum object_type otype = OBJ_BAD;
 	int hashstdin = 0;
 	int stdin_paths = 0;
 	int no_filters = 0;
@@ -109,6 +113,7 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 	};
 	int i;
 	const char *errstr = NULL;
+	int errstr_arg_type = 0;
 
 	argc = parse_options(argc, argv, prefix, hash_object_options,
 			     hash_object_usage, 0);
@@ -123,7 +128,12 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 
 	git_config(git_default_config, NULL);
 
-	if (stdin_paths) {
+	type_len = strlen(type);
+	otype = type_from_string_gently(type, type_len);
+	if (otype < 0 && !literally) {
+		errstr = "the object type \"%.*s\" is invalid, did you mean to use --literally?";
+		errstr_arg_type = 1;
+	} else if (stdin_paths) {
 		if (hashstdin)
 			errstr = "Can't use --stdin-paths with --stdin";
 		else if (argc)
@@ -137,27 +147,31 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 	}
 
 	if (errstr) {
-		error("%s", errstr);
+		if (errstr_arg_type)
+			error(errstr, (int)type_len, type);
+		else
+			error("%s", errstr);
 		usage_with_options(hash_object_usage, hash_object_options);
 	}
 
-	type_len = strlen(type);
 	if (hashstdin)
-		hash_fd(0, type, type_len, vpath, flags, literally);
+		hash_fd(0, otype, type, type_len, vpath, flags, literally);
 
 	for (i = 0 ; i < argc; i++) {
 		const char *arg = argv[i];
 		char *to_free = NULL;
+		const char *tmp;
 
 		if (prefix)
 			arg = to_free = prefix_filename(prefix, arg);
-		hash_object(arg, type, type_len, no_filters ? NULL : vpath ? vpath : arg,
-			    flags, literally);
+		tmp = no_filters ? NULL : vpath ? vpath : arg;
+		hash_object(arg, otype, type, type_len, tmp, flags, literally);
 		free(to_free);
 	}
 
 	if (stdin_paths)
-		hash_stdin_paths(type, type_len, no_filters, flags, literally);
+		hash_stdin_paths(otype, type, type_len, no_filters, flags,
+				 literally);
 
 	return 0;
 }
