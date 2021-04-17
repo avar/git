@@ -65,12 +65,9 @@ compare_mtimes ()
 }
 
 test_expect_success '-A without -d option leaves unreachable objects packed' '
-	fsha1path=$(echo "$fsha1" | sed -e "s|\(..\)|\1/|") &&
-	fsha1path=".git/objects/$fsha1path" &&
-	csha1path=$(echo "$csha1" | sed -e "s|\(..\)|\1/|") &&
-	csha1path=".git/objects/$csha1path" &&
-	tsha1path=$(echo "$tsha1" | sed -e "s|\(..\)|\1/|") &&
-	tsha1path=".git/objects/$tsha1path" &&
+	fsha1path="$(test_oid_to_objects_path $fsha1)" &&
+	csha1path="$(test_oid_to_objects_path $csha1)" &&
+	tsha1path="$(test_oid_to_objects_path $tsha1)" &&
 	git branch transient_branch $csha1 &&
 	git repack -a -d -l &&
 	test ! -f "$fsha1path" &&
@@ -143,7 +140,7 @@ test_expect_success 'repack -k keeps unreachable packed objects' '
 test_expect_success 'repack -k packs unreachable loose objects' '
 	# create loose unreachable object
 	sha1=$(echo would-be-deleted-loose | git hash-object -w --stdin) &&
-	objpath=.git/objects/$(echo $sha1 | sed "s,..,&/,") &&
+	objpath="$(test_oid_to_objects_path $sha1)" &&
 	test_path_is_file $objpath &&
 
 	# and confirm that the loose object goes away, but we can
