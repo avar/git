@@ -278,7 +278,9 @@ TEST_NUMBER="${TEST_NAME%%-*}"
 TEST_NUMBER="${TEST_NUMBER#t}"
 TEST_RESULTS_DIR="$TEST_OUTPUT_DIRECTORY/test-results"
 TEST_RESULTS_BASE="$TEST_RESULTS_DIR/$TEST_NAME$TEST_STRESS_JOB_SFX"
-TRASH_DIRECTORY="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
+TRASH_DIRECTORY_BASE="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
+export TRASH_DIRECTORY_BASE
+TRASH_DIRECTORY="$TRASH_DIRECTORY_BASE"
 test -n "$root" && TRASH_DIRECTORY="$root/$TRASH_DIRECTORY"
 case "$TRASH_DIRECTORY" in
 /*) ;; # absolute path is good
@@ -652,6 +654,7 @@ say_color_tap_comment_level_2='##'
 # - skipped test scripts (due to GIT_TEST_SKIP or prerequisites)
 say_color_tap_comment_level_3='###'
 # 4th level comments (#### <line>)
+# - main test_create_repo (the $TRASH_DIRECTORY)
 # - lazy prerequisite scripts (test_lazy_prereq '[...]' <script>)
 say_color_tap_comment_level_4='####'
 say_color_tap_comment() {
@@ -1486,13 +1489,21 @@ rm -fr "$TRASH_DIRECTORY" || {
 	exit 1
 }
 
+# Set up verbosity for --verbose-only, we emit the output before the
+# first test with $test_count=0, so --verbose-only=0 will emit the
+# "say_color_tap_comment" below.
+maybe_setup_verbose
+
 remove_trash=t
+trash_message="for '$TEST_NAME' in '[ROOT DIR]/$TRASH_DIRECTORY_BASE'"
 if test -z "$TEST_NO_CREATE_REPO"
 then
-	git init "$TRASH_DIRECTORY" >&3 2>&4 ||
+	git init --quiet "$TRASH_DIRECTORY" >&3 2>&4 &&
+	say_color_tap_comment >&3 4 trace "Created repo $trash_message" ||
 	error "cannot run git init"
 else
-	mkdir -p "$TRASH_DIRECTORY"
+	mkdir -p "$TRASH_DIRECTORY" &&
+	say_color_tap_comment >&3 4 trace "Created dir $trash_message"
 fi
 
 # Use -P to resolve symlinks in our working directory so that the cwd

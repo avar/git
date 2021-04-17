@@ -207,6 +207,7 @@ test_expect_success 'subtest: --verbose option' '
 	test_done
 	EOF
 	check_sub_test_lib_test t1234-verbose <<-\EOF
+	#### Created repo for '"'"'t1234-verbose'"'"' in '"'"'[ROOT DIR]/trash directory.t1234-verbose'"'"'
 	> ok 1 - passing test
 	> ###true
 	> Z
@@ -253,6 +254,7 @@ test_expect_success 'setup subtest: --verbose-only output correctness' '
 test_expect_success 'subtest: --verbose output correctness' '
 	run_sub_test_lib_test verbose-only --verbose &&
 	check_sub_test_lib_test verbose-only <<-\EOF
+	> #### Created repo for '"'"'verbose-only'"'"' in '"'"'[ROOT DIR]/trash directory.verbose-only'"'"'
 	> ok 1 - try to screw with TAP output | ok 1 - one
 	> ###
 	> ###printf "ok 1 - try to screw with TAP output | "
@@ -263,6 +265,17 @@ test_expect_success 'subtest: --verbose output correctness' '
 	> Z
 	> # passed all 2 test(s)
 	> 1..2
+	EOF
+'
+
+test_expect_success 'subtest: --verbose-only=0 output before any test_expect_{success,failure}' '
+	run_sub_test_lib_test verbose-only --verbose-only=0 &&
+	check_sub_test_lib_test verbose-only <<-\EOF
+	> #### Created repo for '"'"'verbose-only'"'"' in '"'"'[ROOT DIR]/trash directory.verbose-only'"'"'
+	ok 1 - one
+	ok 2 - two
+	# passed all 2 test(s)
+	1..2
 	EOF
 '
 
@@ -297,6 +310,7 @@ test_expect_success 'subtest: skip all with skip_all=*' '
 	test_done
 	EOF
 	check_sub_test_lib_test skip-all <<-\EOF
+	<MAGENTA>#### Created repo for '"'"'skip-all'"'"' in '"'"'[ROOT DIR]/trash directory.skip-all'"'"'<RESET>
 	<CYAN>1..0 # SKIP cannot run here<RESET>
 	EOF
 '
@@ -743,6 +757,7 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 
 	check_sub_test_lib_test_out lazy-prereq-and-tracing \
 		<<-\EOF &&
+	> #### Created repo for '"'"'lazy-prereq-and-tracing'"'"' in '"'"'[ROOT DIR]/trash directory.lazy-prereq-and-tracing'"'"'
 	> #### Checking prerequisite LAZY...
 	> ####
 	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&

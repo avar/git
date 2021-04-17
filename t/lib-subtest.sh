@@ -66,11 +66,6 @@ _run_sub_test_lib_test_common () {
 		sane_unset GIT_TEST_FAIL_PREREQS &&
 		./"$name.sh" "$@" >out.raw 2>err.raw;
 		ret=$? &&
-		grep -v \
-		     -e "^Initialized empty.* Git repository" \
-		     -e "^Reinitialized existing.* Git repository" \
-		     out.raw >out.raw+ &&
-		mv out.raw+ out.raw &&
 		test "$ret" "$cmp_op" "$want_code"
 	)
 }
