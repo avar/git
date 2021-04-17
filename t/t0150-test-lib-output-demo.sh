@@ -129,6 +129,7 @@ test_expect_success 'run t0150-fake.sh --verbose' '
 	run_sub_test_lib_test_err t0150-fake --verbose &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
+	> #### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'
 	> ok 1 - successful one-line test
 	> ###true
 	> Z
@@ -221,6 +222,7 @@ test_expect_success 'run t0150-fake.sh --verbose -color' '
 	run_sub_test_lib_test_err t0150-fake --verbose --color &&
 
 	check_sub_test_lib_test t0150-fake <<-\EOF
+	> <MAGENTA>#### Created repo for '"'"'t0150-fake'"'"' in '"'"'[ROOT DIR]/trash directory.t0150-fake'"'"'<RESET>
 	> <GREEN;BOLD>ok 1 - successful one-line test<RESET>
 	> <GREEN>###true<RESET>
 	> Z
