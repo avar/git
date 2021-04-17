@@ -217,6 +217,15 @@ same as lines with conflict markers, 'git rerere' may fail to record a
 conflict resolution.  To work around this, the `conflict-marker-size`
 setting in linkgit:gitattributes[5] can be used.
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/rerere.txt[]
+
+include::config/gc.txt[]
+
 GIT
 ---
 Part of the linkgit:git[1] suite
