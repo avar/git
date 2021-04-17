@@ -41,6 +41,8 @@ while (<>) {
 	/^\s*declare\s+/ and err 'arrays/declare not portable';
 	/^\s*[^#]\s*which\s/ and err 'which is not portable (use type)';
 	/\btest\s+[^=]*==/ and err '"test a == b" is not portable (use =)';
+	/\btest\s+-[a-z]\s+[^&|]+\s+-a\s+/ and err '"test A && test B" preferred to "test A -a B"';
+	/\btest\s+-[a-z]\s+[^&|]+\s+-o\s+/ and err '"test A || test B" preferred to "test A -o B"';
 	/\bwc -l.*"\s*=/ and err '`"$(wc -l)"` is not portable (use test_line_count)';
 	/\bhead\s+-c\b/ and err 'head -c is not portable (use test_copy_bytes BYTES <file >out)';
 	/(?:\$\(seq|^\s*seq\b)/ and err 'seq is not portable (use test_seq)';
