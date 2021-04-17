@@ -202,12 +202,6 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 			     const struct string_list *server_options,
 			     int stateless_rpc);
 
-/* Used for protocol v2 in order to retrieve bundle uris from a remote */
-void get_remote_bundle_uris(int fd_out, struct packet_reader *reader,
-			    struct string_list *uris, int for_push,
-			    const struct string_list *server_options,
-			    int stateless_rpc);
-
 int resolve_remote_symref(struct ref *ref, struct ref *list);
 
 /*
