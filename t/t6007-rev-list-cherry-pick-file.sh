@@ -260,15 +260,6 @@ test_expect_success '--cherry-pick with duplicates on each side' '
 	test_must_be_empty actual
 '
 
-# Corrupt the object store deliberately to make sure
-# the object is not even checked for its existence.
-remove_loose_object () {
-	sha1="$(git rev-parse "$1")" &&
-	remainder=${sha1#??} &&
-	firsttwo=${sha1%$remainder} &&
-	rm .git/objects/$firsttwo/$remainder
-}
-
 test_expect_success '--cherry-pick avoids looking at full diffs' '
 	git checkout -b shy-diff &&
 	test_commit dont-look-at-me &&
@@ -277,7 +268,8 @@ test_expect_success '--cherry-pick avoids looking at full diffs' '
 	git commit -m tip dont-look-at-me.t &&
 	git checkout -b mainline HEAD^ &&
 	test_commit to-cherry-pick &&
-	remove_loose_object shy-diff^:dont-look-at-me.t &&
+	oid="$(git rev-parse shy-diff^:dont-look-at-me.t)" &&
+	test_rm_loose_oid "$oid" &&
 	git rev-list --cherry-pick ...shy-diff
 '
 
