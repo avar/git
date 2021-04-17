@@ -206,8 +206,6 @@ test_expect_success 'subtest: --verbose option' '
 	test_expect_success "failing test" false
 	test_done
 	EOF
-	mv t1234-verbose/out t1234-verbose/out+ &&
-	grep -v "^Initialized empty" t1234-verbose/out+ >t1234-verbose/out &&
 	check_sub_test_lib_test t1234-verbose <<-\EOF
 	> expecting success of 1234.1 '\''passing test'\'': true
 	> ok 1 - passing test
