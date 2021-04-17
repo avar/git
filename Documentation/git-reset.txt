@@ -498,6 +498,13 @@ working index HEAD target         working index HEAD
 
 `X` means any state and `U` means an unmerged index.
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/reset.txt[]
+
 GIT
 ---
 Part of the linkgit:git[1] suite
