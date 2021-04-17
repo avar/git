@@ -112,12 +112,27 @@ static struct tree *create_tree(struct repository *r, const struct object_id *oi
 	return create_object(r, oid, alloc_tree_node(r));
 }
 
-struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
+struct tree *lookup_tree_type(struct repository *r,
+			      const struct object_id *oid,
+			      enum object_type type)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_tree(r, oid);
+	if (type != OBJ_NONE &&
+	    obj->type != OBJ_NONE) {
+		enum object_type want = OBJ_TREE;
+		if (oid_is_type_or_error(oid, obj->type, &want)) {
+			obj->type = want;
+			return NULL;
+		}
+	}
 	return object_as_type(obj, OBJ_TREE);
+}
+
+struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
+{
+	return lookup_tree_type(r, oid, OBJ_NONE);
 }
 
 int parse_tree_buffer(struct tree *item, void *buffer, unsigned long size)
