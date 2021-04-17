@@ -69,12 +69,7 @@ _run_sub_test_lib_test_common () {
 			./"$name.sh" "$@" >out.raw 2>err.raw
 		else
 			! ./"$name.sh" "$@" >out.raw 2>err.raw
-		fi &&
-		grep -v \
-		     -e "^Initialized empty.* Git repository" \
-		     -e "^Reinitialized existing.* Git repository" \
-		     out.raw >out.raw+
-		mv out.raw+ out.raw
+		fi
 	)
 }
 
