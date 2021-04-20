@@ -11,5 +11,8 @@ struct blob {
 
 struct blob *create_blob(struct repository *r, const struct object_id *oid);
 struct blob *lookup_blob(struct repository *r, const struct object_id *oid);
+struct blob *lookup_blob_type(struct repository *r,
+			      const struct object_id *oid,
+			      enum object_type type);
 
 #endif /* BLOB_H */
