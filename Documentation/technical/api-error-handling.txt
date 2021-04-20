@@ -1,8 +1,11 @@
 Error reporting in git
 ======================
 
-`die`, `usage`, `error`, and `warning` report errors of various
-kinds.
+`BUG`, `bug`, `die`, `usage`, `error`, and `warning` report errors of
+various kinds.
+
+- `BUG` is for failed internal assertions that should never happen,
+  i.e. a bug in git itself.
 
 - `die` is for fatal application errors.  It prints a message to
   the user and exits with status 128.
@@ -15,10 +18,19 @@ kinds.
   to the user and returns -1 for convenience in signaling the error
   to the caller.
 
+- `bug` (lower-case, not `BUG`) is supposed to be used like `BUG` but
+  has the same non-fatal semantics as `error`. It's meant to signal an
+  internal bug in a library whose caller might still want to attempt
+  some amount of graceful recovery, or to append other error output of
+  their own.
+
 - `warning` is for reporting situations that probably should not
   occur but which the user (and Git) can continue to work around
   without running into too many problems.  Like `error`, it
   returns -1 after reporting the situation to the caller.
+
+These reports will be logged via the trace2 facility. See the "error"
+event in link:api-trace2.txt[trace2 API].
 
 Customizable error handlers
 ---------------------------
