@@ -12,15 +12,60 @@ test_description='git mktag: tag object verify test'
 # given in the expect.pat file.
 
 check_verify_failure () {
-	test_expect_success "$1" "
-		test_must_fail git mktag <tag.sig 2>message &&
-		grep '$2' message &&
-		if test '$3' != '--no-strict'
+	subject=$1 &&
+	message=$2 &&
+	shift 2 &&
+
+	no_strict= &&
+	fsck_obj_ok= &&
+	no_strict= &&
+	while test $# != 0
+	do
+		case "$1" in
+		--no-strict)
+			no_strict=yes
+			;;
+		--fsck-obj-ok)
+			fsck_obj_ok=yes
+			;;
+		esac
+		shift
+	done &&
+
+	test_expect_success "fail with [--[no-]strict]: $subject" '
+		test_must_fail git mktag <tag.sig 2>err &&
+		if test -z "$no_strict"
 		then
-			test_must_fail git mktag --no-strict <tag.sig 2>message.no-strict &&
-			grep '$2' message.no-strict
-		fi
-	"
+			test_must_fail git mktag <tag.sig 2>err2 &&
+			test_cmp err err2
+		else
+			git mktag --no-strict <tag.sig
+		fi &&
+
+		test_when_finished "rm -rf bad-tag" &&
+		test_create_repo bad-tag &&
+		bad_tag=$(git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig) &&
+		if test -n "$fsck_obj_ok"
+		then
+			git -C bad-tag fsck
+		else
+			test_must_fail git -C bad-tag fsck >out 2>err
+		fi &&
+
+		# Do update-ref anyway to see if it segfaults
+		tag_ref=refs/tags/bad_tag &&
+		test_might_fail git -C bad-tag update-ref "$tag_ref" "$bad_tag" &&
+		# The update-ref command itself might fail, but we are
+		# not testing that
+		echo "$bad_tag" >"bad-tag/.git/$tag_ref" &&
+		test_must_fail git -C bad-tag fsck &&
+
+		printf "%s tag\t%s\n" "$bad_tag" "$tag_ref" >expected &&
+		git -C bad-tag for-each-ref "$tag_ref" >actual &&
+		test_cmp expected actual &&
+		# segfaults!
+		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
+	'
 }
 
 test_expect_mktag_success() {
@@ -167,7 +212,8 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- correct type, nonexisting object' \
-	'^fatal: could not read tagged object'
+	'^fatal: could not read tagged object' \
+	--fsck-obj-ok
 
 cat >tag.sig <<EOF
 object $head
@@ -200,7 +246,8 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- mismatched type, valid object' \
-	'^fatal: object.*tagged as.*tree.*but is.*commit'
+	'^fatal: object.*tagged as.*tree.*but is.*commit' \
+	--fsck-obj-ok
 
 ############################################################
 #  9.5. verify object (hash/type) check -- replacement
@@ -229,7 +276,8 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- mismatched type, valid object' \
-	'^fatal: object.*tagged as.*tree.*but is.*blob'
+	'^fatal: object.*tagged as.*tree.*but is.*blob' \
+	--fsck-obj-ok
 
 ############################################################
 # 10. verify tag-name check
@@ -243,7 +291,9 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify tag-name check' \
-	'^error:.* badTagName:' '--no-strict'
+	'^error:.* badTagName:' \
+	--no-strict \
+	--fsck-obj-ok
 
 ############################################################
 # 11. tagger line label check #1
@@ -257,7 +307,9 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #1' \
-	'^error:.* missingTaggerEntry:' '--no-strict'
+	'^error:.* missingTaggerEntry:' \
+	--no-strict \
+	--fsck-obj-ok
 
 ############################################################
 # 12. tagger line label check #2
@@ -272,7 +324,9 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #2' \
-	'^error:.* missingTaggerEntry:' '--no-strict'
+	'^error:.* missingTaggerEntry:' \
+	--no-strict \
+	--fsck-obj-ok
 
 ############################################################
 # 13. allow missing tag author name like fsck
@@ -301,7 +355,9 @@ tagger T A Gger <
 EOF
 
 check_verify_failure 'disallow malformed tagger' \
-	'^error:.* badEmail:' '--no-strict'
+	'^error:.* badEmail:' \
+	--no-strict \
+	--fsck-obj-ok
 
 ############################################################
 # 15. allow empty tag email
@@ -425,7 +481,9 @@ this line should not be here
 EOF
 
 check_verify_failure 'detect invalid header entry' \
-	'^error:.* extraHeaderEntry:' '--no-strict'
+	'^error:.* extraHeaderEntry:' \
+	--no-strict \
+	--fsck-obj-ok
 
 test_expect_success 'invalid header entry config & fsck' '
 	test_must_fail git mktag <tag.sig &&
