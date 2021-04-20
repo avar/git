@@ -1,3 +1,4 @@
+t4018 header: interface RIGHT
 interface RIGHT
 {
     public function foo($ChangeMe);
