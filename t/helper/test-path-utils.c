@@ -474,7 +474,7 @@ int cmd__path_utils(int argc, const char **argv)
 	if (argc > 1 && !strcmp(argv[1], "protect_ntfs_hfs"))
 		return !!protect_ntfs_hfs_benchmark(argc - 1, argv + 1);
 
-	if (argc > 1 && !strcmp(argv[1], "is_valid_path")) {
+	if (argc > 1 && !strcmp(argv[1], "is-valid-paths")) {
 		int res = 0, expect = 1, i;
 
 		for (i = 2; i < argc; i++)
