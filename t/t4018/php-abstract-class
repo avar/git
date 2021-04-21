@@ -1,3 +1,4 @@
+t4018 header: abstract class RIGHT
 abstract class RIGHT
 {
     const FOO = 'ChangeMe';
