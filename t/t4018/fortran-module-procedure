@@ -1,3 +1,4 @@
+t4018 header: module RIGHT
  module RIGHT
 
    implicit none
