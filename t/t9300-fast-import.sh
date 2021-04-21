@@ -955,6 +955,93 @@ test_expect_success 'L: verify internal tree sorting' '
 	test_cmp expect actual
 '
 
+test_expect_success 'L: verify internal tree sorting on bad input (tecmp1)' '
+	test_create_repo L1-0 &&
+
+	cat >input <<-INPUT_END &&
+	blob
+	mark :1
+	data 0
+
+	reset refs/heads/L1-0
+	commit refs/heads/L1-0
+	committer $GIT_COMMITTER_NAME <$GIT_COMMITTER_EMAIL> $GIT_COMMITTER_DATE
+	data <<COMMIT
+	create L1-0
+	COMMIT
+	M 100644 :1 x.txt
+	M 100644 :1 x/y.txt
+	M 100644 :1 z.txt
+	M 100644 :1 z
+	INPUT_END
+
+	cat >expected <<-EXPECT_END &&
+	x.txt
+	x
+	z
+	z.txt
+	EXPECT_END
+
+	git -C L1-0 fast-import <input &&
+	git -C L1-0 ls-tree L1-0 >tmp &&
+	cut -f 2 <tmp >actual &&
+	test_cmp expected actual &&
+	git -C L1-0 fsck 2>err &&
+	# Would happen if tecmp1() were broken
+	! grep "error in tree .*: treeNotSorted: " err
+'
+
+test_expect_success 'L: verify internal tree sorting on bad input (tecmp0)' '
+
+	test_create_repo L1-1 &&
+
+	cat >input <<-INPUT_END &&
+	blob
+	mark :1
+	data <<EOF
+	some data
+	EOF
+
+	reset refs/heads/L1-1
+	commit refs/heads/L1-1
+	committer $GIT_COMMITTER_NAME <$GIT_COMMITTER_EMAIL> $GIT_COMMITTER_DATE
+	data <<COMMIT
+	create L1-1
+	COMMIT
+	M 100644 :1 x.txt
+	M 100644 :1 x/y.txt
+	M 100644 :1 z.txt
+	M 100644 :1 z
+
+	commit refs/heads/L1-1
+	committer $GIT_COMMITTER_NAME <$GIT_COMMITTER_EMAIL> $GIT_COMMITTER_DATE
+	data <<COMMIT
+	update L1-1
+	COMMIT
+	M 100644 :1 another.txt
+	M 100644 :1 x.txt
+	M 100644 :1 x/y.txt
+	M 100644 :1 z.txt
+	M 100644 :1 z
+	INPUT_END
+
+	cat >expected <<-EXPECT_END &&
+	another.txt
+	x.txt
+	x
+	z
+	z.txt
+	EXPECT_END
+
+	git -C L1-1 fast-import <input &&
+	git -C L1-1 ls-tree L1-1 >tmp 2>err &&
+	# Would happen if tecmp0() passed a fixed mode
+	! grep "fatal: not a tree object" err &&
+	cut -f 2 <tmp >actual &&
+	test_cmp expected actual &&
+	git -C L1-1 fsck
+'
+
 test_expect_success 'L: nested tree copy does not corrupt deltas' '
 	cat >input <<-INPUT_END &&
 	blob
