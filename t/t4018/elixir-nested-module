@@ -1,3 +1,4 @@
+t4018 header: defmodule MyApp.RIGHT do
 defmodule MyApp.RIGHT do
   @moduledoc """
   Foo bar
