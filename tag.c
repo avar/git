@@ -109,7 +109,7 @@ struct tag *lookup_tag(struct repository *r, const struct object_id *oid)
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_tag(r, oid);
-	return object_as_type(obj, OBJ_TAG, 0);
+	return object_as_type(obj, OBJ_TAG);
 }
 
 static timestamp_t parse_tag_date(const char *buf, const char *tail)
