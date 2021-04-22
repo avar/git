@@ -85,6 +85,11 @@ check_verify_failure () {
 
 		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
 	'
+
+	test_expect_success "fast-export & fast-import: $subject" '
+		test_must_fail git -C bad-tag fast-export --all &&
+		test_must_fail git -C bad-tag fast-export $bad_tag
+	'
 }
 
 test_expect_mktag_success() {
