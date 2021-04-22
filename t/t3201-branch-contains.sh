@@ -166,7 +166,13 @@ test_expect_success 'implicit --list conflicts with modification options' '
 '
 
 test_expect_success 'Assert that --contains only works on commits, not trees & blobs' '
-	test_must_fail git branch --contains main^{tree} &&
+	tree=$(git rev-parse main^{tree}) &&
+	test_must_fail git branch --contains main^{tree} 2>actual &&
+	cat >expect <<-EOF &&
+	error: object $tree is a tree, not a commit
+	error: no such commit main^{tree}
+	EOF
+	test_cmp expect actual &&
 	blob=$(git hash-object -w --stdin <<-\EOF
 	Some blob
 	EOF
