@@ -177,14 +177,6 @@ static int is_dotgitmodules(const char *path)
 	return is_hfs_dotgitmodules(path) || is_ntfs_dotgitmodules(path);
 }
 
-static int cmp_by_st_size(const void *a, const void *b)
-{
-	intptr_t x = (intptr_t)((struct string_list_item *)a)->util;
-	intptr_t y = (intptr_t)((struct string_list_item *)b)->util;
-
-	return x > y ? -1 : (x < y ? +1 : 0);
-}
-
 /*
  * A very simple, reproducible pseudo-random generator. Copied from
  * `test-genrandom.c`.
@@ -280,6 +272,8 @@ static int protect_ntfs_hfs_benchmark(int argc, const char **argv)
 
 int cmd__path_utils(int argc, const char **argv)
 {
+	int is_file_size, is_file_sizes;
+
 	if (argc == 3 && !strcmp(argv[1], "normalize_path_copy")) {
 		char *buf = xmallocz(strlen(argv[2]));
 		int rv = normalize_path_copy(buf, argv[2]);
@@ -395,9 +389,16 @@ int cmd__path_utils(int argc, const char **argv)
 		return !!res;
 	}
 
-	if (argc > 2 && !strcmp(argv[1], "file-size")) {
+	is_file_size = !strcmp(argv[1], "file-size");
+	is_file_sizes = !strcmp(argv[1], "file-sizes");
+	if (argc > 2 && (is_file_size || is_file_sizes)) {
 		int res = 0, i;
 		struct stat st;
+
+		if (is_file_size && argc > 3) {
+			res = error("too many arguments to is-file-size, use is-file-sizes?");
+			return res;
+		}
 
 		for (i = 2; i < argc; i++)
 			if (stat(argv[i], &st))
@@ -428,33 +429,10 @@ int cmd__path_utils(int argc, const char **argv)
 		return 0;
 	}
 
-	if (argc > 5 && !strcmp(argv[1], "slice-tests")) {
-		int res = 0;
-		long offset, stride, i;
-		struct string_list list = STRING_LIST_INIT_NODUP;
-		struct stat st;
-
-		offset = strtol(argv[2], NULL, 10);
-		stride = strtol(argv[3], NULL, 10);
-		if (stride < 1)
-			stride = 1;
-		for (i = 4; i < argc; i++)
-			if (stat(argv[i], &st))
-				res = error_errno("Cannot stat '%s'", argv[i]);
-			else
-				string_list_append(&list, argv[i])->util =
-					(void *)(intptr_t)st.st_size;
-		QSORT(list.items, list.nr, cmp_by_st_size);
-		for (i = offset; i < list.nr; i+= stride)
-			printf("%s\n", list.items[i].string);
-
-		return !!res;
-	}
-
 	if (argc > 1 && !strcmp(argv[1], "protect_ntfs_hfs"))
 		return !!protect_ntfs_hfs_benchmark(argc - 1, argv + 1);
 
-	if (argc > 1 && !strcmp(argv[1], "is_valid_path")) {
+	if (argc > 1 && !strcmp(argv[1], "is-valid-paths")) {
 		int res = 0, expect = 1, i;
 
 		for (i = 2; i < argc; i++)
