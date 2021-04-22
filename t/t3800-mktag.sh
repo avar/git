@@ -44,6 +44,8 @@ check_verify_failure () {
 	'
 
 	test_expect_success "setup: $subject" '
+		tag_ref=refs/tags/bad_tag &&
+
 		# Reset any leftover state from the last $subject
 		rm -rf bad-tag &&
 
@@ -58,6 +60,20 @@ check_verify_failure () {
 		else
 			test_must_fail git -C bad-tag fsck >out 2>err
 		fi
+	'
+
+	test_expect_success "update-ref & fsck reachable: $subject" '
+		# The update-ref of the bad content will fail, do it
+		# anyway to see if it segfaults
+		test_might_fail git -C bad-tag update-ref "$tag_ref" "$bad_tag" &&
+
+		# Manually create the ref because we cannot do it with
+		# update-ref, should we have a --literally option for it?
+		echo "$bad_tag" >"bad-tag/$tag_ref" &&
+
+		# Unlike when we fsck unreachable content above this
+		# will always fail.
+		test_must_fail git -C bad-tag fsck
 	'
 }
 
