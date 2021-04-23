@@ -3,6 +3,10 @@
 # Copyright (c) 2005 Junio C Hamano
 #
 
+ifndef V
+	QUIET_CLEAN	= @echo '   ' CLEAN $@;
+endif
+
 -include ../config.mak.autogen
 -include ../config.mak
 
@@ -57,17 +61,17 @@ $(T):
 	@echo "*** $@ ***"; '$(TEST_SHELL_PATH_SQ)' $@ $(GIT_TEST_OPTS)
 
 pre-clean:
-	$(RM) -r '$(TEST_RESULTS_DIRECTORY_SQ)'
+	$(QUIET_CLEAN)$(RM) -r '$(TEST_RESULTS_DIRECTORY_SQ)'
 
 clean-except-prove-cache: clean-chainlint
-	$(RM) -r 'trash directory'.* '$(TEST_RESULTS_DIRECTORY_SQ)'
-	$(RM) -r valgrind/bin
+	$(QUIET_CLEAN)$(RM) -r 'trash directory'.* '$(TEST_RESULTS_DIRECTORY_SQ)'
+	$(QUIET_CLEAN)$(RM) -r valgrind/bin
 
 clean: clean-except-prove-cache
-	$(RM) .prove
+	$(QUIET_CLEAN)$(RM) .prove
 
 clean-chainlint:
-	$(RM) -r '$(CHAINLINTTMP_SQ)'
+	$(QUIET_CLEAN)$(RM) -r '$(CHAINLINTTMP_SQ)'
 
 check-chainlint:
 	@mkdir -p '$(CHAINLINTTMP_SQ)' && \
