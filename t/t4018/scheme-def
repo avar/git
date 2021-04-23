@@ -1,4 +1,5 @@
-(def (some-func x y z) RIGHT
+t4018 header: (def (some-func x y z)
+(def (some-func x y z)
   (let ((a x)
         (b y))
         (ChangeMe a b)))
