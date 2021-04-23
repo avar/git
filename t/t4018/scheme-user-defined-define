@@ -1,4 +1,5 @@
-(define-test-suite record\ case-tests RIGHT
+t4018 header: (define-test-suite record\ case-tests
+(define-test-suite record\ case-tests
   (record-case-1 (lambda (fail)
                    (let ((a (make-foo 1 2)))
                      (record-case a
