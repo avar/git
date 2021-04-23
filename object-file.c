@@ -993,9 +993,11 @@ void *xmmap(void *start, size_t length,
  * the streaming interface and rehash it to do the same.
  */
 int check_object_signature(struct repository *r, const struct object_id *oid,
-			   void *map, unsigned long size, const char *type)
+			   void *map, unsigned long size, const char *type,
+			   struct object_id *real_oidp)
 {
-	struct object_id real_oid;
+	struct object_id tmp;
+	struct object_id *real_oid = real_oidp ? real_oidp : &tmp;
 	enum object_type obj_type;
 	struct git_istream *st;
 	git_hash_ctx c;
@@ -1003,8 +1005,8 @@ int check_object_signature(struct repository *r, const struct object_id *oid,
 	int hdrlen;
 
 	if (map) {
-		hash_object_file(r->hash_algo, map, size, type, &real_oid);
-		return !oideq(oid, &real_oid) ? -1 : 0;
+		hash_object_file(r->hash_algo, map, size, type, real_oid);
+		return !oideq(oid, real_oid) ? -1 : 0;
 	}
 
 	st = open_istream(r, oid, &obj_type, &size, NULL);
@@ -1029,9 +1031,9 @@ int check_object_signature(struct repository *r, const struct object_id *oid,
 			break;
 		r->hash_algo->update_fn(&c, buf, readlen);
 	}
-	r->hash_algo->final_fn(real_oid.hash, &c);
+	r->hash_algo->final_fn(real_oid->hash, &c);
 	close_istream(st);
-	return !oideq(oid, &real_oid) ? -1 : 0;
+	return !oideq(oid, real_oid) ? -1 : 0;
 }
 
 int git_open_cloexec(const char *name, int flags)
@@ -1294,8 +1296,9 @@ static void *unpack_loose_rest(git_zstream *stream,
  * too permissive for what we want to check. So do an anal
  * object header parse by hand.
  */
-static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
-				       unsigned int flags)
+int parse_loose_header(const char *hdr,
+		       struct object_info *oi,
+		       unsigned int flags)
 {
 	const char *type_buf = hdr;
 	unsigned long size;
@@ -1322,9 +1325,7 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 	 * we're obtaining the type using '--allow-unknown-type'
 	 * option.
 	 */
-	if ((flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE) && (type < 0))
-		type = 0;
-	else if (type < 0)
+	if (type < 0 && !(flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE))
 		die(_("invalid object type"));
 	if (oi->typep)
 		*oi->typep = type;
@@ -1353,14 +1354,6 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 	 * The length must be followed by a zero byte
 	 */
 	return *hdr ? -1 : type;
-}
-
-int parse_loose_header(const char *hdr, unsigned long *sizep)
-{
-	struct object_info oi = OBJECT_INFO_INIT;
-
-	oi.sizep = sizep;
-	return parse_loose_header_extended(hdr, &oi, 0);
 }
 
 static int loose_object_info(struct repository *r,
@@ -1414,14 +1407,17 @@ static int loose_object_info(struct repository *r,
 	} else if (unpack_loose_header(&stream, map, mapsize, hdr, sizeof(hdr)) < 0)
 		status = error(_("unable to unpack %s header"),
 			       oid_to_hex(oid));
-	if (status < 0)
+	if (status < 0) {
 		; /* Do nothing */
-	else if (hdrbuf.len) {
-		if ((status = parse_loose_header_extended(hdrbuf.buf, oi, flags)) < 0)
+	} else if (hdrbuf.len) {
+		if ((status = parse_loose_header(hdrbuf.buf, oi, flags)) < 0)
 			status = error(_("unable to parse %s header with --allow-unknown-type"),
 				       oid_to_hex(oid));
-	} else if ((status = parse_loose_header_extended(hdr, oi, flags)) < 0)
-		status = error(_("unable to parse %s header"), oid_to_hex(oid));
+	} else {
+		status = parse_loose_header(hdr, oi, flags);
+		if (status < 0 && !(flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE))
+			error(_("unable to parse %s header"), oid_to_hex(oid));
+	}
 
 	if (status >= 0 && oi->contentp) {
 		*oi->contentp = unpack_loose_rest(&stream, hdr,
@@ -2495,15 +2491,18 @@ static int check_stream_oid(git_zstream *stream,
 
 int read_loose_object(const char *path,
 		      const struct object_id *expected_oid,
-		      enum object_type *type,
-		      unsigned long *size,
-		      void **contents)
+		      struct object_id *real_oid,
+		      void **contents,
+		      struct object_info *oi,
+		      unsigned int oi_flags)
 {
 	int ret = -1;
 	void *map = NULL;
 	unsigned long mapsize;
 	git_zstream stream;
 	char hdr[MAX_HEADER_LEN];
+	enum object_type *type = oi->typep;
+	unsigned long *size = oi->sizep;
 
 	*contents = NULL;
 
@@ -2518,9 +2517,9 @@ int read_loose_object(const char *path,
 		goto out;
 	}
 
-	*type = parse_loose_header(hdr, size);
-	if (*type < 0) {
-		error(_("unable to parse header of %s"), path);
+	*type = parse_loose_header(hdr, oi, oi_flags);
+	if (*type < 0 && !(oi_flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE)) {
+		error(_("unable to parse header %s"), path);
 		git_inflate_end(&stream);
 		goto out;
 	}
@@ -2536,10 +2535,9 @@ int read_loose_object(const char *path,
 			goto out;
 		}
 		if (check_object_signature(the_repository, expected_oid,
-					   *contents, *size,
-					   type_name(*type))) {
-			error(_("hash mismatch for %s (expected %s)"), path,
-			      oid_to_hex(expected_oid));
+					   *contents, *size, oi->type_name->buf, real_oid)) {
+			if (oideq(real_oid, &null_oid))
+				BUG("should only get OID mismatch errors with mapped contents");
 			free(*contents);
 			goto out;
 		}
