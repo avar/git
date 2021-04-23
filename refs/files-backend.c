@@ -982,7 +982,6 @@ static int create_reflock(const char *path, void *cb)
 
 /*
  * Locks a ref returning the lock on success and NULL on failure.
- * On failure errno is set to something meaningful.
  */
 static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 					   const char *refname,
@@ -991,7 +990,6 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 {
 	struct strbuf ref_file = STRBUF_INIT;
 	struct ref_lock *lock;
-	int last_errno = 0;
 
 	files_assert_main_repository(refs, "lock_ref_oid_basic");
 	assert(err);
@@ -1001,14 +999,15 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 	files_ref_path(refs, &ref_file, refname);
 	if (!refs_resolve_ref_unsafe(&refs->base, refname,
 				     RESOLVE_REF_NO_RECURSE,
-				     &lock->old_oid, type)) {
-		last_errno = errno;
-		if (last_errno != ENOTDIR ||
-		    !refs_verify_refname_available(&refs->base, refname,
-						   NULL, NULL, err))
-			strbuf_addf(err, "unable to resolve reference '%s': %s",
-				    refname, strerror(last_errno));
-
+				     &lock->old_oid, type) &&
+	    (errno != ENOTDIR ||
+	     /* in case of D/F conflict, try to generate a better error
+	      * message. If that fails, fall back to strerror(ENOTDIR).
+	      */
+	     !refs_verify_refname_available(&refs->base, refname, NULL,
+					    NULL, err))) {
+		strbuf_addf(err, "unable to resolve reference '%s': %s",
+			    refname, strerror(errno));
 		goto error_return;
 	}
 
@@ -1020,15 +1019,12 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 	 */
 	if (is_null_oid(&lock->old_oid) &&
 	    refs_verify_refname_available(refs->packed_ref_store, refname,
-					  NULL, NULL, err)) {
-		last_errno = ENOTDIR;
+					  NULL, NULL, err))
 		goto error_return;
-	}
 
 	lock->ref_name = xstrdup(refname);
 
 	if (raceproof_create_file(ref_file.buf, create_reflock, &lock->lk)) {
-		last_errno = errno;
 		unable_to_lock_message(ref_file.buf, errno, err);
 		goto error_return;
 	}
@@ -1045,7 +1041,6 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 
  out:
 	strbuf_release(&ref_file);
-	errno = last_errno;
 	return lock;
 }
 
