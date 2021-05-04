@@ -75,6 +75,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 	unsigned flags = OBJECT_INFO_LOOKUP_REPLACE;
 	const char *path = force_path;
 	int ret;
+	void *content;
 
 	if (unknown_type)
 		flags |= OBJECT_INFO_ALLOW_UNKNOWN_TYPE;
@@ -135,8 +136,12 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 		/* else fallthrough */
 
 	case 'p':
-		type = oid_object_info(the_repository, &oid, NULL);
-		if (type < 0)
+		oi.sizep = &size;
+		oi.typep = &type;
+		oi.contentp = &content;
+
+		ret = oid_object_info_extended(the_repository, &oid, &oi, flags);
+		if (!unknown_type && *oi.typep < 0)
 			die("Not a valid object name %s", obj_name);
 
 		/* custom pretty-print here */
@@ -149,7 +154,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 
 		if (type == OBJ_BLOB)
 			return stream_blob(&oid);
-		buf = read_object_file(&oid, &type, &size);
+		buf = content;
 		if (!buf)
 			die("Cannot read object %s", obj_name);
 
@@ -191,7 +196,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 		die("git cat-file %s: bad file", obj_name);
 
 	write_or_die(1, buf, size);
-	free(buf);
+	//free(buf);
 	free(obj_context.path);
 	return 0;
 }
@@ -718,7 +723,7 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 	if (batch.enabled)
 		return batch_objects(&batch);
 
-	if (unknown_type && opt != 't' && opt != 's')
+	if (unknown_type && opt != 't' && opt != 's' && opt != 'p')
 		die("git cat-file --allow-unknown-type: use with -s or -t");
 	return cat_one_file(opt, exp_type, obj_name, unknown_type);
 }
