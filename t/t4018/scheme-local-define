@@ -1,4 +1,5 @@
+t4018 header: (define local-function
 (define (higher-order)
-  (define local-function RIGHT
+  (define local-function
     (lambda (x)
      (car "this is" "ChangeMe"))))

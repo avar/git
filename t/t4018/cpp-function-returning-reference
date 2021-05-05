@@ -1,3 +1,4 @@
+t4018 header: string& get::it::RIGHT(char *ptr)
 string& get::it::RIGHT(char *ptr)
 {
 	ChangeMe;
