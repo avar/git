@@ -491,7 +491,8 @@ static int git_log_config(const char *var, const char *value, void *cb)
 		default_follow = git_config_bool(var, value);
 		return 0;
 	}
-	if (skip_prefix(var, "color.decorate.", &slot_name))
+	if (skip_prefix(var, "color.logDecorate.", &slot_name) ||
+	    skip_prefix(var, "color.decorate.", &slot_name))
 		return parse_decorate_color_config(var, slot_name, value);
 	if (!strcmp(var, "log.mailmap")) {
 		use_mailmap_config = git_config_bool(var, value);
