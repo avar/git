@@ -501,58 +501,8 @@ commit message.
 
 === Pine
 
-(Johannes Schindelin)
-
-....
-I don't know how many people still use pine, but for those poor
-souls it may be good to mention that the quell-flowed-text is
-needed for recent versions.
-
-... the "no-strip-whitespace-before-send" option, too. AFAIK it
-was introduced in 4.60.
-....
-
-(Linus Torvalds)
-
-....
-And 4.58 needs at least this.
-
-diff-tree 8326dd8350be64ac7fc805f6563a1d61ad10d32c (from e886a61f76edf5410573e92e38ce22974f9c40f1)
-Author: Linus Torvalds <torvalds@g5.osdl.org>
-Date:   Mon Aug 15 17:23:51 2005 -0700
-
-    Fix pine whitespace-corruption bug
-
-    There's no excuse for unconditionally removing whitespace from
-    the pico buffers on close.
-
-diff --git a/pico/pico.c b/pico/pico.c
---- a/pico/pico.c
-+++ b/pico/pico.c
-@@ -219,7 +219,9 @@ PICO *pm;
-	    switch(pico_all_done){	/* prepare for/handle final events */
-	      case COMP_EXIT :		/* already confirmed */
-		packheader();
-+#if 0
-		stripwhitespace();
-+#endif
-		c |= COMP_EXIT;
-		break;
-....
-
-(Daniel Barkalow)
-
-....
-> A patch to SubmittingPatches, MUA specific help section for
-> users of Pine 4.63 would be very much appreciated.
-
-Ah, it looks like a recent version changed the default behavior to do the
-right thing, and inverted the sense of the configuration option. (Either
-that or Gentoo did it.) So you need to set the
-"no-strip-whitespace-before-send" option, unless the option you have is
-"strip-whitespace-before-send", in which case you should avoid checking
-it.
-....
+Abandoned by its uptsream and has known flowed text bugs, use its
+successor alpine or another MUA instead.
 
 === Thunderbird, KMail, GMail
 
