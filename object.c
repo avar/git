@@ -83,10 +83,10 @@ static void insert_obj_hash(struct object *obj, struct object **hash, unsigned i
 struct object *lookup_object(struct repository *r, const struct object_id *oid)
 {
 	unsigned int i, first;
-	struct object *obj;
+	struct object *obj = NULL;
 
 	if (!r->parsed_objects->obj_hash)
-		return NULL;
+		return obj;
 
 	first = i = hash_obj(oid, r->parsed_objects->obj_hash_size);
 	while ((obj = r->parsed_objects->obj_hash[i]) != NULL) {
