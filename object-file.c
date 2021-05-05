@@ -1317,7 +1317,7 @@ int parse_loose_header(const char *hdr,
 		type_len++;
 	}
 
-	type = type_from_string_gently(type_buf, type_len, 1);
+	type = type_from_string_gently(type_buf, type_len);
 	if (oi->type_name)
 		strbuf_add(oi->type_name, type_buf, type_len);
 	/*
@@ -1568,11 +1568,9 @@ int oid_object_info_extended(struct repository *r, const struct object_id *oid,
 	return ret;
 }
 
-
-/* returns enum object_type or negative */
-int oid_object_info(struct repository *r,
-		    const struct object_id *oid,
-		    unsigned long *sizep)
+enum object_type oid_object_info(struct repository *r,
+				 const struct object_id *oid,
+				 unsigned long *sizep)
 {
 	enum object_type type;
 	struct object_info oi = OBJECT_INFO_INIT;
@@ -1713,13 +1711,15 @@ void *read_object_with_reference(struct repository *r,
 
 static void write_object_file_prepare(const struct git_hash_algo *algo,
 				      const void *buf, unsigned long len,
-				      const char *type, struct object_id *oid,
-				      char *hdr, int *hdrlen)
+				      const char *type, size_t type_len,
+				      struct object_id *oid, char *hdr,
+				      int *hdrlen)
 {
 	git_hash_ctx c;
 
 	/* Generate the header */
-	*hdrlen = xsnprintf(hdr, *hdrlen, "%s %"PRIuMAX , type, (uintmax_t)len)+1;
+	*hdrlen = xsnprintf(hdr, *hdrlen, "%.*s %"PRIuMAX,
+			    (int)type_len, type, (uintmax_t)len) + 1;
 
 	/* Sha1.. */
 	algo->init_fn(&c);
@@ -1784,7 +1784,8 @@ int hash_object_file(const struct git_hash_algo *algo, const void *buf,
 {
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen = sizeof(hdr);
-	write_object_file_prepare(algo, buf, len, type, oid, hdr, &hdrlen);
+	write_object_file_prepare(algo, buf, len, type, strlen(type), oid, hdr,
+				  &hdrlen);
 	return 0;
 }
 
@@ -1938,29 +1939,30 @@ int write_object_file(const void *buf, unsigned long len, const char *type,
 {
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen = sizeof(hdr);
+	size_t type_len = strlen(type);
 
 	/* Normally if we have it in the pack then we do not bother writing
 	 * it out into .git/objects/??/?{38} file.
 	 */
-	write_object_file_prepare(the_hash_algo, buf, len, type, oid, hdr,
-				  &hdrlen);
+	write_object_file_prepare(the_hash_algo, buf, len, type, type_len, oid,
+				  hdr, &hdrlen);
 	if (freshen_packed_object(oid) || freshen_loose_object(oid))
 		return 0;
 	return write_loose_object(oid, hdr, hdrlen, buf, len, 0);
 }
 
 int hash_object_file_literally(const void *buf, unsigned long len,
-			       const char *type, struct object_id *oid,
-			       unsigned flags)
+			       const char *type, size_t type_len,
+			       struct object_id *oid, unsigned flags)
 {
 	char *header;
 	int hdrlen, status = 0;
 
 	/* type string, SP, %lu of the length plus NUL must fit this */
-	hdrlen = strlen(type) + MAX_HEADER_LEN;
+	hdrlen = type_len + MAX_HEADER_LEN;
 	header = xmalloc(hdrlen);
-	write_object_file_prepare(the_hash_algo, buf, len, type, oid, header,
-				  &hdrlen);
+	write_object_file_prepare(the_hash_algo, buf, len, type, type_len, oid,
+				  header, &hdrlen);
 
 	if (!(flags & HASH_WRITE_OBJECT))
 		goto cleanup;
