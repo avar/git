@@ -154,6 +154,7 @@ void *create_object(struct repository *r, const struct object_id *oid, void *o)
 }
 
 static const char *object_type_mismatch_msg = N_("object %s is a %s, not a %s");
+static const char *object_maybe_type_mismatch_msg = N_("object %s is referred to as a %s, not a %s");
 
 void oid_is_type_or_die(const struct object_id *oid,
 			enum object_type want,
@@ -199,7 +200,9 @@ void *object_as_type(struct object *obj, enum object_type type)
 			obj->type = type;
 		return obj;
 	} else {
-		error(_(object_type_mismatch_msg),
+		error(obj->parsed
+		      ? _(object_type_mismatch_msg)
+		      : _(object_maybe_type_mismatch_msg),
 		      oid_to_hex(&obj->oid),
 		      type_name(obj->type), type_name(type));
 		return NULL;
@@ -219,13 +222,13 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 	*eaten_p = 0;
 
 	if (type == OBJ_BLOB) {
-		struct blob *blob = lookup_blob(r, oid);
+		struct blob *blob = lookup_blob_type(r, oid, type);
 		if (blob) {
 			blob->object.parsed = 1;
 			return &blob->object;
 		}
 	} else if (type == OBJ_TREE) {
-		struct tree *tree = lookup_tree(r, oid);
+		struct tree *tree = lookup_tree_type(r, oid, type);
 		if (tree) {
 			if (!tree->buffer)
 				tree->object.parsed = 0;
@@ -237,7 +240,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 			return &tree->object;
 		}
 	} else if (type == OBJ_COMMIT) {
-		struct commit *commit = lookup_commit(r, oid);
+		struct commit *commit = lookup_commit_type(r, oid, type);
 		if (commit) {
 			if (parse_commit_buffer(r, commit, buffer, size, 1))
 				return NULL;
@@ -248,7 +251,7 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 			return &commit->object;
 		}
 	} else if (type == OBJ_TAG) {
-		struct tag *tag = lookup_tag(r, oid);
+		struct tag *tag = lookup_tag_type(r, oid, type);
 		if (tag) {
 			if (parse_tag_buffer(r, tag, buffer, size))
 			       return NULL;
