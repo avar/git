@@ -892,7 +892,7 @@ static int collect_merge_info_callback(int n,
 	 * setup_path_info() for tracking.
 	 */
 	p = names;
-	while (!p->mode)
+	while (p->object_type == OBJ_NONE)
 		p++;
 	len = traverse_path_len(info, p->pathlen);
 
