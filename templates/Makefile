@@ -2,6 +2,7 @@
 
 ifndef V
 	QUIET = @
+	QUIET_CLEAN	= @echo '   ' CLEAN $@;
 endif
 
 INSTALL ?= install
@@ -58,7 +59,7 @@ custom:
 	$(QUIET): no custom templates yet
 
 clean:
-	$(RM) -r blt boilerplates.made
+	$(QUIET_CLEAN)$(RM) -r blt boilerplates.made
 
 install: all
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(template_instdir_SQ)'
