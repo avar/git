@@ -131,10 +131,13 @@ int convert_to_sparse(struct index_state *istate)
 	 * index.sparse config variable to be on.
 	 */
 	test_env = git_env_bool("GIT_TEST_SPARSE_INDEX", -1);
-	if (test_env >= 0)
-		set_sparse_index_config(istate->repo, test_env);
-	else
+	if (test_env >= 0) {
+		if (set_sparse_index_config(istate->repo, test_env) < 0)
+			die(_("could not set index.sparse based on GIT_TEST_SPARSE_INDEX=%d"),
+			    test_env);
+	} else {
 		prepare_repo_settings(istate->repo);
+	}
 
 	/*
 	 * Only convert to sparse if index.sparse is set.

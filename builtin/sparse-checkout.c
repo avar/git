@@ -280,8 +280,9 @@ static int set_config(enum sparse_checkout_mode mode)
 				      "core.sparseCheckoutCone",
 				      mode == MODE_CONE_PATTERNS ? "true" : NULL);
 
-	if (mode == MODE_NO_PATTERNS)
-		set_sparse_index_config(the_repository, 0);
+	if (mode == MODE_NO_PATTERNS &&
+	    set_sparse_index_config(the_repository, 0) < 0)
+		die(_("could not set index.sparse=0"));
 
 	return 0;
 }
