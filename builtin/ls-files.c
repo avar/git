@@ -448,7 +448,8 @@ static int read_one_entry_opt(struct index_state *istate,
 }
 
 static int read_one_entry(const struct object_id *oid, struct strbuf *base,
-			  const char *pathname, unsigned mode,
+			  const char *pathname,
+			  enum object_type object_type, unsigned mode,
 			  void *context)
 {
 	struct index_state *istate = context;
@@ -462,7 +463,8 @@ static int read_one_entry(const struct object_id *oid, struct strbuf *base,
  * the stage that will conflict with the entry being added.
  */
 static int read_one_entry_quick(const struct object_id *oid, struct strbuf *base,
-				const char *pathname, unsigned mode,
+				const char *pathname,
+				enum object_type object_type, unsigned mode,
 				void *context)
 {
 	struct index_state *istate = context;
