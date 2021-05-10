@@ -197,22 +197,25 @@ static int tr2_dst_try_path(struct tr2_dst *dst, const char *tgt_value)
 #define PREFIX_AF_UNIX_STREAM "af_unix:stream:"
 #define PREFIX_AF_UNIX_DGRAM "af_unix:dgram:"
 
-static int tr2_dst_try_uds_connect(const char *path, int sock_type, int *out_fd)
+static int tr2_dst_try_uds_connect(const char *path, int sock_type,
+				   int *out_fd, int *saved_errno)
 {
 	int fd;
 	struct sockaddr_un sa;
 
 	fd = socket(AF_UNIX, sock_type, 0);
-	if (fd == -1)
-		return errno;
+	if (fd == -1) {
+		*saved_errno = errno;
+		return -1;
+	}
 
 	sa.sun_family = AF_UNIX;
 	strlcpy(sa.sun_path, path, sizeof(sa.sun_path));
 
 	if (connect(fd, (struct sockaddr *)&sa, sizeof(sa)) == -1) {
-		int e = errno;
+		*saved_errno = errno;
 		close(fd);
-		return e;
+		return -1;
 	}
 
 	*out_fd = fd;
@@ -227,7 +230,7 @@ static int tr2_dst_try_unix_domain_socket(struct tr2_dst *dst,
 {
 	unsigned int uds_try = 0;
 	int fd;
-	int e;
+	int saved_errno;
 	const char *path = NULL;
 
 	/*
@@ -271,15 +274,15 @@ static int tr2_dst_try_unix_domain_socket(struct tr2_dst *dst,
 	}
 
 	if (uds_try & TR2_DST_UDS_TRY_STREAM) {
-		e = tr2_dst_try_uds_connect(path, SOCK_STREAM, &fd);
-		if (!e)
+		if (!tr2_dst_try_uds_connect(path, SOCK_STREAM, &fd,
+					     &saved_errno))
 			goto connected;
-		if (e != EPROTOTYPE)
+		if (saved_errno != EPROTOTYPE)
 			goto error;
 	}
 	if (uds_try & TR2_DST_UDS_TRY_DGRAM) {
-		e = tr2_dst_try_uds_connect(path, SOCK_DGRAM, &fd);
-		if (!e)
+		if (!tr2_dst_try_uds_connect(path, SOCK_DGRAM, &fd,
+					     &saved_errno))
 			goto connected;
 	}
 
@@ -287,7 +290,7 @@ error:
 	if (tr2_dst_want_warning())
 		warning("trace2: could not connect to socket '%s' for '%s' tracing: %s",
 			path, tr2_sysenv_display_name(dst->sysenv_var),
-			strerror(e));
+			strerror(saved_errno));
 
 	tr2_dst_trace_disable(dst);
 	return 0;
