@@ -102,7 +102,7 @@ static int convert_to_sparse_rec(struct index_state *istate,
 	return num_converted - start_converted;
 }
 
-static int set_index_sparse_config(struct repository *repo, int enable)
+int set_sparse_index_config(struct repository *repo, int enable)
 {
 	int res;
 	char *config_path = repo_git_path(repo, "config.worktree");
@@ -110,15 +110,6 @@ static int set_index_sparse_config(struct repository *repo, int enable)
 					    "index.sparse",
 					    enable ? "true" : NULL);
 	free(config_path);
-
-	prepare_repo_settings(repo);
-	repo->settings.sparse_index = 1;
-	return res;
-}
-
-int set_sparse_index_config(struct repository *repo, int enable)
-{
-	int res = set_index_sparse_config(repo, enable);
 
 	prepare_repo_settings(repo);
 	repo->settings.sparse_index = enable;
@@ -140,13 +131,17 @@ int convert_to_sparse(struct index_state *istate)
 	 * index.sparse config variable to be on.
 	 */
 	test_env = git_env_bool("GIT_TEST_SPARSE_INDEX", -1);
-	if (test_env >= 0)
-		set_sparse_index_config(istate->repo, test_env);
+	if (test_env >= 0) {
+		if (set_sparse_index_config(istate->repo, test_env) < 0)
+			die(_("could not set index.sparse based on GIT_TEST_SPARSE_INDEX=%d"),
+			    test_env);
+	} else {
+		prepare_repo_settings(istate->repo);
+	}
 
 	/*
 	 * Only convert to sparse if index.sparse is set.
 	 */
-	prepare_repo_settings(istate->repo);
 	if (!istate->repo->settings.sparse_index)
 		return 0;
 
