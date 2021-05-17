@@ -343,18 +343,24 @@ test_expect_success 'error on size of missing object' '
 '
 
 bogus_type="bogus"
+bogus_type_SQ="'$bogus_type'"
 bogus_content="bogus"
+bogus_size=5
 bogus_size=$(strlen "$bogus_content")
 bogus_sha1=$(echo_without_newline "$bogus_content" | git hash-object -t $bogus_type --literally -w --stdin)
 
 test_expect_success 'die on broken object under -t and -s without --allow-unknown-type' '
-	cat >err.expect <<-\EOF &&
-	fatal: invalid object type
+	cat >err.expect <<-EOF &&
+	fatal: object $bogus_sha1 is of unknown type $bogus_type_SQ, refusing to emit it without --allow-unknown-type
 	EOF
 
 	test_must_fail git cat-file -t $bogus_sha1 >out.actual 2>err.actual &&
 	test_cmp err.expect err.actual &&
 	test_must_be_empty out.actual &&
+
+	cat >err.expect <<-EOF &&
+	fatal: object $bogus_sha1 is of size $bogus_size, refusing to emit it without --allow-unknown-type
+	EOF
 
 	test_must_fail git cat-file -s $bogus_sha1 >out.actual 2>err.actual &&
 	test_cmp err.expect err.actual &&
@@ -434,19 +440,24 @@ test_expect_success 'the --allow-unknown-type option does not consider replaceme
 '
 
 bogus_type="abcdefghijklmnopqrstuvwxyz1234679"
-bogus_content="bogus"
+bogus_type_SQ="'$bogus_type'"
+bogus_content="bogus2"
+bogus_size=6
 bogus_size=$(strlen "$bogus_content")
 bogus_sha1=$(echo_without_newline "$bogus_content" | git hash-object -t $bogus_type --literally -w --stdin)
 
 test_expect_success 'die on broken object with large type under -t and -s without --allow-unknown-type' '
 	cat >err.expect <<-EOF &&
-	error: header for $bogus_sha1 too long, exceeds 32 bytes
-	fatal: git cat-file: could not get object info
+	fatal: object $bogus_sha1 is of unknown type $bogus_type_SQ, refusing to emit it without --allow-unknown-type
 	EOF
 
 	test_must_fail git cat-file -t $bogus_sha1 >out.actual 2>err.actual &&
 	test_cmp err.expect err.actual &&
 	test_must_be_empty out.actual &&
+
+	cat >err.expect <<-EOF &&
+	fatal: object $bogus_sha1 is of size $bogus_size, refusing to emit it without --allow-unknown-type
+	EOF
 
 	test_must_fail git cat-file -s $bogus_sha1 >out.actual 2>err.actual &&
 	test_cmp err.expect err.actual &&
