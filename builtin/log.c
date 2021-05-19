@@ -2169,7 +2169,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		int old_total = total++;
 		start_number--;
 		if (thread)
-			gen_message_id(&rev, "cover", 0, old_total, &null_oid);
+			gen_message_id(&rev, "cover", 0, old_total, null_oid());
 		make_cover_letter(&rev, !!output_directory,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
