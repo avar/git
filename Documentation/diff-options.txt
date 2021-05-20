@@ -95,6 +95,11 @@ endif::git-log[]
 --unified=<n>::
 	Generate diffs with <n> lines of context instead of
 	the usual three.
++
+Under `-W` generates diffs with at least <n> lines of context, if the
+number is lower than the context `-U<n>` would extend the diff to then
+`-U<n>` takes precedence.
+
 ifndef::git-format-patch[]
 	Implies `--patch`.
 endif::git-format-patch[]
@@ -777,6 +782,13 @@ endif::git-format-patch[]
 	The function names are determined in the same way as
 	`git diff` works out patch hunk headers (see 'Defining a
 	custom hunk-header' in linkgit:gitattributes[5]).
++
+When showing the whole function for context the "@@" context line
+itself will always be empty, since the context that would otherwise be
+shown there will be the first line of the hunk being shown.
++
+See the documentation for `-U<n>` above for how the two options
+interact.
 
 ifndef::git-format-patch[]
 ifndef::git-log[]
