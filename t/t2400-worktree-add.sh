@@ -66,6 +66,19 @@ test_expect_success '"add" worktree' '
 	)
 '
 
+test_expect_success '"add" worktree orphan branch' '
+	git worktree add --orphan -b orphan here-orphan &&
+	echo refs/heads/orphan >expect &&
+	git -C here-orphan symbolic-ref HEAD >actual &&
+	test_cmp expect actual &&
+	test_must_fail git -C here-orphan rev-parse --verify HEAD &&
+	test_must_fail git -C here-orphan log &&
+
+	echo here-orphan/.git >expected &&
+	find here-orphan -type f >actual &&
+	test_cmp expected actual
+'
+
 test_expect_success '"add" worktree with lock' '
 	git rev-parse HEAD >expect &&
 	git worktree add --detach --lock here-with-lock main &&
