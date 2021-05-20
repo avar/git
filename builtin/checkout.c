@@ -134,6 +134,7 @@ static int update_some(const struct object_id *oid, struct strbuf *base,
 	memcpy(ce->name + base->len, pathname, len - base->len);
 	ce->ce_flags = create_ce_flags(0) | CE_UPDATE;
 	ce->ce_namelen = len;
+	mode = canon_mode(mode);
 	ce->ce_mode = create_ce_mode(mode);
 
 	/*
