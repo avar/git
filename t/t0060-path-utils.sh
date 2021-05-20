@@ -499,7 +499,7 @@ test_expect_success 'match .mailmap' '
 '
 
 test_expect_success MINGW 'is_valid_path() on Windows' '
-	test-tool path-utils is_valid_path \
+	test-tool path-utils is-valid-paths \
 		win32 \
 		"win32 x" \
 		../hello.txt \
