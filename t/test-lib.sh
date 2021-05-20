@@ -1,3 +1,5 @@
+#!/bin/sh
+#
 # Test framework for git.  See t/README for usage.
 #
 # Copyright (c) 2005 Junio C Hamano
@@ -14,6 +16,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
+
+# Early bailing out on 'prove t*.sh'
+if test -n "$HARNESS_ACTIVE" && test "$0" = "test-lib.sh"
+then
+	echo "1..0 # SKIP accidentally invoked 'prove t*.sh'?"
+	exit 0
+fi
 
 # Test the binaries we have just built.  The tests are kept in
 # t/ subdirectory and are run in 'trash directory' subdirectory.
