@@ -59,9 +59,9 @@ static int tree_entry_pathcmp(struct tree_desc *t1, struct tree_desc *t2)
 		return -1;
 
 	e1 = &t1->entry;
-	istree_e1 = S_ISDIR(e1->mode);
+	istree_e1 = (e1->object_type == OBJ_TREE);
 	e2 = &t2->entry;
-	istree_e2 = S_ISDIR(e2->mode);
+	istree_e2 = (e2->object_type == OBJ_TREE);
 	cmp = base_name_compare(e1->path, tree_entry_len(e1), istree_e1,
 				e2->path, tree_entry_len(e2), istree_e2);
 	return cmp;
@@ -195,10 +195,11 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 	assert(t || tp);
 
 	if (t) {
+		enum object_type object_type;
 		/* path present in resulting tree */
-		oid = tree_entry_extract_mode(t, &path, &mode);
+		oid = tree_entry_extract_all(t, &path, &mode, &object_type);
 		pathlen = tree_entry_len(&t->entry);
-		isdir = S_ISDIR(mode);
+		isdir = (object_type == OBJ_TREE);
 	} else {
 		/*
 		 * a path was removed - take path from imin parent. Also take
@@ -207,10 +208,11 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 		 * 1) all modes for tp[i]=tp[imin] should be the same wrt
 		 *    S_ISDIR, thanks to base_name_compare().
 		 */
-		tree_entry_extract_mode(&tp[imin], &path, &mode);
+		enum object_type object_type;
+		tree_entry_extract_type(&tp[imin], &path, &object_type);
 		pathlen = tree_entry_len(&tp[imin].entry);
 
-		isdir = S_ISDIR(mode);
+		isdir = object_type == OBJ_TREE;
 		oid = NULL;
 		mode = 0;
 	}
