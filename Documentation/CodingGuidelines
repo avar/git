@@ -421,11 +421,6 @@ For C programs:
    that are made available to it by including one of the header files
    it must include by the previous rule.
 
- - If you are planning a new command, consider writing it in shell
-   or perl first, so that changes in semantics can be easily
-   changed and discussed.  Many Git commands started out like
-   that, and a few are still scripts.
-
  - Avoid introducing a new dependency into Git. This means you
    usually should stay away from scripting languages not already
    used in the Git core command set (unless your command is clearly
