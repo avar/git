@@ -57,11 +57,16 @@ struct commit *lookup_commit_or_die(const struct object_id *oid, const char *ref
 	return c;
 }
 
+struct commit *create_commit(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_commit_node(r));
+}
+
 struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_commit_node(r));
+		return create_commit(r, oid);
 	return object_as_type(obj, OBJ_COMMIT, 0);
 }
 

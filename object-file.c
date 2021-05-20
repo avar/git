@@ -1697,25 +1697,24 @@ void *read_object_file_extended(struct repository *r,
 
 void *read_object_with_reference(struct repository *r,
 				 const struct object_id *oid,
-				 const char *required_type_name,
+				 enum object_type object_type,
 				 unsigned long *size,
 				 struct object_id *actual_oid_return)
 {
-	enum object_type type, required_type;
 	void *buffer;
 	unsigned long isize;
 	struct object_id actual_oid;
 
-	required_type = type_from_string(required_type_name);
 	oidcpy(&actual_oid, oid);
 	while (1) {
 		int ref_length = -1;
 		const char *ref_type = NULL;
+		enum object_type type;
 
 		buffer = repo_read_object_file(r, &actual_oid, &type, &isize);
 		if (!buffer)
 			return NULL;
-		if (type == required_type) {
+		if (type == object_type) {
 			*size = isize;
 			if (actual_oid_return)
 				oidcpy(actual_oid_return, &actual_oid);
