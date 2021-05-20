@@ -67,8 +67,8 @@ static void *fill_tree_desc_strict(struct tree_desc *desc,
 static int base_name_entries_compare(const struct name_entry *a,
 				     const struct name_entry *b)
 {
-	int istree_a = S_ISDIR(a->mode);
-	int istree_b = S_ISDIR(b->mode);
+	int istree_a = (a->object_type == OBJ_TREE);
+	int istree_b = (b->object_type == OBJ_TREE);
 	return base_name_compare(a->path, tree_entry_len(a), istree_a,
 				 b->path, tree_entry_len(b), istree_b);
 }
@@ -143,11 +143,11 @@ static void match_trees(const struct object_id *hash1,
 	while (one.size) {
 		const char *path;
 		const struct object_id *elem;
-		unsigned short mode;
+		enum object_type object_type;
 		int score;
 
-		elem = tree_entry_extract_mode(&one, &path, &mode);
-		if (!S_ISDIR(mode))
+		elem = tree_entry_extract_type(&one, &path, &object_type);
+		if (object_type != OBJ_TREE)
 			goto next;
 		score = score_trees(elem, hash2);
 		if (*best_score < score) {
@@ -198,14 +198,14 @@ static int splice_tree(const struct object_id *oid1, const char *prefix,
 
 	rewrite_here = NULL;
 	while (desc.size) {
+		enum object_type object_type;
 		const char *name;
-		unsigned short mode;
 		int len = tree_entry_len(&desc.entry);
 
-		tree_entry_extract_mode(&desc, &name, &mode);
+		tree_entry_extract_type(&desc, &name, &object_type);
 		if (len == toplen &&
 		    !memcmp(name, prefix, toplen)) {
-			if (!S_ISDIR(mode))
+			if (object_type != OBJ_TREE)
 				die("entry %s in tree %s is not a tree", name,
 				    oid_to_hex(oid1));
 
@@ -315,17 +315,17 @@ void shift_tree_by(struct repository *r,
 		   const char *shift_prefix)
 {
 	struct object_id sub1, sub2;
-	unsigned short tmp;
+	enum object_type tmp;
 	unsigned candidate = 0;
 
 	/* Can hash2 be a tree at shift_prefix in tree hash1? */
-	if (!get_tree_entry_mode(r, hash1, shift_prefix, &sub1, &tmp) &&
-	    S_ISDIR(tmp))
+	if (!get_tree_entry_type(r, hash1, shift_prefix, &sub1, &tmp) &&
+	    tmp == OBJ_TREE)
 		candidate |= 1;
 
 	/* Can hash1 be a tree at shift_prefix in tree hash2? */
-	if (!get_tree_entry_mode(r, hash2, shift_prefix, &sub2, &tmp) &&
-	    S_ISDIR(tmp))
+	if (!get_tree_entry_type(r, hash2, shift_prefix, &sub2, &tmp) &&
+	    tmp == OBJ_TREE)
 		candidate |= 2;
 
 	if (candidate == 3) {

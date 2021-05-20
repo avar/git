@@ -183,13 +183,14 @@ static void set_index_entry(struct index_state *istate, int nr, struct cache_ent
 
 static int add_path_to_index(const struct object_id *oid,
 			     struct strbuf *base, const char *path,
-			     unsigned int mode, void *context)
+			     enum object_type type, unsigned int mode,
+			     void *context)
 {
 	struct index_state *istate = (struct index_state *)context;
 	struct cache_entry *ce;
 	size_t len = base->len;
 
-	if (S_ISDIR(mode))
+	if (type == OBJ_TREE)
 		return READ_TREE_RECURSIVE;
 
 	strbuf_addstr(base, path);

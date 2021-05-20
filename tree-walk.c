@@ -47,7 +47,9 @@ static int decode_tree_entry(struct tree_desc *desc, const char *buf, unsigned l
 
 	/* Initialize the descriptor entry */
 	desc->entry.path = path;
-	desc->entry.mode = canon_mode(mode);
+	mode = canon_mode(mode);
+	desc->entry.mode = mode;
+	desc->entry.object_type = object_type(mode);
 	desc->entry.pathlen = len - 1;
 	oidread(&desc->entry.oid, (const unsigned char *)path + len);
 
@@ -519,7 +521,7 @@ int traverse_trees(struct index_state *istate,
 			if (!entry[i].path)
 				continue;
 			mask |= 1ul << i;
-			if (S_ISDIR(entry[i].mode))
+			if (entry[i].object_type == OBJ_TREE)
 				dirmask |= 1ul << i;
 			e = &entry[i];
 		}
@@ -559,7 +561,8 @@ struct dir_state {
 
 static int find_tree_entry(struct repository *r, struct tree_desc *t,
 			   const char *name, struct object_id *result,
-			   unsigned short *mode)
+			   unsigned short *mode,
+			   enum object_type *object_type)
 {
 	int namelen = strlen(name);
 	while (t->size) {
@@ -567,7 +570,7 @@ static int find_tree_entry(struct repository *r, struct tree_desc *t,
 		struct object_id oid;
 		int entrylen, cmp;
 
-		oidcpy(&oid, tree_entry_extract_mode(t, &entry, mode));
+		oidcpy(&oid, tree_entry_extract_all(t, &entry, mode, object_type));
 		entrylen = tree_entry_len(&t->entry);
 		update_tree_entry(t);
 		if (entrylen > namelen)
@@ -583,23 +586,24 @@ static int find_tree_entry(struct repository *r, struct tree_desc *t,
 		}
 		if (name[entrylen] != '/')
 			continue;
-		if (!S_ISDIR(*mode))
+		if (*object_type != OBJ_TREE)
 			break;
 		if (++entrylen == namelen) {
 			oidcpy(result, &oid);
 			return 0;
 		}
-		return get_tree_entry_mode(r, &oid, name + entrylen, result,
-					   mode);
+		return get_tree_entry_all(r, &oid, name + entrylen, result,
+					  mode, object_type);
 	}
 	return -1;
 }
 
-int get_tree_entry_mode(struct repository *r,
-			const struct object_id *tree_oid,
-			const char *name,
-			struct object_id *oid,
-			unsigned short *mode)
+int get_tree_entry_all(struct repository *r,
+		       const struct object_id *tree_oid,
+		       const char *name,
+		       struct object_id *oid,
+		       unsigned short *mode,
+		       enum object_type *object_type)
 {
 	int retval;
 	void *tree;
@@ -622,7 +626,7 @@ int get_tree_entry_mode(struct repository *r,
 		struct tree_desc t;
 		init_tree_desc(&t, tree, size);
 		retval = find_tree_entry(r, &t, name, oid,
-					 mode);
+					 mode, object_type);
 	}
 	free(tree);
 	return retval;
@@ -634,7 +638,30 @@ int get_tree_entry_path(struct repository *r,
 			struct object_id *oid)
 {
 	unsigned short mode;
-	return get_tree_entry_mode(r, tree_oid, name, oid, &mode);
+	enum object_type type;
+	return get_tree_entry_all(r, tree_oid, name, oid, &mode, &type);
+}
+
+int get_tree_entry_mode(struct repository *r,
+			const struct object_id *tree_oid,
+			const char *name,
+			struct object_id *oid,
+			unsigned short *mode)
+{
+	enum object_type object_type;
+	return get_tree_entry_all(r, tree_oid, name, oid,
+				  mode, &object_type);
+}
+
+int get_tree_entry_type(struct repository *r,
+			const struct object_id *tree_oid,
+			const char *name,
+			struct object_id *oid,
+			enum object_type *object_type)
+{
+	unsigned short mode;
+	return get_tree_entry_all(r, tree_oid, name, oid,
+				  &mode, object_type);
 }
 
 /*
@@ -681,6 +708,7 @@ enum get_oid_result get_tree_entry_follow_symlinks(struct repository *r,
 		int find_result;
 		char *first_slash;
 		char *remainder = NULL;
+		enum object_type object_type;
 
 		if (!t.buffer) {
 			void *tree;
@@ -758,7 +786,7 @@ enum get_oid_result get_tree_entry_follow_symlinks(struct repository *r,
 		/* Look up the first (or only) path component in the tree. */
 		find_result = find_tree_entry(r, &t, namebuf.buf,
 					      &current_tree_oid,
-					      mode);
+					      mode, &object_type);
 		if (find_result) {
 			goto done;
 		}
@@ -902,8 +930,8 @@ static int match_entry(const struct pathspec_item *item,
 		 * nothing else (to handle 'submod/' and 'submod'
 		 * uniformly).
 		 */
-		if (!S_ISDIR(entry->mode) &&
-		    (!S_ISGITLINK(entry->mode) || matchlen > pathlen + 1))
+		if (entry->object_type != OBJ_TREE &&
+		    (entry->object_type != OBJ_COMMIT || matchlen > pathlen + 1))
 			return 0;
 	}
 
@@ -1048,7 +1076,7 @@ static enum interesting do_match(struct index_state *istate,
 		    ps->max_depth == -1)
 			return all_entries_interesting;
 		return within_depth(base->buf + base_offset, baselen,
-				    !!S_ISDIR(entry->mode),
+				    entry->object_type == OBJ_TREE,
 				    ps->max_depth) ?
 			entry_interesting : entry_not_interesting;
 	}
@@ -1081,7 +1109,7 @@ static enum interesting do_match(struct index_state *istate,
 
 			if (within_depth(base_str + matchlen + 1,
 					 baselen - matchlen - 1,
-					 !!S_ISDIR(entry->mode),
+					 entry->object_type == OBJ_TREE,
 					 ps->max_depth))
 				goto interesting;
 			else
@@ -1104,7 +1132,8 @@ static enum interesting do_match(struct index_state *istate,
 				 * Match all directories. We'll try to
 				 * match files later on.
 				 */
-				if (ps->recursive && S_ISDIR(entry->mode))
+				if (ps->recursive &&
+				    entry->object_type == OBJ_TREE)
 					return entry_interesting;
 
 				/*
@@ -1115,7 +1144,7 @@ static enum interesting do_match(struct index_state *istate,
 				 * be performed in the submodule itself.
 				 */
 				if (ps->recurse_submodules &&
-				    S_ISGITLINK(entry->mode) &&
+				    entry->object_type == OBJ_COMMIT &&
 				    !ps_strncmp(item, match + baselen,
 						entry->path,
 						item->nowildcard_len - baselen))
@@ -1164,7 +1193,8 @@ match_wildcards:
 		 * character.  More accurate matching can then
 		 * be performed in the submodule itself.
 		 */
-		if (ps->recurse_submodules && S_ISGITLINK(entry->mode) &&
+		if (ps->recurse_submodules &&
+		    entry->object_type == OBJ_COMMIT &&
 		    !ps_strncmp(item, match, base->buf + base_offset,
 				item->nowildcard_len)) {
 			strbuf_setlen(base, base_offset + baselen);
@@ -1180,7 +1210,7 @@ match_wildcards:
 		 * in future, see
 		 * https://lore.kernel.org/git/7vmxo5l2g4.fsf@alter.siamese.dyndns.org/
 		 */
-		if (ps->recursive && S_ISDIR(entry->mode))
+		if (ps->recursive && entry->object_type == OBJ_TREE)
 			return entry_interesting;
 		continue;
 interesting:
@@ -1203,7 +1233,7 @@ interesting:
 			 * can probably return all_entries_interesting or
 			 * all_entries_not_interesting here if matched.
 			 */
-			if (S_ISDIR(entry->mode))
+			if (entry->object_type == OBJ_TREE)
 				return entry_interesting;
 
 			strbuf_add(base, entry->path, pathlen);
@@ -1279,7 +1309,7 @@ enum interesting tree_entry_interesting(struct index_state *istate,
 		return positive;
 
 	/* #15, #19 */
-	if (S_ISDIR(entry->mode) &&
+	if (entry->object_type == OBJ_TREE &&
 	    positive >= entry_interesting &&
 	    negative == entry_interesting)
 		return entry_interesting;
