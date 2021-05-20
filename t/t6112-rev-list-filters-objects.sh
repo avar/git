@@ -312,7 +312,7 @@ test_expect_success 'rev-list W/ --missing=print and --missing=allow-any for tre
 	# Create a spare repo because we will be deleting objects from this one.
 	git clone r3 r3.b &&
 
-	rm r3.b/.git/objects/$(echo $TREE | sed "s|^..|&/|") &&
+	rm r3.b/"$(test_oid_to_objects_path $TREE)" &&
 
 	git -C r3.b rev-list --quiet --missing=print --objects HEAD \
 		>missing_objs 2>rev_list_err &&
@@ -670,9 +670,9 @@ test_expect_success 'rev-list W/ --missing=print' '
 	awk -f print_2.awk ls_files_result |
 	sort >expected &&
 
-	for id in `cat expected | sed "s|..|&/|"`
+	for id in `cat expected`
 	do
-		rm r1/.git/objects/$id
+		rm r1/"$(test_oid_to_objects_path $id)"
 	done &&
 
 	git -C r1 rev-list --quiet --missing=print --objects HEAD >revs &&
