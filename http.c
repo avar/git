@@ -406,10 +406,11 @@ static int http_options(const char *var, const char *value, void *cb)
 		return git_config_string(&user_agent, var, value);
 
 	if (!strcmp("http.emptyauth", var)) {
-		if (value && !strcmp("auto", value))
+		int tristate = git_config_tristate(var, value);
+		if (tristate == 2)
 			curl_empty_auth = -1;
 		else
-			curl_empty_auth = git_config_bool(var, value);
+			curl_empty_auth = tristate;
 		return 0;
 	}
 
