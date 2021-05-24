@@ -1002,9 +1002,6 @@ int xsnprintf(char *dst, size_t max, const char *fmt, ...);
 
 int xgethostname(char *buf, size_t len);
 
-/* in ctype.c, for kwset users */
-extern const unsigned char tolower_trans_tbl[256];
-
 /* Sane ctype - no locale, and works with signed chars */
 #undef isascii
 #undef isspace
