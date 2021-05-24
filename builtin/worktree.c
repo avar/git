@@ -31,6 +31,7 @@ struct add_opts {
 	int quiet;
 	int checkout;
 	int keep_locked;
+	int orphan;
 };
 
 static int show_only;
@@ -264,8 +265,12 @@ static int add_worktree(const char *path, const char *refname,
 			die_if_checked_out(symref.buf, 0);
 	}
 	commit = lookup_commit_reference_by_name(refname);
-	if (!commit)
+	if (opts->orphan) {
+		if (commit)
+			die(_("valid reference: %s"), refname);
+	} else if  (!commit) {
 		die(_("invalid reference: %s"), refname);
+	}
 
 	name = worktree_basename(path, &len);
 	strbuf_add(&sb, name, path + len - name);
@@ -338,7 +343,7 @@ static int add_worktree(const char *path, const char *refname,
 	strvec_pushf(&child_env, "%s=%s", GIT_WORK_TREE_ENVIRONMENT, path);
 	cp.git_cmd = 1;
 
-	if (!is_branch)
+	if (!opts->orphan && !is_branch)
 		strvec_pushl(&cp.args, "update-ref", "HEAD",
 			     oid_to_hex(&commit->object.oid), NULL);
 	else {
@@ -412,18 +417,28 @@ done:
 static void print_preparing_worktree_line(int detach,
 					  const char *branch,
 					  const char *new_branch,
-					  int force_new_branch)
+					  int force_new_branch,
+					  int orphan)
 {
 	if (force_new_branch) {
 		struct commit *commit = lookup_commit_reference_by_name(new_branch);
-		if (!commit)
-			printf_ln(_("Preparing worktree (new branch '%s')"), new_branch);
-		else
+		if (!commit) {
+			if (orphan)
+				printf_ln(_("Preparing worktree (new orphan branch '%s')"), new_branch);
+			else
+				printf_ln(_("Preparing worktree (new branch '%s')"), new_branch);
+		} else {
+			if (orphan)
+				BUG("TODO");
 			printf_ln(_("Preparing worktree (resetting branch '%s'; was at %s)"),
 				  new_branch,
 				  find_unique_abbrev(&commit->object.oid, DEFAULT_ABBREV));
+		}
 	} else if (new_branch) {
-		printf_ln(_("Preparing worktree (new branch '%s')"), new_branch);
+		if (orphan)
+			printf_ln(_("Preparing worktree (new orphan branch '%s')"), new_branch);
+		else
+			printf_ln(_("Preparing worktree (new branch '%s')"), new_branch);
 	} else {
 		struct strbuf s = STRBUF_INIT;
 		if (!detach && !strbuf_check_branch_ref(&s, branch) &&
@@ -486,6 +501,7 @@ static int add(int ac, const char **av, const char *prefix)
 		OPT_BOOL('d', "detach", &opts.detach, N_("detach HEAD at named commit")),
 		OPT_BOOL(0, "checkout", &opts.checkout, N_("populate the new working tree")),
 		OPT_BOOL(0, "lock", &opts.keep_locked, N_("keep the new working tree locked")),
+		OPT_BOOL(0, "orphan", &opts.orphan, N_("new unparented branch")),
 		OPT__QUIET(&opts.quiet, N_("suppress progress reporting")),
 		OPT_PASSTHRU(0, "track", &opt_track, NULL,
 			     N_("set up tracking mode (see git-branch(1))"),
@@ -505,6 +521,8 @@ static int add(int ac, const char **av, const char *prefix)
 
 	path = prefix_filename(prefix, av[0]);
 	branch = ac < 2 ? "HEAD" : av[1];
+	if (opts.orphan)
+		branch = "";
 
 	if (!strcmp(branch, "-"))
 		branch = "@{-1}";
@@ -542,9 +560,11 @@ static int add(int ac, const char **av, const char *prefix)
 		}
 	}
 	if (!opts.quiet)
-		print_preparing_worktree_line(opts.detach, branch, new_branch, !!new_branch_force);
+		print_preparing_worktree_line(opts.detach, branch, new_branch, !!new_branch_force, opts.orphan);
 
-	if (new_branch) {
+	if (opts.orphan && new_branch) {
+		branch = new_branch;
+	} else if (new_branch) {
 		struct child_process cp = CHILD_PROCESS_INIT;
 		cp.git_cmd = 1;
 		strvec_push(&cp.args, "branch");
@@ -560,6 +580,8 @@ static int add(int ac, const char **av, const char *prefix)
 			return -1;
 		branch = new_branch;
 	} else if (opt_track) {
+		if (opts.orphan)
+			BUG("TODO");
 		die(_("--[no-]track can only be used if a new branch is created"));
 	}
 
