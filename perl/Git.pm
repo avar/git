@@ -628,9 +628,7 @@ sub hooks_path {
 	my ($self) = @_;
 
 	my $dir = $self->command_oneline('rev-parse', '--git-path', 'hooks');
-	require Cwd;
-	my $abs = Cwd::abs_path($dir);
-	return $abs;
+	return $dir;
 }
 
 =item wc_path ()
