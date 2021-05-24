@@ -342,6 +342,22 @@ test_expect_success 'error on size of missing object' '
 	test_cmp expect.err err
 '
 
+test_expect_success 'cat-file complains about bogus type name' '
+	test_must_fail git cat-file co HEAD >out 2>err &&
+	test_must_be_empty out &&
+	cat >expected <<-\EOF &&
+	fatal: invalid object type "co"
+	EOF
+	test_cmp expected err &&
+
+	test_must_fail git cat-file bogus HEAD >out 2>err &&
+	test_must_be_empty out &&
+	cat >expected <<-\EOF &&
+	fatal: invalid object type "bogus"
+	EOF
+	test_cmp expected err
+'
+
 bogus_type="bogus"
 bogus_content="bogus"
 bogus_size=$(strlen "$bogus_content")
