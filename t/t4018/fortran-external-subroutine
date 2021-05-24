@@ -1,3 +1,4 @@
+t4018 header: subroutine RIGHT
 subroutine RIGHT
 
 real ChangeMe
