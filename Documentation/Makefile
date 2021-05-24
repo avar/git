@@ -225,6 +225,7 @@ endif
 
 ifneq ($(findstring $(MAKEFLAGS),s),s)
 ifndef V
+	QUIET_CLEAN	= @echo '   ' CLEAN $@;
 	QUIET_ASCIIDOC	= @echo '   ' ASCIIDOC $@;
 	QUIET_XMLTO	= @echo '   ' XMLTO $@;
 	QUIET_DB2TEXI	= @echo '   ' DB2TEXI $@;
@@ -346,14 +347,14 @@ GIT-ASCIIDOCFLAGS: FORCE
             fi
 
 clean:
-	$(RM) *.xml *.xml+ *.html *.html+ *.1 *.5 *.7
-	$(RM) *.texi *.texi+ *.texi++ git.info gitman.info
-	$(RM) *.pdf
-	$(RM) howto-index.txt howto/*.html doc.dep
-	$(RM) technical/*.html technical/api-index.txt
-	$(RM) SubmittingPatches.txt
-	$(RM) $(cmds_txt) $(mergetools_txt) *.made
-	$(RM) manpage-base-url.xsl
+	$(QUIET_CLEAN)$(RM) *.xml *.xml+ *.html *.html+ *.1 *.5 *.7 && \
+	$(RM) *.texi *.texi+ *.texi++ git.info gitman.info && \
+	$(RM) *.pdf && \
+	$(RM) howto-index.txt howto/*.html doc.dep && \
+	$(RM) technical/*.html technical/api-index.txt && \
+	$(RM) SubmittingPatches.txt && \
+	$(RM) $(cmds_txt) $(mergetools_txt) *.made && \
+	$(RM) manpage-base-url.xsl && \
 	$(RM) GIT-ASCIIDOCFLAGS
 
 $(MAN_HTML): %.html : %.txt asciidoc.conf asciidoctor-extensions.rb GIT-ASCIIDOCFLAGS

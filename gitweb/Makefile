@@ -78,6 +78,7 @@ endif
 ifneq ($(findstring $(MAKEFLAGS),s),s)
 ifndef V
 	QUIET          = @
+	QUIET_CLEAN    = $(QUIET)echo '   ' CLEAN $@;
 	QUIET_GEN      = $(QUIET)echo '   ' GEN $@;
 	QUIET_SUBDIR0  = +@subdir=
 	QUIET_SUBDIR1  = ;$(NO_SUBDIR) echo '   ' SUBDIR $$subdir; \
@@ -189,7 +190,7 @@ install: all
 ### Cleaning rules
 
 clean:
-	$(RM) gitweb.cgi static/gitweb.js \
+	$(QUIET_CLEAN)$(RM) gitweb.cgi static/gitweb.js \
 		static/gitweb.min.js static/gitweb.min.css \
 		GITWEB-BUILD-OPTIONS
 
