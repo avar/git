@@ -467,8 +467,8 @@ int ie_modified(struct index_state *istate,
 	return 0;
 }
 
-int base_name_compare(const char *name1, int len1, int mode1,
-		      const char *name2, int len2, int mode2)
+int base_name_compare(const char *name1, int len1, int istree1,
+		      const char *name2, int len2, int istree2)
 {
 	unsigned char c1, c2;
 	int len = len1 < len2 ? len1 : len2;
@@ -479,9 +479,9 @@ int base_name_compare(const char *name1, int len1, int mode1,
 		return cmp;
 	c1 = name1[len];
 	c2 = name2[len];
-	if (!c1 && S_ISDIR(mode1))
+	if (!c1 && istree1)
 		c1 = '/';
-	if (!c2 && S_ISDIR(mode2))
+	if (!c2 && istree2)
 		c2 = '/';
 	return (c1 < c2) ? -1 : (c1 > c2) ? 1 : 0;
 }
@@ -496,8 +496,8 @@ int base_name_compare(const char *name1, int len1, int mode1,
  * This is used by routines that want to traverse the git namespace
  * but then handle conflicting entries together when possible.
  */
-int df_name_compare(const char *name1, int len1, int mode1,
-		    const char *name2, int len2, int mode2)
+int df_name_compare(const char *name1, int len1, int istree1,
+		    const char *name2, int len2, int istree2)
 {
 	int len = len1 < len2 ? len1 : len2, cmp;
 	unsigned char c1, c2;
@@ -509,10 +509,10 @@ int df_name_compare(const char *name1, int len1, int mode1,
 	if (len1 == len2)
 		return 0;
 	c1 = name1[len];
-	if (!c1 && S_ISDIR(mode1))
+	if (!c1 && istree1)
 		c1 = '/';
 	c2 = name2[len];
-	if (!c2 && S_ISDIR(mode2))
+	if (!c2 && istree2)
 		c2 = '/';
 	if (c1 == '/' && !c2)
 		return 0;
