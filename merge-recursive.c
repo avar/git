@@ -453,7 +453,7 @@ static void unpack_trees_finish(struct merge_options *opt)
 
 static int save_files_dirs(const struct object_id *oid,
 			   struct strbuf *base, const char *path,
-			   unsigned int mode,
+			   enum object_type object_type, unsigned int mode,
 			   void *context)
 {
 	struct path_hashmap_entry *entry;
@@ -467,7 +467,9 @@ static int save_files_dirs(const struct object_id *oid,
 	hashmap_add(&opt->priv->current_file_dir_set, &entry->e);
 
 	strbuf_setlen(base, baselen);
-	return (S_ISDIR(mode) ? READ_TREE_RECURSIVE : 0);
+	if (object_type != OBJ_TREE)
+		return 0;
+	return READ_TREE_RECURSIVE;
 }
 
 static void get_files_dirs(struct merge_options *opt, struct tree *tree)
