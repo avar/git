@@ -1,16 +1,27 @@
 #include "test-tool.h"
 #include "cache.h"
+#include "parse-options.h"
+
+static const char *read_cache_again_usage[] = {
+	"test-tool read-cache-again [<options>...] <file>",
+	NULL
+};
 
 int cmd__read_cache_again(int argc, const char **argv)
 {
 	struct repository *r = the_repository;
-	int cnt;
+	int cnt = 2;
 	const char *name;
+	struct option options[] = {
+		OPT_INTEGER(0, "count", &cnt, "number of passes"),
+		OPT_END()
+	};
 
-	if (argc != 2)
-		die("usage: test-tool read-cache-again <count> <file>");
-
-	cnt = strtol(argv[0], NULL, 0);
+	argc = parse_options(argc, argv, "test-tools", options,
+			     read_cache_again_usage, 0);
+	if (argc != 1)
+		usage_msg_opt("Too many arguments.", read_cache_again_usage,
+			      options);
 	name = argv[2];
 
 	setup_git_directory();
