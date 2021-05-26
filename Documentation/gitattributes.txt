@@ -794,11 +794,47 @@ backslashes; the pattern above picks a line that begins with a
 backslash, and zero or more occurrences of `sub` followed by
 `section` followed by open brace, to the end of line.
 
-There are a few built-in patterns to make this easier, and `tex`
-is one of them, so you do not have to write the above in your
-configuration file (you still need to enable this with the
-attribute mechanism, via `.gitattributes`).  The following built in
-patterns are available:
+Multiple patterns can be supplied by listing them one per line
+separated by `\n`. They will be matched one line at a time, e.g.:
+
+------------------------
+[diff "perl"]
+	xfuncname = "!^=head\n^[^ ]+.*"
+------------------------
+
+Patterns in a list of multiple patterns that begin with "!" are
+negated. A matching negated pattern will cause the matched line to be
+skipped. Use it to skip a later pattern that would otherwise match. It
+is an error if one or more negated patterns aren't followed by a
+non-negated pattern.
+
+To match a literal "!" at the start of a line, use some other regex
+construct that will match a literal "!" without "!" being the first
+character on that line, such as "[!]".
+
+If the last pattern in a list of multiple patterns ends with "\n" it
+will be interpreted as an empty pattern, and will match the first
+empty line. It's almost always a logic error to provide a list of
+multiple patterns ending with "\n", but it's permitted in case you
+genuinely want to match an empty line.
+
+If the pattern contains a `$1` capture it will be used instead of the
+entire matching line (`$0`) to display the hunk header. This can be
+used e.g. to strip whitespace from the beginning of the line, or to
+only display the function name as part of a longer function
+definition.
+
+There are built-in patterns shipped as part of git itself, see the
+full listing below.
+
+For built-in patterns, you do not need `diff.<lang>.xfuncname` in your
+configuration file. If present, it will override a built-in pattern,
+as shown in the `diff.perl.xfuncname` example above.
+
+Nevertheless, you need to enable built-in patterns via .gitattributes`
+for the pattern to take effect.
+
+The following built-in patterns are available:
 
 - `ada` suitable for source code in the Ada language.
 
