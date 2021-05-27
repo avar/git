@@ -19,6 +19,7 @@
 #include "list-objects-filter.h"
 #include "list-objects-filter-options.h"
 #include "pack-objects.h"
+#include "builtin/pack-objects.h"
 #include "progress.h"
 #include "refs.h"
 #include "streaming.h"
@@ -36,6 +37,13 @@
 #include "trace2.h"
 #include "shallow.h"
 #include "promisor-remote.h"
+
+/*
+ * Objects we are going to pack are collected in the `to_pack` structure.
+ * It contains an array (dynamically expanded) of the object data, and a map
+ * that can resolve SHA1s to their position in the array.
+ */
+static struct packing_data to_pack;
 
 #define IN_PACK(obj) oe_in_pack(&to_pack, obj)
 #define SIZE(obj) oe_size(&to_pack, obj)
@@ -55,13 +63,6 @@ static const char *pack_usage[] = {
 	N_("git pack-objects [<options>...] <base-name> [< <ref-list> | < <object-list>]"),
 	NULL
 };
-
-/*
- * Objects we are going to pack are collected in the `to_pack` structure.
- * It contains an array (dynamically expanded) of the object data, and a map
- * that can resolve SHA1s to their position in the array.
- */
-static struct packing_data to_pack;
 
 static struct pack_idx_entry **written_list;
 static uint32_t nr_result, nr_written, nr_seen;
