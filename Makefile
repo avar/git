@@ -334,15 +334,28 @@ all::
 # Define INSTALL_SYMLINKS if you prefer to have everything that can be
 # symlinked between bin/ and libexec/ to use relative symlinks between
 # the two. This option overrides NO_CROSS_DIRECTORY_HARDLINKS and
+# NO_INSTALL_HARDLINKS. This will not produce any indirect symlinks, we will
+# always symlink to the final target directly.
+#
 # NO_INSTALL_HARDLINKS which will also use symlinking by indirection
 # within the same directory in some cases, INSTALL_SYMLINKS will
-# always symlink to the final target directly.
+# always symlink to the final target directly. This option also
+# affects dashed built-ins in the build directory pre-installation.
 #
 # Define NO_CROSS_DIRECTORY_HARDLINKS if you plan to distribute the installed
 # programs as a tar, where bin/ and libexec/ might be on different file systems.
 #
-# Define NO_INSTALL_HARDLINKS if you prefer to use either symbolic links or
-# copies to install built-in git commands e.g. git-cat-file.
+# Define NO_INSTALL_HARDLINKS if you'd like to have programs in bin/
+# and libexec/ either symlinked (we try with INSTALL_SYMLINKS first),
+# or if that fails fall back on a "cp" instead of a "ln". Useful for
+# when you don't want hardlinks at all.
+#
+# Define INSTALL_FALLBACK_LN_CP if you'd like your
+# "INSTALL_SYMLINKS=Y" to fall back on hardlinks if we can't run "ln
+# -s", and for "ln" to fall back on "NO_INSTALL_HARDLINKS=Y" if we
+# can't perform a "ln" and need to fall-back to a "cp". This used to
+# be the default behavior, but we'll now error if we can't satisfy
+# your INSTALL_SYMLINKS, NO_INSTALL_HARDLINKS etc. settings.
 #
 # Define SKIP_DASHED_BUILT_INS if you do not need the dashed versions of the
 # built-ins to be linked/copied at all.
@@ -2236,11 +2249,11 @@ version.sp version.s version.o: EXTRA_CPPFLAGS = \
 		GIT_CEILING_DIRECTORIES="$(CURDIR)/.." \
 		git rev-parse -q --verify HEAD 2>/dev/null)"'
 
+$(BUILT_INS): GIT-LNCPFLAGS
 $(BUILT_INS): git$X
-	$(QUIET_BUILT_IN)$(RM) $@ && \
-	ln $< $@ 2>/dev/null || \
-	ln -s $< $@ 2>/dev/null || \
-	cp $< $@
+	$(QUIET_BUILT_IN)./ln-or-cp.sh \
+		--install-symlinks "$(INSTALL_SYMLINKS)" \
+		$< $@
 
 config-list.h: generate-configlist.sh
 
@@ -2592,11 +2605,11 @@ git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS) && \
 	mv $@+ $@
 
+$(REMOTE_CURL_ALIASES): GIT-LNCPFLAGS
 $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
-	$(QUIET_LNCP)$(RM) $@ && \
-	ln $< $@ 2>/dev/null || \
-	ln -s $< $@ 2>/dev/null || \
-	cp $< $@
+	$(QUIET_LNCP)./ln-or-cp.sh \
+		--install-symlinks "$(INSTALL_SYMLINKS)" \
+		$< $@
 
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
@@ -2790,6 +2803,10 @@ GIT-LDFLAGS: FORCE
 		echo >&2 "    * new link flags"; \
 		echo "$$FLAGS" >GIT-LDFLAGS; \
             fi
+
+GIT-LNCPFLAGS: FORCE
+	@echo INSTALL_SYMLINKS=\''$(subst ','\'',$(subst ','\'',$(INSTALL_SYMLINKS)))'\' >$@+
+	@if cmp $@+ $@ >/dev/null 2>&1; then $(RM) $@+; else mv $@+ $@; fi
 
 # We need to apply sq twice, once to protect from the shell
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
@@ -3055,44 +3072,42 @@ endif
 	destdir_from_execdir_SQ=$$(echo '$(gitexecdir_relative_SQ)' | sed -e 's|[^/][^/]*|..|g') && \
 	{ test "$$bindir/" = "$$execdir/" || \
 	  for p in git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS)); do \
-		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/$$p" "$$execdir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)$(NO_CROSS_DIRECTORY_HARDLINKS)" && \
-		  ln "$$bindir/$$p" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$bindir/$$p" "$$execdir/$$p" || exit; } \
+		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
+			--install-symlinks "$(INSTALL_SYMLINKS)" \
+			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
+			--no-cross-directory-hardlinks "$(NO_CROSS_DIRECTORY_HARDLINKS)" \
+			--symlink-target "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/$$p" \
+			"$$bindir/$$p" "$$execdir/$$p"; \
 	  done; \
 	} && \
 	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
-		$(RM) "$$bindir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git$X" "$$bindir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$bindir/git$X" "$$bindir/$$p" 2>/dev/null || \
-		  ln -s "git$X" "$$bindir/$$p" 2>/dev/null || \
-		  cp "$$bindir/git$X" "$$bindir/$$p" || exit; }; \
+		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
+			--install-symlinks "$(INSTALL_SYMLINKS)" \
+			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
+			--symlink-target "git$X" \
+			"$$bindir/git$X" "$$bindir/$$p"; \
 	done && \
 	for p in $(BUILT_INS); do \
-		$(RM) "$$execdir/$$p" && \
 		if test -z "$(SKIP_DASHED_BUILT_INS)"; \
 		then \
-			test -n "$(INSTALL_SYMLINKS)" && \
-			ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" "$$execdir/$$p" || \
-			{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-			  ln "$$execdir/git$X" "$$execdir/$$p" 2>/dev/null || \
-			  ln -s "git$X" "$$execdir/$$p" 2>/dev/null || \
-			  cp "$$execdir/git$X" "$$execdir/$$p" || exit; }; \
+			./ln-or-cp.sh \
+				--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
+				--install-symlinks "$(INSTALL_SYMLINKS)" \
+				--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
+				--symlink-target "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" \
+				"$$execdir/git$X" "$$execdir/$$p"; \
 		fi \
 	done && \
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
-		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git-remote-http$X" "$$execdir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$execdir/git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  ln -s "git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$execdir/git-remote-http$X" "$$execdir/$$p" || exit; } \
+		./ln-or-cp.sh \
+			--install-fallback-ln-cp "$(INSTALL_FALLBACK_LN_CP)" \
+			--install-symlinks "$(INSTALL_SYMLINKS)" \
+			--no-install-hardlinks "$(NO_INSTALL_HARDLINKS)" \
+			--symlink-target "git-remote-http$X" \
+			"$$execdir/git-remote-http$X" "$$execdir/$$p"; \
 	done && \
 	./check_bindir "z$$bindir" "z$$execdir" "$$bindir/git-add$X"
 
