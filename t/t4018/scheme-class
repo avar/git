@@ -1,5 +1,6 @@
+t4018 header: (class* () object%
 (define book-class%
-  (class* () object% RIGHT
+  (class* () object%
     (field (pages 5))
     (field (ChangeMe 5))
     (define/public (letters)
