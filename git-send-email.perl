@@ -2009,8 +2009,9 @@ sub validate_patch {
 	my ($fn, $xfer_encoding) = @_;
 
 	if ($repo) {
+		my $hooks_path = $repo->command_oneline('rev-parse', '--git-path', 'hooks');
 		require File::Spec;
-		my $validate_hook = File::Spec->catfile($repo->hooks_path(),
+		my $validate_hook = File::Spec->catfile($hooks_path,
 					    'sendemail-validate');
 		my $hook_error;
 		if (-x $validate_hook) {
