@@ -99,11 +99,16 @@ struct object *deref_tag_noverify(struct object *o)
 	return o;
 }
 
+static struct tag *create_tag(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_tag_node(r));
+}
+
 struct tag *lookup_tag(struct repository *r, const struct object_id *oid)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_tag_node(r));
+		return create_tag(r, oid);
 	return object_as_type(obj, OBJ_TAG, 0);
 }
 
