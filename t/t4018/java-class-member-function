@@ -1,3 +1,4 @@
+t4018 header: public static void main(String RIGHT[])
 public class Beer
 {
 	int special;
