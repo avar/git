@@ -243,3 +243,5 @@ Release/
 /git.VC.db
 *.dSYM
 /contrib/buildsystems/out
+/.dist-tmp-dir
+/git-*.tar
