@@ -681,9 +681,6 @@ FUZZ_OBJS += fuzz-pack-idx.o
 .PHONY: fuzz-objs
 fuzz-objs: $(FUZZ_OBJS)
 
-# Always build fuzz objects even if not testing, to prevent bit-rot.
-all:: $(FUZZ_OBJS)
-
 FUZZ_PROGRAMS += $(patsubst %.o,%,$(FUZZ_OBJS))
 
 # Empty...
@@ -3426,9 +3423,9 @@ FUZZ_CXXFLAGS ?= $(CFLAGS)
 
 .PHONY: fuzz-all
 
-$(FUZZ_PROGRAMS): all
+$(FUZZ_PROGRAMS): all fuzz-objs
 	$(QUIET_LINK)$(CXX) $(FUZZ_CXXFLAGS) $(LIB_OBJS) $(BUILTIN_OBJS) \
 		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@+ && \
 	mv $@+ $@
 
-fuzz-all: $(FUZZ_PROGRAMS)
+fuzz-all: $(FUZZ_PROGRAMS) $(FUZZ_OBJS)
