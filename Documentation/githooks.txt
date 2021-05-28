@@ -206,6 +206,8 @@ This hook can be used to perform repository validity checks, auto-display
 differences from the previous HEAD if different, or set working dir metadata
 properties.
 
+Hooks executed during 'post-checkout' will not be parallelized.
+
 post-merge
 ~~~~~~~~~~
 
@@ -697,6 +699,10 @@ and "0" meaning they were not.
 
 Only one parameter should be set to "1" when the hook runs.  The hook
 running passing "1", "1" should not be possible.
+
+SEE ALSO
+--------
+linkgit:git-hook[1]
 
 GIT
 ---
