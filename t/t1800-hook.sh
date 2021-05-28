@@ -4,10 +4,6 @@ test_description='git-hook command'
 
 . ./test-lib.sh
 
-test_expect_success 'setup .git/hooks' '
-	mkdir .git/hooks
-'
-
 test_expect_success 'git hook run -- nonexistent hook' '
 	cat >stderr.expect <<-\EOF &&
 	error: cannot find a hook named does-not-exist
