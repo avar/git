@@ -1,3 +1,4 @@
+t4018 header: classdef RIGHT
 classdef RIGHT
     properties
         ChangeMe
