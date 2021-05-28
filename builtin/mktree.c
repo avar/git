@@ -117,7 +117,7 @@ static void mktree_line(char *buf, int nul_term_line, int allow_missing)
 	 * These should all agree.
 	 */
 	mode_type = object_type(mode);
-	type_type = type_from_string_gently(ptr, ntr - ptr, 1);
+	type_type = type_from_string_gently(ptr, ntr - ptr);
 	if (type_type < 0)
 		die("entry '%s' object type '%.*s' is invalid (our derived mode type is '%s')",
 			path, (int)(ntr - ptr), ptr, type_name(mode_type));
