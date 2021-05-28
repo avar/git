@@ -5,7 +5,7 @@ test_description='partial clone'
 . ./test-lib.sh
 
 delete_object () {
-	rm $1/.git/objects/$(echo $2 | sed -e 's|^..|&/|')
+	rm "$1"/"$(test_oid_to_objects_path $2)"
 }
 
 pack_as_from_promisor () {
