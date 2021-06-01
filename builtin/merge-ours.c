@@ -29,5 +29,5 @@ int cmd_merge_ours(int argc, const char **argv, const char *prefix)
 		die_errno("read_cache failed");
 	if (index_differs_from(the_repository, "HEAD", NULL, 0))
 		exit(2);
-	exit(0);
+	return 0;
 }
