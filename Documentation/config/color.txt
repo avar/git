@@ -126,6 +126,11 @@ color.interactive.<slot>::
 	or `error`, for four distinct types of normal output from
 	interactive commands.
 
+color.man::
+	This flag can be used to disable the automatic colorizaton of man
+	pages when using the less pager. It's activated only when color.ui
+	allows it, and also when color.pager is on. (`true` by default).
+
 color.pager::
 	A boolean to enable/disable colored output when the pager is in
 	use (default is true).
