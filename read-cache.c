@@ -1595,6 +1595,8 @@ int refresh_index(struct index_state *istate, unsigned int flags,
 		int t2_did_lstat = 0;
 		int t2_did_scan = 0;
 
+		display_progress(progress, i + 1);
+
 		ce = istate->cache[i];
 		if (ignore_submodules && S_ISGITLINK(ce->ce_mode))
 			continue;
@@ -1628,8 +1630,6 @@ int refresh_index(struct index_state *istate, unsigned int flags,
 		t2_sum_scan += t2_did_scan;
 		if (new_entry == ce)
 			continue;
-		if (progress)
-			display_progress(progress, i);
 		if (!new_entry) {
 			const char *fmt;
 
@@ -1664,10 +1664,7 @@ int refresh_index(struct index_state *istate, unsigned int flags,
 	trace2_data_intmax("index", NULL, "refresh/sum_lstat", t2_sum_lstat);
 	trace2_data_intmax("index", NULL, "refresh/sum_scan", t2_sum_scan);
 	trace2_region_leave("index", "refresh", NULL);
-	if (progress) {
-		display_progress(progress, istate->cache_nr);
-		stop_progress(&progress);
-	}
+	stop_progress(&progress);
 	trace_performance_leave("refresh index");
 	return has_errors;
 }
