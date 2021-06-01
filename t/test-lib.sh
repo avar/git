@@ -128,6 +128,8 @@ parse_option () {
 		with_dashes=t ;;
 	--no-bin-wrappers)
 		no_bin_wrappers=t ;;
+	--color)
+		color=t ;;
 	--no-color)
 		color= ;;
 	--va|--val|--valg|--valgr|--valgri|--valgrin|--valgrind)
@@ -151,10 +153,32 @@ parse_option () {
 	--no-chain-lint)
 		GIT_TEST_CHAIN_LINT=0 ;;
 	-x)
-		trace=t ;;
-	-V|--verbose-log)
-		verbose_log=t
+		trace=t
+		verbose=t
+		;;
+	--verbose-log=0)
+
+		verbose_log_comment_level=-1
+		echo setting $verbose_log_comment_level
+		parse_option "--verbose-log"
+		;;
+	-V0|-V|--verbose-log)
+		verbose=t
 		tee=t
+
+		if test "$opt" = "-V0"
+		then
+			verbose_log_comment_level=-1
+		fi
+
+		# --verbose-log, unlike --verbose --tee, shows only
+		# --the TAP on stdout,
+		verbose_log=--out-only-tap
+
+		# TAP comment level via --verbose-log=0, -V, -VV, -VVV etc.
+		verbose_log_comment_level=${verbose_log_comment_level:-0}
+		verbose_log_comment_level=$(($verbose_log_comment_level + 1))
+
 		;;
 	--write-junit-xml)
 		write_junit_xml=t
@@ -209,7 +233,7 @@ do
 	fi
 
 	case "$opt" in
-	--*|-?)
+	--*|-?|-V0)
 		parse_option "$opt" ;;
 	-?*)
 		# bundled short options must be fed separately to parse_option
@@ -238,7 +262,7 @@ then
 	test -z "$verbose" && verbose_only="$valgrind_only"
 elif test -n "$valgrind"
 then
-	test -z "$verbose_log" && verbose=t
+	verbose=t
 fi
 
 if test -n "$stress"
@@ -254,7 +278,9 @@ TEST_NUMBER="${TEST_NAME%%-*}"
 TEST_NUMBER="${TEST_NUMBER#t}"
 TEST_RESULTS_DIR="$TEST_OUTPUT_DIRECTORY/test-results"
 TEST_RESULTS_BASE="$TEST_RESULTS_DIR/$TEST_NAME$TEST_STRESS_JOB_SFX"
-TRASH_DIRECTORY="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
+TRASH_DIRECTORY_BASE="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
+export TRASH_DIRECTORY_BASE
+TRASH_DIRECTORY="$TRASH_DIRECTORY_BASE"
 test -n "$root" && TRASH_DIRECTORY="$root/$TRASH_DIRECTORY"
 case "$TRASH_DIRECTORY" in
 /*) ;; # absolute path is good
@@ -366,8 +392,25 @@ then
 	# from any previous runs.
 	>"$GIT_TEST_TEE_OUTPUT_FILE"
 
-	(GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1;
-	 echo $? >"$TEST_RESULTS_BASE.exit") | tee -a "$GIT_TEST_TEE_OUTPUT_FILE"
+	(
+		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
+		echo $? >"$TEST_RESULTS_BASE.exit"
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee-tap \
+		--prefix="GIT_TEST_TEE_STARTED " \
+		--file-escape \
+		${verbose_log:---out-escape} ${verbose_log:+--out-comment-level=$verbose_log_comment_level} \
+		"$GIT_TEST_TEE_OUTPUT_FILE"
+	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
+	exit
+elif test -n "$verbose" && test -n "$HARNESS_ACTIVE"
+then
+	mkdir -p "$TEST_RESULTS_DIR"
+	(
+		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
+		echo $? >"$TEST_RESULTS_BASE.exit"
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee-tap \
+		--prefix="GIT_TEST_TEE_STARTED " \
+		--out-escape
 	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
 	exit
 fi
@@ -394,10 +437,6 @@ then
 		echo >&2 "warning: ignoring -x; '$0' is untraceable without BASH_XTRACEFD"
 		trace=
 	fi
-fi
-if test -n "$trace" && test -z "$verbose_log"
-then
-	verbose=t
 fi
 
 # For repeatability, reset the environment to known value.
@@ -548,20 +587,42 @@ then
 	# substitutions strip trailing newlines).  Given that most
 	# (all?) terminals in common use are related to ECMA-48, this
 	# shouldn't be a problem.
-	say_color_error=$(tput bold; tput setaf 1) # bold red
-	say_color_skip=$(tput setaf 4) # blue
-	say_color_warn=$(tput setaf 3) # brown/yellow
-	say_color_pass=$(tput setaf 2) # green
-	say_color_info=$(tput setaf 6) # cyan
-	say_color_reset=$(tput sgr0)
+	say_color_reset=$(printf "\033[0m")
+	say_color_error=$(printf "\033[31m") # red
+	say_color_berror=$(printf "\033[31;1m") # bold red
+	say_color_pass=$(printf "\033[32m") # green
+	say_color_bpass=$(printf "\033[32;1m") # green
+	say_color_warn=$(printf "\033[33m") # brown/yellow
+	say_color_bwarn=$(printf "\033[33;1m") # bold brown/yellow
+	say_color_skip=$(printf "\033[34m") # blue
+	say_color_bskip=$(printf "\033[34;1m") # bold blue
+	say_color_trace=$(printf "\033[35m") # magenta
+	say_color_btrace=$(printf "\033[35;1m") # bold magenta
+	say_color_info=$(printf "\033[36m") # cyan
+	say_color_binfo=$(printf "\033[36;1m") # bold cyan
 	say_color_="" # no formatting for normal text
+	say_color_start () {
+		test -z "$1" && test -n "$quiet" && return
+		eval "say_color_color=\$say_color_$1"
+		shift
+		printf "%s" "$say_color_color$*"
+	}
+	say_color_reset () {
+		printf "%s" "$say_color_reset"
+	}
 	say_color () {
 		test -z "$1" && test -n "$quiet" && return
 		eval "say_color_color=\$say_color_$1"
 		shift
-		printf "%s\\n" "$say_color_color$*$say_color_reset"
+		printf "%s\\n" "$say_color_color$*${say_color_color:+$say_color_reset}"
 	}
 else
+	say_color_start () {
+		return
+	}
+	say_color_reset () {
+		return
+	}
 	say_color() {
 		test -z "$1" && test -n "$quiet" && return
 		shift
@@ -569,11 +630,62 @@ else
 	}
 fi
 
+say_color_tap() {
+	say_color_tap=$1
+	shift
+	printf "%s" "${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }"
+	say_color "$say_color_tap" "$@"
+}
+
+# Comments starting with "#" are TAP syntax, we add our own comment
+# level pseudo-syntax on top of that. As noted here for X number of
+# leading #'s:
+#
+# 1st level comments (# <line>)
+# - main summaries like 'passed X tests' etc.
+# - failed test scripts (test_expect_success '[...]' 'false')
+say_color_tap_comment_level_1='#'
+# 2nd level comments (## <line>)
+# - known-bad succeding test scripts (test_expect_failure '[...]' 'true')
+say_color_tap_comment_level_2='##'
+# 3rd level comments (### <line>)
+# - succeeding test scripts (test_expect_failure '[...]' 'true')
+# - known-bad failing test scripts (test_expect_failure '[...]' 'false')
+# - skipped test scripts (due to GIT_TEST_SKIP or prerequisites)
+say_color_tap_comment_level_3='###'
+# 4th level comments (#### <line>)
+# - main test_create_repo (the $TRASH_DIRECTORY)
+# - lazy prerequisite scripts (test_lazy_prereq '[...]' <script>)
+say_color_tap_comment_level_4='####'
+say_color_tap_comment() {
+	eval "say_level=\$say_color_tap_comment_level_$1"
+	test -z "$say_level" && BUG "comment level $1 unknown"
+	shift
+	say_color_tap=$1
+	shift
+	say_color_tap "$say_color_tap" "$say_level" "$@"
+}
+
+say_color_tap_comment_lines() {
+	eval "say_level=\$say_color_tap_comment_level_$1"
+	test -z "$say_level" && BUG "comment level $1 unknown"
+	shift
+	say_color=$1
+	shift
+	say_start=$(say_color_start "$say_color" "")
+	say_prefix="${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }"
+	say_reset=$(say_color_reset)
+
+	printf '%s\n' "$*" | sed \
+		-e "s/^/${say_prefix}${say_start}${say_level}/" \
+		-e "s/$/${say_reset}/"
+}
+
 TERM=dumb
 export TERM
 
 error () {
-	say_color error "error: $*"
+	say_color berror "error: $*"
 	finalize_junit_xml
 	GIT_EXIT_OK=t
 	exit 1
@@ -587,16 +699,6 @@ say () {
 	say_color info "$*"
 }
 
-if test -n "$HARNESS_ACTIVE"
-then
-	if test "$verbose" = t || test -n "$verbose_only"
-	then
-		printf 'Bail out! %s\n' \
-		 'verbose mode forbidden under TAP harness; try --verbose-log'
-		exit 1
-	fi
-fi
-
 test "${test_description}" != "" ||
 error "Test script did not set test_description."
 
@@ -609,10 +711,7 @@ fi
 exec 5>&1
 exec 6<&0
 exec 7>&2
-if test "$verbose_log" = "t"
-then
-	exec 3>>"$GIT_TEST_TEE_OUTPUT_FILE" 4>&3
-elif test "$verbose" = "t"
+if test "$verbose" = "t"
 then
 	exec 4>&2 3>&1
 else
@@ -637,8 +736,7 @@ test_count=0
 test_fixed=0
 test_broken=0
 test_success=0
-
-test_external_has_tap=0
+test_skipped=0
 
 die () {
 	code=$?
@@ -675,7 +773,9 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
-	say_color "" "ok $test_count - $@"
+	say_color_tap "${verbose:+bpass}" "ok $test_count - $1"
+	shift
+	say_color_tap_comment_lines >&3 3 pass "$*"
 }
 
 test_failure_ () {
@@ -700,9 +800,9 @@ test_failure_ () {
 		write_junit_xml_testcase "$1" "      $junit_insert"
 	fi
 	test_failure=$(($test_failure + 1))
-	say_color error "not ok $test_count - $1"
+	say_color_tap berror "not ok $test_count - $1"
 	shift
-	printf '%s\n' "$*" | sed -e 's/^/#	/'
+	say_color_tap_comment_lines 1 error "$*"
 	test "$immediate" = "" || { finalize_junit_xml; GIT_EXIT_OK=t; exit 1; }
 }
 
@@ -712,7 +812,9 @@ test_known_broken_ok_ () {
 		write_junit_xml_testcase "$* (breakage fixed)"
 	fi
 	test_fixed=$(($test_fixed+1))
-	say_color error "ok $test_count - $@ # TODO known breakage vanished"
+	say_color_tap bwarn "ok $test_count - $1 # TODO known breakage vanished"
+	shift
+	say_color_tap_comment_lines >&3 2 warn "$*"
 }
 
 test_known_broken_failure_ () {
@@ -721,7 +823,24 @@ test_known_broken_failure_ () {
 		write_junit_xml_testcase "$* (known breakage)"
 	fi
 	test_broken=$(($test_broken+1))
-	say_color warn "not ok $test_count - $@ # TODO known breakage"
+
+	broken_color="${verbose:+bpass}"
+	reset="$(say_color_reset)"
+	broken_reset=
+	end_reset=
+	if test -n "$broken_color"
+	then
+		broken_reset="$reset"
+	else
+		end_reset="$reset"
+	fi
+	todo=$(
+		say_color_start bwarn &&
+		printf "%s%s" "# TODO known breakage"
+	)
+	say_color_tap "$broken_color" "not ok $test_count - $1$broken_reset $todo$end_reset"
+	shift
+	say_color_tap_comment_lines >&3 3 pass "$*"
 }
 
 test_debug () {
@@ -848,7 +967,7 @@ maybe_teardown_verbose () {
 last_verbose=t
 maybe_setup_verbose () {
 	test -z "$verbose_only" && return
-	if match_pattern_list $test_count $verbose_only
+	if match_pattern_list $test_count "$verbose_only"
 	then
 		exec 4>&2 3>&1
 		# Emit a delimiting blank line when going from
@@ -878,7 +997,7 @@ maybe_setup_valgrind () {
 		return
 	fi
 	GIT_VALGRIND_ENABLED=
-	if match_pattern_list $test_count $valgrind_only
+	if match_pattern_list $test_count "$valgrind_only"
 	then
 		GIT_VALGRIND_ENABLED=t
 	fi
@@ -886,9 +1005,7 @@ maybe_setup_valgrind () {
 
 trace_level_=0
 want_trace () {
-	test "$trace" = t && {
-		test "$verbose" = t || test "$verbose_log" = t
-	}
+	test "$trace" = t && test "$verbose" = t
 }
 
 # This is a separate function because some tests use
@@ -936,7 +1053,12 @@ test_eval_ () {
 
 	if test "$test_eval_ret_" != 0 && want_trace
 	then
-		say_color error >&4 "error: last command exited with \$?=$test_eval_ret_"
+		last_command_color=error
+		if test -n "$expecting_failure"
+		then
+			last_command_color=warn
+		fi
+		say_color $last_command_color >&4 "error: last command exited with \$?=$test_eval_ret_"
 	fi
 	return $test_eval_ret_
 }
@@ -1039,7 +1161,11 @@ test_skip () {
 				"      <skipped message=\"$message\" />"
 		fi
 
-		say_color skip "ok $test_count # skip $1 ($skipped_reason)"
+		test_skipped=$(($test_skipped + 1))
+		say_color_tap skip "ok $test_count # SKIP $1 ($skipped_reason)"
+		shift
+		say_color_tap_comment_lines >&3 3 skip "$*"
+
 		: true
 		;;
 	*)
@@ -1138,13 +1264,17 @@ test_done () {
 		EOF
 	fi
 
+	if test "$test_skipped" != 0
+	then
+		say_color_tap skip "# $test_skipped test(s) skipped"
+	fi
 	if test "$test_fixed" != 0
 	then
-		say_color error "# $test_fixed known breakage(s) vanished; please update test(s)"
+		say_color_tap_comment 1 warn "$test_fixed known breakage(s) vanished; please update test(s)"
 	fi
 	if test "$test_broken" != 0
 	then
-		say_color warn "# still have $test_broken known breakage(s)"
+		say_color_tap_comment 1 pass "still have $test_broken known breakage(s)"
 	fi
 	if test "$test_broken" != 0 || test "$test_fixed" != 0
 	then
@@ -1156,26 +1286,23 @@ test_done () {
 	fi
 	case "$test_failure" in
 	0)
-		if test $test_external_has_tap -eq 0
+		if test $test_remaining -gt 0
 		then
-			if test $test_remaining -gt 0
-			then
-				say_color pass "# passed all $msg"
-			fi
-
-			# Maybe print SKIP message
-			test -z "$skip_all" || skip_all="# SKIP $skip_all"
-			case "$test_count" in
-			0)
-				say "1..$test_count${skip_all:+ $skip_all}"
-				;;
-			*)
-				test -z "$skip_all" ||
-				say_color warn "$skip_all"
-				say "1..$test_count"
-				;;
-			esac
+			say_color_tap_comment 1 pass "passed all $msg"
 		fi
+
+		# Maybe print SKIP message
+		test -z "$skip_all" || skip_all="# SKIP $skip_all"
+		case "$test_count" in
+		0)
+			say_color_tap "info" "1..$test_count${skip_all:+ $skip_all}"
+			;;
+		*)
+			test -z "$skip_all" ||
+			say_color warn "$skip_all"
+			say_color_tap "info" "1..$test_count"
+			;;
+		esac
 
 		if test -z "$debug" && test -n "$remove_trash"
 		then
@@ -1195,11 +1322,9 @@ test_done () {
 		exit 0 ;;
 
 	*)
-		if test $test_external_has_tap -eq 0
-		then
-			say_color error "# failed $test_failure among $msg"
-			say "1..$test_count"
-		fi
+
+		say_color_tap_comment 1 berror "failed $test_failure among $msg"
+		say_color_tap "info" "1..$test_count"
 
 		exit 1 ;;
 
@@ -1348,7 +1473,6 @@ this_test=${0##*/}
 this_test=${this_test%%-*}
 if match_pattern_list "$this_test" $GIT_SKIP_TESTS
 then
-	say_color info >&3 "skipping test $this_test altogether"
 	skip_all="skip all tests in $this_test"
 	test_done
 fi
@@ -1365,13 +1489,21 @@ rm -fr "$TRASH_DIRECTORY" || {
 	exit 1
 }
 
+# Set up verbosity for --verbose-only, we emit the output before the
+# first test with $test_count=0, so --verbose-only=0 will emit the
+# "say_color_tap_comment" below.
+maybe_setup_verbose
+
 remove_trash=t
+trash_message="for '$TEST_NAME' in '[ROOT DIR]/$TRASH_DIRECTORY_BASE'"
 if test -z "$TEST_NO_CREATE_REPO"
 then
-	git init "$TRASH_DIRECTORY" >&3 2>&4 ||
+	git init --quiet "$TRASH_DIRECTORY" >&3 2>&4 &&
+	say_color_tap_comment >&3 4 trace "Created repo $trash_message" ||
 	error "cannot run git init"
 else
-	mkdir -p "$TRASH_DIRECTORY"
+	mkdir -p "$TRASH_DIRECTORY" &&
+	say_color_tap_comment >&3 4 trace "Created dir $trash_message"
 fi
 
 # Use -P to resolve symlinks in our working directory so that the cwd
