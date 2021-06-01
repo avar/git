@@ -28,6 +28,8 @@ int read_tree_at(struct repository *r,
 	init_tree_desc(&desc, tree->buffer, tree->size);
 
 	while (tree_entry(&desc, &entry)) {
+		struct commit *commit;
+
 		if (retval != all_entries_interesting) {
 			retval = tree_entry_interesting(r->index, &entry,
 							base, 0, pathspec);
@@ -38,7 +40,7 @@ int read_tree_at(struct repository *r,
 		}
 
 		switch (fn(&entry.oid, base,
-			   entry.path, entry.mode, context)) {
+			   entry.path, entry.object_type, entry.mode, context)) {
 		case 0:
 			continue;
 		case READ_TREE_RECURSIVE:
@@ -47,11 +49,11 @@ int read_tree_at(struct repository *r,
 			return -1;
 		}
 
-		if (S_ISDIR(entry.mode))
+		switch (entry.object_type) {
+		case OBJ_TREE:
 			oidcpy(&oid, &entry.oid);
-		else if (S_ISGITLINK(entry.mode)) {
-			struct commit *commit;
-
+			break;
+		case OBJ_COMMIT:
 			commit = lookup_commit(r, &entry.oid);
 			if (!commit)
 				die("Commit %s in submodule path %s%s not found",
@@ -64,9 +66,12 @@ int read_tree_at(struct repository *r,
 				    base->buf, entry.path);
 
 			oidcpy(&oid, get_commit_tree_oid(commit));
-		}
-		else
+			break;
+		case OBJ_BLOB:
 			continue;
+		default:
+			BUG("unreachable");
+		}
 
 		len = tree_entry_len(&entry);
 		strbuf_add(base, entry.path, len);
