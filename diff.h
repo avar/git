@@ -8,6 +8,8 @@
 #include "pathspec.h"
 #include "object.h"
 #include "oidset.h"
+#include "xdiff-interface.h"
+#include "grep.h"
 
 /**
  * The diff API is for programs that compare two sets of files (e.g. two trees,
@@ -230,6 +232,10 @@ enum diff_submodule_format {
 	DIFF_SUBMODULE_INLINE_DIFF
 };
 
+typedef int (*pickaxe_fn)(mmfile_t *one, mmfile_t *two,
+			  struct diff_options *o,
+			  struct grep_opt *grep_filter);
+
 /**
  * the set of options the calling program wants to affect the operation of
  * diffcore library with.
@@ -266,6 +272,9 @@ struct diff_options {
 	 */
 	const char *pickaxe;
 	unsigned pickaxe_opts;
+	int pickaxed_compiled;
+	pickaxe_fn pickaxe_fn;
+	struct grep_opt pickaxe_grep_opt;
 
 	/* -I<regex> */
 	regex_t **ignore_regex;
@@ -395,6 +404,8 @@ struct diff_options {
 
 	struct repository *repo;
 	struct option *parseopts;
+
+	struct grep_opt *grep_filter;
 
 	int no_free;
 };
@@ -547,20 +558,28 @@ int git_config_rename(const char *var, const char *value);
 
 #define DIFF_PICKAXE_ALL	1
 #define DIFF_PICKAXE_REGEX	2
+#define DIFF_PICKAXE_PATCH	4
 
-#define DIFF_PICKAXE_KIND_S	4 /* traditional plumbing counter */
-#define DIFF_PICKAXE_KIND_G	8 /* grep in the patch */
-#define DIFF_PICKAXE_KIND_OBJFIND	16 /* specific object IDs */
+#define DIFF_PICKAXE_KIND_S	8 /* traditional plumbing counter */
+#define DIFF_PICKAXE_KIND_G	16 /* grep in the patch */
+#define DIFF_PICKAXE_KIND_OBJFIND	32 /* specific object IDs */
 
+#define DIFF_PICKAXE_KIND_GS_MASK (DIFF_PICKAXE_KIND_S | \
+				   DIFF_PICKAXE_KIND_G)
 #define DIFF_PICKAXE_KINDS_MASK (DIFF_PICKAXE_KIND_S | \
 				 DIFF_PICKAXE_KIND_G | \
 				 DIFF_PICKAXE_KIND_OBJFIND)
 #define DIFF_PICKAXE_KINDS_G_REGEX_MASK (DIFF_PICKAXE_KIND_G | \
 					 DIFF_PICKAXE_REGEX)
+#define DIFF_PICKAXE_KINDS_S_PATCH_MASK (DIFF_PICKAXE_KIND_S | \
+					 DIFF_PICKAXE_PATCH)
+#define DIFF_PICKAXE_KINDS_ALL_OBJFIND_MASK (DIFF_PICKAXE_ALL | \
+					     DIFF_PICKAXE_KIND_OBJFIND)
 #define DIFF_PICKAXE_KINDS_ALL_OBJFIND_MASK (DIFF_PICKAXE_ALL | \
 					     DIFF_PICKAXE_KIND_OBJFIND)
 
-#define DIFF_PICKAXE_IGNORE_CASE	32
+#define DIFF_PICKAXE_IGNORE_CASE	64
+
 
 void diffcore_std(struct diff_options *);
 void diffcore_fix_diff_index(void);
