@@ -7,38 +7,9 @@
 #include "pkt-line.h"
 #include "config.h"
 
-static int config_read;
-static int advertise_unborn;
-static int allow_unborn;
-
-static void ensure_config_read(void)
-{
-	const char *str = NULL;
-
-	if (config_read)
-		return;
-
-	if (repo_config_get_string_tmp(the_repository, "lsrefs.unborn", &str)) {
-		/*
-		 * If there is no such config, advertise and allow it by
-		 * default.
-		 */
-		advertise_unborn = 1;
-		allow_unborn = 1;
-	} else {
-		if (!strcmp(str, "advertise")) {
-			advertise_unborn = 1;
-			allow_unborn = 1;
-		} else if (!strcmp(str, "allow")) {
-			allow_unborn = 1;
-		} else if (!strcmp(str, "ignore")) {
-			/* do nothing */
-		} else {
-			die(_("invalid value '%s' for lsrefs.unborn"), str);
-		}
-	}
-	config_read = 1;
-}
+/* "unborn" is on by default if there's no lsrefs.unborn config */
+static int advertise_unborn = 1;
+static int allow_unborn = 1;
 
 /*
  * Check if one of the prefixes is a prefix of the ref.
@@ -128,8 +99,22 @@ static void send_possibly_unborn_head(struct ls_refs_data *data)
 	strbuf_release(&namespaced);
 }
 
-static int ls_refs_config(const char *var, const char *value, void *data)
+int ls_refs_configure(const char *var, const char *value, void *data)
 {
+	if (!strcmp(var, "lsrefs.unborn")) {
+		if (!strcmp(value, "advertise")) {
+			/* Allowed and advertised by default */
+		} else if (!strcmp(value, "allow")) {
+			advertise_unborn = 0;
+			allow_unborn = 1;
+		} else if (!strcmp(value, "ignore")) {
+			advertise_unborn = 0;
+			allow_unborn = 0;
+		} else {
+			die(_("invalid value '%s' for lsrefs.unborn"), value);
+		}
+	}
+
 	/*
 	 * We only serve fetches over v2 for now, so respect only "uploadpack"
 	 * config. This may need to eventually be expanded to "receive", but we
@@ -145,9 +130,6 @@ int ls_refs(struct repository *r, struct strvec *keys,
 
 	memset(&data, 0, sizeof(data));
 	strvec_init(&data.prefixes);
-
-	ensure_config_read();
-	git_config(ls_refs_config, NULL);
 
 	while (packet_reader_read(request) == PACKET_READ_NORMAL) {
 		const char *arg = request->line;
@@ -179,7 +161,6 @@ int ls_refs(struct repository *r, struct strvec *keys,
 int ls_refs_advertise(struct repository *r, struct strbuf *value)
 {
 	if (value) {
-		ensure_config_read();
 		if (advertise_unborn)
 			strbuf_addstr(value, "unborn");
 	}
