@@ -292,7 +292,8 @@ static void check_unreachable_object(struct object *obj)
 		printf_ln(_("unreachable %s %s"),
 			  printable_type(&obj->oid, obj->type),
 			  describe_object(&obj->oid));
-		return;
+		if (!show_dangling && !write_lost_and_found)
+			return;
 	}
 
 	/*
