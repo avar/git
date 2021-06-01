@@ -1936,16 +1936,23 @@ static void check_ce_order(struct index_state *istate)
 static void tweak_untracked_cache(struct index_state *istate)
 {
 	struct repository *r = the_repository;
+	enum untracked_cache_setting setting;
 
 	prepare_repo_settings(r);
+	setting = r->settings.core_untracked_cache;
 
-	if (r->settings.core_untracked_cache  == UNTRACKED_CACHE_REMOVE) {
+	switch (setting) {
+	case UNTRACKED_CACHE_REMOVE:
 		remove_untracked_cache(istate);
-		return;
-	}
-
-	if (r->settings.core_untracked_cache == UNTRACKED_CACHE_WRITE)
+		break;
+	case UNTRACKED_CACHE_WRITE:
 		add_untracked_cache(istate);
+		break;
+	case UNTRACKED_CACHE_UNSET:
+		/* This includes core.untrackedCache=keep */
+		break;
+	}
+	return;
 }
 
 static void tweak_split_index(struct index_state *istate)
