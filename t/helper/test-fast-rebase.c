@@ -51,7 +51,7 @@ static char *get_author(const char *message)
 	return NULL;
 }
 
-static struct commit *create_commit(struct tree *tree,
+static struct commit *make_a_commit(struct tree *tree,
 				    struct commit *based_on,
 				    struct commit *parent)
 {
@@ -177,7 +177,7 @@ int cmd__fast_rebase(int argc, const char **argv)
 		if (!result.clean)
 			die("Aborting: Hit a conflict and restarting is not implemented.");
 		last_picked_commit = commit;
-		last_commit = create_commit(result.tree, commit, last_commit);
+		last_commit = make_a_commit(result.tree, commit, last_commit);
 	}
 	fprintf(stderr, "\nDone.\n");
 	/* TODO: There should be some kind of rev_info_free(&revs) call... */
