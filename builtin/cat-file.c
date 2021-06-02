@@ -154,7 +154,9 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 		break;
 
 	case 0:
-		exp_type_id = type_from_string(exp_type);
+		exp_type_id = type_from_string_gently(exp_type, strlen(exp_type));
+		if (exp_type_id < 0)
+			die(_("invalid object type \"%s\""), exp_type);
 		if (exp_type_id == OBJ_BLOB) {
 			struct object_id blob_oid;
 			if (oid_object_info(the_repository, &oid, NULL) == OBJ_TAG) {
