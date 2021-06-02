@@ -1,3 +1,4 @@
+t4018 header: RIGHT(int arg)
 const char *
 RIGHT(int arg)
 {
