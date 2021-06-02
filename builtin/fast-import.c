@@ -1287,18 +1287,22 @@ static int tecmp0 (const void *_a, const void *_b)
 {
 	struct tree_entry *a = *((struct tree_entry**)_a);
 	struct tree_entry *b = *((struct tree_entry**)_b);
+	int istree_a = S_ISDIR(a->versions[0].mode);
+	int istree_b = S_ISDIR(b->versions[0].mode);
 	return base_name_compare(
-		a->name->str_dat, a->name->str_len, a->versions[0].mode,
-		b->name->str_dat, b->name->str_len, b->versions[0].mode);
+		a->name->str_dat, a->name->str_len, istree_a,
+		b->name->str_dat, b->name->str_len, istree_b);
 }
 
 static int tecmp1 (const void *_a, const void *_b)
 {
 	struct tree_entry *a = *((struct tree_entry**)_a);
 	struct tree_entry *b = *((struct tree_entry**)_b);
+	int istree_a = S_ISDIR(a->versions[1].mode);
+	int istree_b = S_ISDIR(b->versions[1].mode);
 	return base_name_compare(
-		a->name->str_dat, a->name->str_len, a->versions[1].mode,
-		b->name->str_dat, b->name->str_len, b->versions[1].mode);
+		a->name->str_dat, a->name->str_len, istree_a,
+		b->name->str_dat, b->name->str_len, istree_b);
 }
 
 static void mktree(struct tree_content *t, int v, struct strbuf *b)
