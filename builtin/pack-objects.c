@@ -3748,7 +3748,6 @@ static void mark_bitmap_preferred_tips(void)
 static enum rev_info_stdin_line get_object_list_handle_stdin_line(
 	struct rev_info *revs, struct strbuf *line_sb, void *stdin_line_priv)
 {
-	int *flags = stdin_line_priv;
 	char *line = line_sb->buf;
 	size_t len = line_sb->len;
 
@@ -3756,7 +3755,7 @@ static enum rev_info_stdin_line get_object_list_handle_stdin_line(
 		return REV_INFO_STDIN_LINE_BREAK;
 	if (*line == '-') {
 		if (!strcmp(line, "--not")) {
-			*flags ^= UNINTERESTING;
+			revs->revarg_flags ^= UNINTERESTING;
 			write_bitmap_index = 0;
 			return REV_INFO_STDIN_LINE_CONTINUE;
 		}
@@ -3770,9 +3769,7 @@ static enum rev_info_stdin_line get_object_list_handle_stdin_line(
 		}
 		die(_("not a rev '%s'"), line);
 	}
-	if (handle_revision_arg(line, revs, *flags, REVARG_CANNOT_BE_FILENAME))
-			die(_("bad revision '%s'"), line);
-	return REV_INFO_STDIN_LINE_CONTINUE;
+	return REV_INFO_STDIN_LINE_PROCESS;
 }
 
 static void get_object_list(int ac, const char **av)
@@ -3781,7 +3778,6 @@ static void get_object_list(int ac, const char **av)
 	struct setup_revision_opt s_r_opt = {
 		.allow_exclude_promisor_objects = 1,
 	};
-	int flags = 0;
 
 	repo_init_revisions(the_repository, &revs, NULL);
 	save_commit_buffer = 0;
@@ -3791,7 +3787,6 @@ static void get_object_list(int ac, const char **av)
 
 	revs.stdin_handling = REV_INFO_STDIN_ALWAYS_READ;
 	revs.handle_stdin_line = get_object_list_handle_stdin_line;
-	revs.stdin_line_priv = &flags;
 	setup_revisions(ac, av, &revs, &s_r_opt);
 
 	if (use_bitmap_index && !get_object_list_from_bitmap(&revs))
