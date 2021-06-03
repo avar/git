@@ -89,7 +89,17 @@ struct topo_walk_info;
 enum rev_info_stdin {
 	REV_INFO_STDIN_CONSUME_ON_OPTION = 0,
 	REV_INFO_STDIN_IGNORE,
+	REV_INFO_STDIN_ALWAYS_READ,
 };
+
+enum rev_info_stdin_line {
+	REV_INFO_STDIN_LINE_PROCESS,
+	REV_INFO_STDIN_LINE_BREAK,
+	REV_INFO_STDIN_LINE_CONTINUE,
+};
+
+typedef enum rev_info_stdin_line (*rev_info_stdin_line_func)(
+	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv);
 
 struct rev_info {
 	/* Starting list */
@@ -126,6 +136,9 @@ struct rev_info {
 	 *
 	 * Can be set to REV_INFO_STDIN_IGNORE to ignore any provided
 	 * --stdin option.
+	 *
+	 * Set it to REV_INFO_STDIN_ALWAYS_READ if there's always data
+	 * on stdin to be read, even if no --stdin option is provided.
 	 */
 	enum rev_info_stdin stdin_handling;
 
@@ -135,6 +148,24 @@ struct rev_info {
 	 * option?
 	 */
 	int consumed_stdin_per_option;
+
+	/*
+	 * When reading from stdin (see "stdin_handling" above) define
+	 * a handle_stdin_line function to consume the lines.
+	 *
+	 * - Return 0 to continue revision.c's normal processing of the
+	 *   line (after possibly munging the provided strbuf).
+	 *
+	 * - Return 1 to indicate that the line is fully processed,
+	 *   moving onto the next line (if any)
+	 *
+	 * - Return 2 to process no further lines.
+	 *
+	 * Use the "stdin_line_priv" to optionally pass your own data
+	 * around.
+	 */
+	rev_info_stdin_line_func handle_stdin_line;
+	void *stdin_line_priv;
 
 	/* topo-sort */
 	enum rev_sort_order sort_order;

@@ -2119,6 +2119,25 @@ static void read_revisions_from_stdin(struct rev_info *revs,
 		int len = sb.len;
 		if (!len)
 			break;
+
+		if (revs->handle_stdin_line) {
+			int do_break = 0;
+			enum rev_info_stdin_line ret = revs->handle_stdin_line(
+				revs, &sb, revs->stdin_line_priv);
+
+			switch (ret) {
+			case REV_INFO_STDIN_LINE_PROCESS:
+				break;
+			case REV_INFO_STDIN_LINE_BREAK:
+				do_break = 1;
+				break;
+			case REV_INFO_STDIN_LINE_CONTINUE:
+				continue;
+			}
+			if (do_break)
+				break;
+		}
+
 		if (sb.buf[0] == '-') {
 			if (len == 2 && sb.buf[1] == '-') {
 				seen_dashdash = 1;
@@ -2786,6 +2805,14 @@ int setup_revisions(int argc, const char **argv, struct rev_info *revs, struct s
 			break;
 		}
 	}
+
+	/*
+	 * We've got always_read_from_stdin but no --stdin (or
+	 * "consumed_stdin_per_option" would be set).
+	 */
+	if (revs->stdin_handling == REV_INFO_STDIN_ALWAYS_READ &&
+	    !revs->consumed_stdin_per_option)
+		read_revisions_from_stdin(revs, &prune_data);
 
 	if (prune_data.nr) {
 		/*
