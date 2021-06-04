@@ -62,6 +62,7 @@ static const char * const builtin_help_usage[] = {
 	N_("git help [-a|--all] [--[no-]verbose]]\n"
 	   "       [[-i|--info] [-m|--man] [-w|--web]] [<command>]"),
 	N_("git help [-g|--guides]"),
+	N_("git help [-c|--config]"),
 	NULL
 };
 
@@ -551,18 +552,26 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	int nongit;
 	enum help_format parsed_help_format;
 	int standalone = 0;
+	int need_config = 0;
 
 	argc = parse_options(argc, argv, prefix, builtin_help_options,
 			builtin_help_usage, 0);
 	parsed_help_format = help_format;
+
+	/* Incompatible options */
+	if (show_all + !!show_config + show_guides > 1)
+		usage_with_options(builtin_help_usage, builtin_help_options);
 
 	/* Options that take no further arguments */
 	standalone = show_config || show_guides;
 	if (standalone && argc)
 		usage_with_options(builtin_help_usage, builtin_help_options);
 
-	if (show_all) {
+	need_config = show_all || show_config;
+	if (need_config)
 		git_config(git_help_config, NULL);
+
+	if (show_all) {
 		if (verbose) {
 			setup_pager();
 			list_all_cmds_help();
@@ -571,6 +580,14 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 		printf(_("usage: %s%s"), _(git_usage_string), "\n\n");
 		load_command_list("git-", &main_cmds, &other_cmds);
 		list_commands(colopts, &main_cmds, &other_cmds);
+	}
+
+	if (show_guides)
+		list_guides_help();
+
+	if (show_all || show_guides) {
+		printf("%s\n", _(git_more_info_string));
+		return 0;
 	}
 
 	if (show_config) {
@@ -582,14 +599,6 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 		if (for_human)
 			printf("\n%s\n", _("'git help config' for more information"));
 
-		return 0;
-	}
-
-	if (show_guides)
-		list_guides_help();
-
-	if (show_all || standalone) {
-		printf("%s\n", _(git_more_info_string));
 		return 0;
 	}
 
