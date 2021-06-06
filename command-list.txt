@@ -216,6 +216,7 @@ gitmailmap                              userformats
 gitmodules                              userformats
 gitformats                              gitformats
 gitformat-bundle                        gitformats
+gitformat-commit-graph                  gitformats
 gitformat-pack                          gitformats
 gitformat-pack-protocol                 gitformats
 gitformat-protocol-http                 gitformats
