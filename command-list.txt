@@ -217,6 +217,7 @@ gitmodules                              userformats
 gitformats                              gitformats
 gitformat-bundle                        gitformats
 gitformat-commit-graph                  gitformats
+gitformat-index                         gitformats
 gitformat-pack                          gitformats
 gitformat-pack-protocol                 gitformats
 gitformat-protocol-http                 gitformats
