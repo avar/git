@@ -8,7 +8,7 @@ gitformat-protocol-v2 - Git Wire Protocol, Version 2
 
 SYNOPSIS
 --------
-
+[verse]
 <over-the-wire-protocol>
 
 DESCRIPTION
@@ -55,7 +55,7 @@ Initial Client Request
 In general a client can request to speak protocol v2 by sending
 `version=2` through the respective side-channel for the transport being
 used which inevitably sets `GIT_PROTOCOL`.  More information can be
-found in linkgit:gitformat-pack-protocol[5] and `http-protocol.txt`.  In all cases the
+found in linkgit:gitformat-pack-protocol[5] and linkgit:gitformat-protocol-http[5].  In all cases the
 response from the server is the capability advertisement.
 
 Git Transport
@@ -76,7 +76,7 @@ HTTP Transport
 ~~~~~~~~~~~~~~
 
 When using the http:// or https:// transport a client makes a "smart"
-info/refs request as described in `http-protocol.txt` and requests that
+info/refs request as described in linkgit:gitformat-protocol-http[5] and requests that
 v2 be used by supplying "version=2" in the `Git-Protocol` header.
 
    C: GET $GIT_URL/info/refs?service=git-upload-pack HTTP/1.0
