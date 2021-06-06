@@ -221,6 +221,7 @@ gitformat-index                         gitformats
 gitformat-pack                          gitformats
 gitformat-pack-protocol                 gitformats
 gitformat-protocol-http                 gitformats
+gitformat-signature                     gitformats
 gitnamespaces                           guide
 gitremote-helpers                       guide
 gitrepository-layout                    guide
