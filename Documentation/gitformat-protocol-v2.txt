@@ -39,7 +39,7 @@ Packet-Line Framing
 -------------------
 
 All communication is done using packet-line framing, just as in v1.  See
-`Documentation/technical/pack-protocol.txt` and
+linkgit:gitformat-pack-protocol[5] and
 `Documentation/technical/protocol-common.txt` for more information.
 
 In protocol v2 these special packets will have the following semantics:
@@ -55,7 +55,7 @@ Initial Client Request
 In general a client can request to speak protocol v2 by sending
 `version=2` through the respective side-channel for the transport being
 used which inevitably sets `GIT_PROTOCOL`.  More information can be
-found in `pack-protocol.txt` and `http-protocol.txt`.  In all cases the
+found in linkgit:gitformat-pack-protocol[5] and `http-protocol.txt`.  In all cases the
 response from the server is the capability advertisement.
 
 Git Transport

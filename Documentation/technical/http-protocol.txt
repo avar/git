@@ -222,7 +222,7 @@ smart server reply:
    S: 0000
 
 The client may send Extra Parameters (see
-Documentation/technical/pack-protocol.txt) as a colon-separated string
+linkgit:gitformat-pack-protocol[5]) as a colon-separated string
 in the Git-Protocol HTTP header.
 
 Dumb Server Response
