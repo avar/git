@@ -1,8 +1,21 @@
-Git Protocol Capabilities
-=========================
+gitformat-protocol-capabilities(5)
+==================================
+
+NAME
+----
+gitformat-protocol-capabilities - Protocol v0 and v1 capabilities
+
+
+SYNOPSIS
+--------
+[verse]
+<over-the-wire-protocol>
+
+DESCRIPTION
+-----------
 
 NOTE: this document describes capabilities for versions 0 and 1 of the pack
-protocol. For version 2, please refer to the link:protocol-v2.html[protocol-v2]
+protocol. For version 2, please refer to the linkgit:gitformat-protocol-v2[5]
 doc.
 
 Servers SHOULD support all capabilities defined in this document.
@@ -378,3 +391,7 @@ packet-line, and must not contain non-printable or whitespace characters. The
 current implementation uses trace2 session IDs (see
 link:api-trace2.html[api-trace2] for details), but this may change and users of
 the session ID should not rely on this fact.
+
+GIT
+---
+Part of the linkgit:git[1] suite
