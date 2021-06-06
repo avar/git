@@ -216,6 +216,7 @@ gitmailmap                              userformats
 gitmodules                              userformats
 gitformats                              gitformats
 gitformat-bundle                        gitformats
+gitformat-pack                          gitformats
 gitnamespaces                           guide
 gitremote-helpers                       guide
 gitrepository-layout                    guide
