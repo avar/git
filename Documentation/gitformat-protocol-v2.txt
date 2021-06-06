@@ -1,5 +1,18 @@
-Git Wire Protocol, Version 2
-============================
+gitformat-protocol-v2(5)
+========================
+
+NAME
+----
+gitformat-protocol-v2 - Git Wire Protocol, Version 2
+
+
+SYNOPSIS
+--------
+
+<over-the-wire-protocol>
+
+DESCRIPTION
+-----------
 
 This document presents a specification for a version 2 of Git's wire
 protocol.  Protocol v2 will improve upon v1 in the following ways:
@@ -553,3 +566,7 @@ and associated requested information, each separated by a single space.
 	attr = "size"
 
 	obj-info = obj-id SP obj-size
+
+GIT
+---
+Part of the linkgit:git[1] suite
