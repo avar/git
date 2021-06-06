@@ -90,7 +90,7 @@ interleaved with S-R-Q.
 multi_ack_detailed
 ------------------
 This is an extension of multi_ack that permits client to better
-understand the server's in-memory state. See pack-protocol.txt,
+understand the server's in-memory state. See linkgit:gitformat-pack-protocol[5],
 section "Packfile Negotiation" for more information.
 
 no-done
@@ -294,7 +294,7 @@ a packfile upload and reference update.  If the pushing client requests
 this capability, after unpacking and updating references the server
 will respond with whether the packfile unpacked successfully and if
 each reference was updated successfully.  If any of those were not
-successful, it will send back an error message.  See pack-protocol.txt
+successful, it will send back an error message.  See linkgit:gitformat-pack-protocol[5]
 for example messages.
 
 report-status-v2
@@ -305,7 +305,7 @@ adding new "option" directives in order to support reference rewritten by
 the "proc-receive" hook.  The "proc-receive" hook may handle a command
 for a pseudo-reference which may create or update a reference with
 different name, new-oid, and old-oid.  While the capability
-'report-status' cannot report for such case.  See pack-protocol.txt
+'report-status' cannot report for such case.  See linkgit:gitformat-pack-protocol[5]
 for details.
 
 delete-refs
