@@ -106,7 +106,7 @@ cleanup:
 }
 
 static int cmd_bundle_verify(int argc, const char **argv, const char *prefix) {
-	struct bundle_header header;
+	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int bundle_fd = -1;
 	int quiet = 0;
 	int ret;
@@ -121,7 +121,6 @@ static int cmd_bundle_verify(int argc, const char **argv, const char *prefix) {
 			builtin_bundle_verify_usage, options, &bundle_file);
 	/* bundle internals use argv[1] as further parameters */
 
-	memset(&header, 0, sizeof(header));
 	if ((bundle_fd = read_bundle_header(bundle_file, &header)) < 0) {
 		ret = 1;
 		goto cleanup;
@@ -136,11 +135,12 @@ static int cmd_bundle_verify(int argc, const char **argv, const char *prefix) {
 	ret = 0;
 cleanup:
 	free(bundle_file);
+	bundle_header_release(&header);
 	return ret;
 }
 
 static int cmd_bundle_list_heads(int argc, const char **argv, const char *prefix) {
-	struct bundle_header header;
+	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int bundle_fd = -1;
 	int ret;
 	struct option options[] = {
@@ -152,7 +152,6 @@ static int cmd_bundle_list_heads(int argc, const char **argv, const char *prefix
 			builtin_bundle_list_heads_usage, options, &bundle_file);
 	/* bundle internals use argv[1] as further parameters */
 
-	memset(&header, 0, sizeof(header));
 	if ((bundle_fd = read_bundle_header(bundle_file, &header)) < 0) {
 		ret = 1;
 		goto cleanup;
@@ -161,11 +160,12 @@ static int cmd_bundle_list_heads(int argc, const char **argv, const char *prefix
 	ret = !!list_bundle_refs(&header, argc, argv);
 cleanup:
 	free(bundle_file);
+	bundle_header_release(&header);
 	return ret;
 }
 
 static int cmd_bundle_unbundle(int argc, const char **argv, const char *prefix) {
-	struct bundle_header header;
+	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int bundle_fd = -1;
 	int die_no_repo = 0;
 	int ret;
@@ -178,7 +178,6 @@ static int cmd_bundle_unbundle(int argc, const char **argv, const char *prefix) 
 			builtin_bundle_unbundle_usage, options, &bundle_file);
 	/* bundle internals use argv[1] as further parameters */
 
-	memset(&header, 0, sizeof(header));
 	if ((bundle_fd = read_bundle_header(bundle_file, &header)) < 0) {
 		ret = 1;
 		goto cleanup;
@@ -189,6 +188,7 @@ static int cmd_bundle_unbundle(int argc, const char **argv, const char *prefix) 
 	}
 	ret = !!unbundle(the_repository, &header, bundle_fd, 0) ||
 		list_bundle_refs(&header, argc, argv);
+	bundle_header_release(&header);
 cleanup:
 	if (die_no_repo)
 		die(_("Need a repository to unbundle."));
