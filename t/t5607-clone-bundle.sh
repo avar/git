@@ -29,11 +29,21 @@ test_expect_success '"verify" needs a worktree' '
 
 test_expect_success 'annotated tags can be excluded by rev-list options' '
 	git bundle create bundle --all --since=7.Apr.2005.15:14:00.-0700 &&
-	git ls-remote bundle > output &&
-	grep tag output &&
+	cat >expect <<-EOF &&
+	$(git rev-parse HEAD)	HEAD
+	$(git rev-parse tag)	refs/tags/tag
+	$(git rev-parse main)	refs/heads/main
+	EOF
+	git ls-remote bundle >actual &&
+	test_cmp expect actual &&
+
 	git bundle create bundle --all --since=7.Apr.2005.15:16:00.-0700 &&
-	git ls-remote bundle > output &&
-	! grep tag output
+	cat >expect <<-EOF &&
+	$(git rev-parse HEAD)	HEAD
+	$(git rev-parse main)	refs/heads/main
+	EOF
+	git ls-remote bundle >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'die if bundle file cannot be created' '
@@ -43,14 +53,20 @@ test_expect_success 'die if bundle file cannot be created' '
 
 test_expect_success 'bundle --stdin' '
 	echo main | git bundle create stdin-bundle.bdl --stdin &&
-	git ls-remote stdin-bundle.bdl >output &&
-	grep main output
+	cat >expect <<-EOF &&
+	$(git rev-parse main)	refs/heads/main
+	EOF
+	git ls-remote stdin-bundle.bdl >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'bundle --stdin <rev-list options>' '
 	echo main | git bundle create hybrid-bundle.bdl --stdin tag &&
-	git ls-remote hybrid-bundle.bdl >output &&
-	grep main output
+	cat >expect <<-EOF &&
+	$(git rev-parse main)	refs/heads/main
+	EOF
+	git ls-remote stdin-bundle.bdl >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'empty bundle file is rejected' '
@@ -67,8 +83,13 @@ test_expect_success 'ridiculously long subject in boundary' '
 	printf "%01200d\n" 0 | git commit -F - &&
 	test_commit fifth &&
 	git bundle create long-subject-bundle.bdl HEAD^..HEAD &&
-	git bundle list-heads long-subject-bundle.bdl >heads &&
-	test -s heads &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse main) HEAD
+	EOF
+	git bundle list-heads long-subject-bundle.bdl >actual &&
+	test_cmp expect actual &&
+
 	git fetch long-subject-bundle.bdl &&
 	sed -n "/^-/{p;q;}" long-subject-bundle.bdl >boundary &&
 	grep "^-$OID_REGEX " boundary
