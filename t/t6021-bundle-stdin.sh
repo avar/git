@@ -44,14 +44,14 @@ test_expect_success 'bundle --stdin mixed rev-list and tabular input' '
 
 test_expect_success 'bundle --stdin rev-range tabular input' '
 	cat >in <<-EOF &&
-	HEAD~3..HEAD~2	refs/tags/update-for-second-push
+	HEAD~1..$(git symbolic-ref --short HEAD)	refs/tags/latest-update
 	EOF
-	git bundle create first-update.bdl --stdin <in &&
+	git bundle create latest-update.bdl --stdin <in &&
 
 	cat >expect <<-EOF &&
-	$(git rev-parse :/second)	refs/tags/update-for-second-push
+	$(git rev-parse HEAD)	refs/tags/latest-update
 	EOF
-	git ls-remote first-update.bdl >actual &&
+	git ls-remote latest-update.bdl >actual &&
 	test_cmp expect actual
 '
 
