@@ -334,6 +334,81 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	return 0;
 }
 
+static enum rev_info_stdin_line write_bundle_handle_stdin_line(
+	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv)
+{
+	struct string_list *refnames = stdin_line_priv;
+	const char delim = '\t';
+	struct strbuf **s;
+	struct strbuf *refname;
+	struct strbuf *revname;
+	struct strbuf **fields = strbuf_split_buf(line->buf, line->len, delim, -1);
+	int i;
+
+	/* Parse "<revision>\t<refname>" input */
+	for (s = fields, i = 0; *s; s++, i++) {
+		struct strbuf *field = *s;
+		enum object_type type;
+
+		/* <revision> */
+		if (!i) {
+			revname = field;
+			continue;
+		}
+
+		/* The <revision> was followed by a "\t" */
+		strbuf_chomp(revname, delim);
+
+		/*
+		 * We know we'll only get to <refname> even if there's
+		 * unknown fields, since check_refname_format() will
+		 * refuse a refname with a trailing tab.
+		 *
+		 * We could supply a max of "2" to strbuf_split_buf()
+		 * above (instead of -1); but this makes for better
+		 * error messages and ease of migration to accepting
+		 * more fields in the future.
+		 */
+		refname = field;
+		if (check_refname_format(refname->buf, REFNAME_ALLOW_ONELEVEL))
+			die(_("'%s' is not a valid ref name"), refname->buf);
+		string_list_append(refnames, refname->buf);
+
+		/*
+		 * Strip " commit", " tree", " blob" and " tag" from
+		 * as a special-case for consuming the default
+		 * for-each-ref format. We're lazy and don't validate
+		 * the stated type.
+		 */
+		for (type = OBJ_COMMIT; type <= OBJ_TAG; type++) {
+			const char *name = type_name(type);
+			if (strbuf_strip_suffix(revname, name)) {
+				if (revname->len > 0)
+					revname->buf[--revname->len] = '\0';
+				break;
+			}
+		}
+
+		/*
+		 * Pretend as if only the <revision> was on this line
+		 * in revision.c's read_revisions_from_stdin()
+		 */
+		strbuf_swap(line, revname);
+		strbuf_release(refname);
+		strbuf_release(revname);
+		return REV_INFO_STDIN_LINE_PROCESS;
+	}
+
+	/*
+	 * With non-tabular input we append an empty line for the
+	 * convenience of having a 1=1 mapping between the "refnames"
+	 * string-list and "revs->pending" in write_bundle_refs()
+	 * below.
+	 */
+	string_list_append(refnames, "");
+	return REV_INFO_STDIN_LINE_PROCESS;
+}
+
 /*
  * Write out bundle refs based on the tips already
  * parsed into revs.pending. As a side effect, may
@@ -347,8 +422,11 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 {
 	int i;
 	int ref_count = 0;
+	struct string_list *refnames = revs->stdin_line_priv;
 
 	for (i = 0; i < revs->pending.nr; i++) {
+		char *refname = refnames->nr > i ? refnames->items[i].string : NULL;
+		int have_refname = refname ? !!strlen(refname) : 0;
 		struct object_array_entry *e = revs->pending.objects + i;
 		struct object_id oid;
 		char *ref;
@@ -357,11 +435,15 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 
 		if (e->item->flags & UNINTERESTING)
 			continue;
-		if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
-			goto skip_write_ref;
-		if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
-			flag = 0;
-		display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
+		if (have_refname) {
+			display_ref = refname;
+		} else {
+			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
+				goto skip_write_ref;
+			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
+				flag = 0;
+			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
+		}
 
 		if (e->item->type == OBJ_TAG &&
 				!is_tag_in_date_range(e->item, revs)) {
@@ -389,7 +471,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		 * commit that is referenced by the tag, and not the tag
 		 * itself.
 		 */
-		if (!oideq(&oid, &e->item->oid)) {
+		if (!have_refname && !oideq(&oid, &e->item->oid)) {
 			/*
 			 * Is this the positive end of a range expressed
 			 * in terms of a tag (e.g. v2.0 from the range
@@ -420,7 +502,8 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		write_or_die(bundle_fd, display_ref, strlen(display_ref));
 		write_or_die(bundle_fd, "\n", 1);
  skip_write_ref:
-		free(ref);
+		if (!have_refname)
+			free(ref);
 	}
 
 	/* end header */
@@ -471,6 +554,7 @@ int create_bundle(struct repository *r, const char *path,
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
 	int i;
+	struct string_list refnames = STRING_LIST_INIT_DUP;
 
 	bundle_to_stdout = !strcmp(path, "-");
 	if (bundle_to_stdout)
@@ -499,6 +583,8 @@ int create_bundle(struct repository *r, const char *path,
 	/* init revs to list objects for pack-objects later */
 	save_commit_buffer = 0;
 	repo_init_revisions(r, &revs, NULL);
+	revs.stdin_line_priv = &refnames;
+	revs.handle_stdin_line = write_bundle_handle_stdin_line;
 
 	argc = setup_revisions(argc, argv, &revs, NULL);
 
@@ -531,6 +617,7 @@ int create_bundle(struct repository *r, const char *path,
 
 	/* write bundle refs */
 	ref_count = write_bundle_refs(bundle_fd, &revs_copy);
+	string_list_clear(&refnames, 0);
 	if (!ref_count)
 		die(_("Refusing to create empty bundle."));
 	else if (ref_count < 0)
