@@ -345,6 +345,8 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	struct strbuf **fields = strbuf_split_buf(line->buf, line->len, delim, -1);
 	int i;
 
+	fprintf(stderr, "parsing line <%s>\n", line->buf);
+
 	/* Parse "<revision>\t<refname>" input */
 	for (s = fields, i = 0; *s; s++, i++) {
 		struct strbuf *field = *s;
@@ -409,6 +411,14 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	return REV_INFO_STDIN_LINE_PROCESS;
 }
 
+static void write_bundle_after_stdin_line(struct rev_info *revs,
+					  struct strbuf *line,
+					  void *stdin_line_priv)
+{
+	fprintf(stderr, "after line <%s>\n", line->buf);
+}
+
+
 /*
  * Write out bundle refs based on the tips already
  * parsed into revs.pending. As a side effect, may
@@ -446,7 +456,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 			struct object_array_entry *last_e = revs->pending.objects + last_i;
 
 			if (have_last_refname && last_e->item->flags & BOTTOM) {
-				//fprintf(stderr, "have no name, but last is bottom so using its <%s>\n", last_refname);
+				fprintf(stderr, "have no name, but last is bottom so using its <%s>\n", last_refname);
 
 				have_refname = 1;
 				refname = last_refname;
@@ -454,7 +464,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		}
 			
 
-		//fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, have_refname ? refname : "N/A");
+		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, have_refname ? refname : "N/A");
 		if (e->item->flags & UNINTERESTING) {
 			fprintf(stderr, "...is uninteresting\n");
 			continue;
@@ -610,6 +620,7 @@ int create_bundle(struct repository *r, const char *path,
 	repo_init_revisions(r, &revs, NULL);
 	revs.stdin_line_priv = &refnames;
 	revs.handle_stdin_line = write_bundle_handle_stdin_line;
+	revs.after_stdin_line = write_bundle_after_stdin_line;
 
 	argc = setup_revisions(argc, argv, &revs, NULL);
 

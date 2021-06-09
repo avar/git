@@ -2091,7 +2091,12 @@ static int handle_revision_arg_1(const char *arg_, struct rev_info *revs, int fl
 
 static int handle_revision_arg(const char *arg, struct rev_info *revs, int flags, unsigned revarg_opt)
 {
-	int ret = handle_revision_arg_1(arg, revs, flags, revarg_opt);
+	int ret;
+
+	fprintf(stderr, "handling revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
+	ret = handle_revision_arg_1(arg, revs, flags, revarg_opt);
+	fprintf(stderr, "handled revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
+	
 	if (!ret)
 		revs->rev_input_given = 1;
 	return ret;
@@ -2148,6 +2153,10 @@ static void read_revisions_from_stdin(struct rev_info *revs,
 		if (handle_revision_arg(sb.buf, revs, revs->revarg_flags,
 					REVARG_CANNOT_BE_FILENAME))
 			die("bad revision '%s'", sb.buf);
+		if (revs->after_stdin_line)
+			revs->after_stdin_line(revs, &sb,
+					       revs->stdin_line_priv);
+
 	}
 	if (seen_dashdash)
 		read_pathspec_from_stdin(&sb, prune);
