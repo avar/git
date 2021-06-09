@@ -419,6 +419,7 @@ static void write_bundle_after_stdin_line(struct rev_info *revs,
 	struct strbuf *seen_refname = line_cb->seen_refname;
 	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
 	unsigned int nr;
+	struct object_array_entry *e = &revs->pending.objects[revs->pending.nr - 1];
 
 	/*
 	 * With non-tabular input we append an empty line for the
@@ -432,8 +433,10 @@ static void write_bundle_after_stdin_line(struct rev_info *revs,
 		string_list_append(refname_to_pending, "");
 	}
 	if (seen_refname->len) {
-		fprintf(stderr, "inserting <%s> to list\n", seen_refname->buf);
+		fprintf(stderr, "inserting <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
 		string_list_append(refname_to_pending, seen_refname->buf);
+		e->item->flags &= ~(UNINTERESTING);
+		fprintf(stderr, "inserted <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
 	} else {
 		fprintf(stderr, "inserting <> to list (one last padding value)\n");
 		string_list_append(refname_to_pending, "");
@@ -470,36 +473,22 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		 * origin/master~10..origin/master creates two entries
 		 * in the pending array.
 		 */
-		char *refname = refname_to_pending->items[i].string;
-		int have_refname = !!strlen(refname);
+		char *refname = refname_to_pending->nr > i ? refname_to_pending->items[i].string : "";
 		struct object_array_entry *e = revs->pending.objects + i;
 		struct object_id oid;
 		char *ref;
 		const char *display_ref;
 		int flag;
 
-		if (i > 0 && !have_refname) {
-			int last_i = i - 1;
-			char *last_refname = refnames->nr > last_i ? refnames->items[last_i].string : NULL;
-			int have_last_refname = last_refname ? !!strlen(last_refname) : 0;
-			struct object_array_entry *last_e = revs->pending.objects + last_i;
-
-			if (have_last_refname && last_e->item->flags & BOTTOM) {
-				fprintf(stderr, "have no name, but last is bottom so using its <%s>\n", last_refname);
-
-				have_refname = 1;
-				refname = last_refname;
-			}
-		}
-			
-
-		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, have_refname ? refname : "N/A");
-		if (e->item->flags & UNINTERESTING) {
-			fprintf(stderr, "...is uninteresting\n");
-			continue;
-		}
-		if (have_refname) {
+		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
+		if (*refname) {
 			display_ref = refname;
+			e->item->flags &= ~UNINTERESTING;
+			e->item->flags &= SHOWN;
+			goto write_it;
+		} else if (e->item->flags & UNINTERESTING) {
+			fprintf(stderr, "...is uninteresting (%s)\n", refname);
+			continue;
 		} else {
 			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
 				goto skip_write_ref;
@@ -535,7 +524,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		 * commit that is referenced by the tag, and not the tag
 		 * itself.
 		 */
-		if (!have_refname && !oideq(&oid, &e->item->oid)) {
+		if (!*refname && !oideq(&oid, &e->item->oid)) {
 			/*
 			 * Is this the positive end of a range expressed
 			 * in terms of a tag (e.g. v2.0 from the range
@@ -560,13 +549,14 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 			goto skip_write_ref;
 		}
 
+	write_it:
 		ref_count++;
 		write_or_die(bundle_fd, oid_to_hex(&e->item->oid), the_hash_algo->hexsz);
 		write_or_die(bundle_fd, " ", 1);
 		write_or_die(bundle_fd, display_ref, strlen(display_ref));
 		write_or_die(bundle_fd, "\n", 1);
  skip_write_ref:
-		if (!have_refname)
+		if (!*refname)
 			free(ref);
 	}
 
