@@ -425,6 +425,12 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 	struct string_list *refnames = revs->stdin_line_priv;
 
 	for (i = 0; i < revs->pending.nr; i++) {
+		/*
+		 * TODO: I need to use an oid_array here, this whole
+		 * 1=1 positional mapping won't work, because
+		 * origin/master~10..origin/master creates two entries
+		 * in the pending array.
+		 */
 		char *refname = refnames->nr > i ? refnames->items[i].string : NULL;
 		int have_refname = refname ? !!strlen(refname) : 0;
 		struct object_array_entry *e = revs->pending.objects + i;
