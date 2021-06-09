@@ -334,10 +334,16 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	return 0;
 }
 
+struct stdin_line_cb {
+	struct strbuf *seen_refname;
+	struct string_list refname_to_pending;
+};
+
 static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv)
 {
-	struct string_list *refnames = stdin_line_priv;
+	struct stdin_line_cb *line_cb = stdin_line_priv;
+	struct strbuf *seen_refname = line_cb->seen_refname;
 	const char delim = '\t';
 	struct strbuf **s;
 	struct strbuf *refname;
@@ -374,7 +380,7 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 		refname = field;
 		if (check_refname_format(refname->buf, REFNAME_ALLOW_ONELEVEL))
 			die(_("'%s' is not a valid ref name"), refname->buf);
-		string_list_append(refnames, refname->buf);
+		strbuf_addbuf(seen_refname, refname);
 
 		/*
 		 * Strip " commit", " tree", " blob" and " tag" from
@@ -401,13 +407,7 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 		return REV_INFO_STDIN_LINE_PROCESS;
 	}
 
-	/*
-	 * With non-tabular input we append an empty line for the
-	 * convenience of having a 1=1 mapping between the "refnames"
-	 * string-list and "revs->pending" in write_bundle_refs()
-	 * below.
-	 */
-	string_list_append(refnames, "");
+	//string_list_append(refnames, "");
 	return REV_INFO_STDIN_LINE_PROCESS;
 }
 
@@ -415,7 +415,34 @@ static void write_bundle_after_stdin_line(struct rev_info *revs,
 					  struct strbuf *line,
 					  void *stdin_line_priv)
 {
-	fprintf(stderr, "after line <%s>\n", line->buf);
+	struct stdin_line_cb *line_cb = stdin_line_priv;
+	struct strbuf *seen_refname = line_cb->seen_refname;
+	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
+	unsigned int nr;
+
+	/*
+	 * With non-tabular input we append an empty line for the
+	 * convenience of having a 1=1 mapping between the "refnames"
+	 * string-list and "revs->pending" in write_bundle_refs()
+	 * below.
+	 */
+	for (nr = refname_to_pending->nr; nr < revs->pending.nr - 1; nr++) {
+		fprintf(stderr, "%d: padding out list\n", nr);
+		fprintf(stderr, "inserting <> to list\n");
+		string_list_append(refname_to_pending, "");
+	}
+	if (seen_refname->len) {
+		fprintf(stderr, "inserting <%s> to list\n", seen_refname->buf);
+		string_list_append(refname_to_pending, seen_refname->buf);
+	} else {
+		fprintf(stderr, "inserting <> to list (one last padding value)\n");
+		string_list_append(refname_to_pending, "");
+	}
+
+	fprintf(stderr, "after line <%s> and <%s>, have <%d> in my list and <%d> in pending\n",
+		line->buf, seen_refname->buf, refname_to_pending->nr,
+		revs->pending.nr);
+	strbuf_reset(seen_refname);
 }
 
 
@@ -432,7 +459,9 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 {
 	int i;
 	int ref_count = 0;
-	struct string_list *refnames = revs->stdin_line_priv;
+	struct stdin_line_cb *line_cb = revs->stdin_line_priv;
+	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
+
 
 	for (i = 0; i < revs->pending.nr; i++) {
 		/*
@@ -441,8 +470,8 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		 * origin/master~10..origin/master creates two entries
 		 * in the pending array.
 		 */
-		char *refname = refnames->nr > i ? refnames->items[i].string : NULL;
-		int have_refname = refname ? !!strlen(refname) : 0;
+		char *refname = refname_to_pending->items[i].string;
+		int have_refname = !!strlen(refname);
 		struct object_array_entry *e = revs->pending.objects + i;
 		struct object_id oid;
 		char *ref;
@@ -589,7 +618,12 @@ int create_bundle(struct repository *r, const char *path,
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
 	int i;
-	struct string_list refnames = STRING_LIST_INIT_DUP;
+	struct strbuf seen_refname = STRBUF_INIT;
+	struct string_list refname_to_pending = STRING_LIST_INIT_DUP;
+	struct stdin_line_cb line_cb = {
+		.seen_refname = &seen_refname,
+		.refname_to_pending = refname_to_pending,
+	};
 
 	bundle_to_stdout = !strcmp(path, "-");
 	if (bundle_to_stdout)
@@ -618,7 +652,7 @@ int create_bundle(struct repository *r, const char *path,
 	/* init revs to list objects for pack-objects later */
 	save_commit_buffer = 0;
 	repo_init_revisions(r, &revs, NULL);
-	revs.stdin_line_priv = &refnames;
+	revs.stdin_line_priv = &line_cb;
 	revs.handle_stdin_line = write_bundle_handle_stdin_line;
 	revs.after_stdin_line = write_bundle_after_stdin_line;
 
@@ -653,7 +687,6 @@ int create_bundle(struct repository *r, const char *path,
 
 	/* write bundle refs */
 	ref_count = write_bundle_refs(bundle_fd, &revs_copy);
-	string_list_clear(&refnames, 0);
 	if (!ref_count)
 		die(_("Refusing to create empty bundle."));
 	else if (ref_count < 0)
