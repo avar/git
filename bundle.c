@@ -480,21 +480,21 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		const char *display_ref;
 		int flag;
 
-		//fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
+		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
 		if (*refname) {
 			display_ref = refname;
 			e->item->flags &= ~UNINTERESTING;
 			e->item->flags &= SHOWN;
 			goto write_it;
 		} else if (e->item->flags & UNINTERESTING) {
-			//fprintf(stderr, "...is uninteresting (%s)\n", refname);
+			fprintf(stderr, "...is uninteresting (%s)\n", refname);
 			continue;
 		} else {
 			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
 				goto skip_write_ref;
 			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
 				flag = 0;
-			//fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
+			fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
 			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
 		}
 

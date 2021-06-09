@@ -16,7 +16,15 @@ test_expect_success 'setup' '
 	git tag -a -m"my tag" tag :/second &&
 	git branch trunk :/third &&
 	git branch next :/fifth &&
-	git branch unstable :/sixth
+	git branch unstable :/sixth &&
+
+	git checkout -b divergent :/initial &&
+	test_commit --no-tag alt-2nd &&
+	test_commit --no-tag alt-3rd &&
+	test_commit --no-tag alt-4th &&
+	test_commit --no-tag alt-5th &&
+
+	git checkout -
 '
 
 # --stdin tabular input
@@ -62,7 +70,20 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is a ref 
 	test_cmp expect actual
 '
 
-test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is not a ref name' '
+test_expect_success 'bundle --stdin basic rev-range tabular input, LHS is a ref name' '
+	cat >in <<-EOF &&
+	trunk..$(git rev-parse :/fourth)	refs/tags/post-trunk-update
+	EOF
+	git bundle create post-trunk-update.bdl --stdin <in &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse :/fourth)	refs/tags/post-trunk-update
+	EOF
+	git ls-remote post-trunk-update.bdl >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bundle --stdin basic rev-range tabular input, LHS and RHS are not ref names' '
 	cat >in <<-EOF &&
 	HEAD~2..HEAD~1	refs/tags/penultimate-update
 	EOF
@@ -77,7 +98,6 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is not a 
 
 test_expect_success 'bundle --stdin complex rev-range tabular input, multiple ranges' '
 	cat >in <<-EOF &&
-	:/initial	refs/tags/first-push
 	HEAD~6..HEAD~5	refs/tags/second-push
 	HEAD~2..HEAD~1	refs/tags/penultimate-push
 	EOF
@@ -86,9 +106,23 @@ test_expect_success 'bundle --stdin complex rev-range tabular input, multiple ra
 	cat >expect <<-EOF &&
 	$(git rev-parse :/sixth)	refs/tags/penultimate-push
 	$(git rev-parse :/second)	refs/tags/second-push
-	$(git rev-parse :/initial)	refs/tags/first-push
 	EOF
 	git ls-remote multiple-updates.bdl >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bundle --stdin complex rev-range mixed tabular and ref name input' '
+	cat >in <<-EOF &&
+	trunk~..trunk
+	$(git rev-parse :/initial)..$(git rev-parse :/alt-2nd)	refs/tags/first-divergent-push
+	EOF
+	git bundle create mixed-multiple-updates.bdl --stdin <in &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse :/alt-2nd)	refs/tags/first-divergent-push
+	$(git rev-parse trunk)	refs/heads/trunk
+	EOF
+	git ls-remote mixed-multiple-updates.bdl >actual &&
 	test_cmp expect actual
 '
 
@@ -175,7 +209,7 @@ test_expect_success 'bundle --stdin tabular input is incompatible with "git show
 	git show-ref >sr &&
 
 	cat >expect <<-EOF &&
-	fatal: bad revision '"'"'$(git rev-parse HEAD) $(git symbolic-ref HEAD)'"'"'
+	fatal: bad revision '"'"'$(git rev-parse divergent) refs/heads/divergent'"'"'
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <sr 2>actual &&
 	test_cmp expect actual &&
@@ -188,6 +222,7 @@ test_expect_success 'bundle --stdin tabular input is compatible with "git for-ea
 	git bundle create all.bdl --stdin <fer &&
 
 	cat >expect <<-EOF &&
+	$(git rev-parse divergent) refs/heads/divergent
 	$(git rev-parse HEAD) $(git symbolic-ref HEAD)
 	$(git rev-parse next) refs/heads/next
 	$(git rev-parse trunk) refs/heads/trunk
@@ -207,6 +242,7 @@ test_expect_success 'bundle --stdin tabular "git for-each-ref" input ignores typ
 	git bundle create all.bdl --stdin <fake-fer &&
 
 	cat >expect <<-EOF &&
+	$(git rev-parse divergent) refs/heads/divergent
 	$(git rev-parse HEAD) $(git symbolic-ref HEAD)
 	$(git rev-parse next) refs/heads/next
 	$(git rev-parse trunk) refs/heads/trunk
