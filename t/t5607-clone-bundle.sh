@@ -99,6 +99,19 @@ test_expect_success 'bundle --stdin mixed rev-list and tabular input' '
 	test_cmp expect actual
 '
 
+test_expect_success 'bundle --stdin rev-range tabular input' '
+	cat >in <<-EOF &&
+	tag..HEAD~1	refs/tags/first-update
+	EOF
+	git bundle create first-update.bdl --stdin <in &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse :/second)	refs/tags/first-update
+	EOF
+	git ls-remote first-update.bdl >actual &&
+	test_cmp expect actual
+'
+
 # --stdin tabular input rev validation
 test_expect_success 'bundle --stdin tabular input requires valid revisions' '
 	cat >in <<-EOF &&

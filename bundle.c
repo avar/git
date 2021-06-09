@@ -439,8 +439,26 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		const char *display_ref;
 		int flag;
 
-		if (e->item->flags & UNINTERESTING)
+		if (i > 0 && !have_refname) {
+			int last_i = i - 1;
+			char *last_refname = refnames->nr > last_i ? refnames->items[last_i].string : NULL;
+			int have_last_refname = last_refname ? !!strlen(last_refname) : 0;
+			struct object_array_entry *last_e = revs->pending.objects + last_i;
+
+			if (have_last_refname && last_e->item->flags & BOTTOM) {
+				//fprintf(stderr, "have no name, but last is bottom so using its <%s>\n", last_refname);
+
+				have_refname = 1;
+				refname = last_refname;
+			}
+		}
+			
+
+		//fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, have_refname ? refname : "N/A");
+		if (e->item->flags & UNINTERESTING) {
+			fprintf(stderr, "...is uninteresting\n");
 			continue;
+		}
 		if (have_refname) {
 			display_ref = refname;
 		} else {
@@ -448,6 +466,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 				goto skip_write_ref;
 			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
 				flag = 0;
+			fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
 			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
 		}
 
