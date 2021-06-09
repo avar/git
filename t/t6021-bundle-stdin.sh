@@ -9,6 +9,10 @@ test_expect_success 'setup' '
 	test_commit --no-tag second &&
 	test_commit --no-tag third &&
 	test_commit --no-tag fourth &&
+	test_commit --no-tag fifth &&
+	test_commit --no-tag sixth &&
+	test_commit --no-tag seventh &&
+
 	git tag -a -m"my tag" tag :/second
 '
 
@@ -42,7 +46,7 @@ test_expect_success 'bundle --stdin mixed rev-list and tabular input' '
 	test_cmp expect actual
 '
 
-test_expect_success 'bundle --stdin rev-range tabular input' '
+test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is a ref name' '
 	cat >in <<-EOF &&
 	HEAD~1..$(git symbolic-ref --short HEAD)	refs/tags/latest-update
 	EOF
