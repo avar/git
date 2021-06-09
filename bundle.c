@@ -351,7 +351,7 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	struct strbuf **fields = strbuf_split_buf(line->buf, line->len, delim, -1);
 	int i;
 
-	fprintf(stderr, "parsing line <%s>\n", line->buf);
+	//fprintf(stderr, "parsing line <%s>\n", line->buf);
 
 	/* Parse "<revision>\t<refname>" input */
 	for (s = fields, i = 0; *s; s++, i++) {
@@ -428,23 +428,23 @@ static void write_bundle_after_stdin_line(struct rev_info *revs,
 	 * below.
 	 */
 	for (nr = refname_to_pending->nr; nr < revs->pending.nr - 1; nr++) {
-		fprintf(stderr, "%d: padding out list\n", nr);
-		fprintf(stderr, "inserting <> to list\n");
+		//fprintf(stderr, "%d: padding out list\n", nr);
+		//fprintf(stderr, "inserting <> to list\n");
 		string_list_append(refname_to_pending, "");
 	}
 	if (seen_refname->len) {
-		fprintf(stderr, "inserting <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
+		//fprintf(stderr, "inserting <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
 		string_list_append(refname_to_pending, seen_refname->buf);
 		e->item->flags &= ~(UNINTERESTING);
-		fprintf(stderr, "inserted <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
+		//fprintf(stderr, "inserted <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
 	} else {
-		fprintf(stderr, "inserting <> to list (one last padding value)\n");
+		//fprintf(stderr, "inserting <> to list (one last padding value)\n");
 		string_list_append(refname_to_pending, "");
 	}
 
-	fprintf(stderr, "after line <%s> and <%s>, have <%d> in my list and <%d> in pending\n",
+	/*fprintf(stderr, "after line <%s> and <%s>, have <%d> in my list and <%d> in pending\n",
 		line->buf, seen_refname->buf, refname_to_pending->nr,
-		revs->pending.nr);
+		revs->pending.nr);*/
 	strbuf_reset(seen_refname);
 }
 
@@ -480,21 +480,21 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		const char *display_ref;
 		int flag;
 
-		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
+		//fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
 		if (*refname) {
 			display_ref = refname;
 			e->item->flags &= ~UNINTERESTING;
 			e->item->flags &= SHOWN;
 			goto write_it;
 		} else if (e->item->flags & UNINTERESTING) {
-			fprintf(stderr, "...is uninteresting (%s)\n", refname);
+			//fprintf(stderr, "...is uninteresting (%s)\n", refname);
 			continue;
 		} else {
 			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
 				goto skip_write_ref;
 			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
 				flag = 0;
-			fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
+			//fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
 			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
 		}
 

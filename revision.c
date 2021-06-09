@@ -2093,9 +2093,9 @@ static int handle_revision_arg(const char *arg, struct rev_info *revs, int flags
 {
 	int ret;
 
-	fprintf(stderr, "handling revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
+	//fprintf(stderr, "handling revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
 	ret = handle_revision_arg_1(arg, revs, flags, revarg_opt);
-	fprintf(stderr, "handled revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
+	//fprintf(stderr, "handled revision arg <%s>, now at <%d>\n", arg, revs->pending.nr);
 	
 	if (!ret)
 		revs->rev_input_given = 1;
