@@ -13,7 +13,10 @@ test_expect_success 'setup' '
 	test_commit --no-tag sixth &&
 	test_commit --no-tag seventh &&
 
-	git tag -a -m"my tag" tag :/second
+	git tag -a -m"my tag" tag :/second &&
+	git branch trunk :/third &&
+	git branch next :/fifth &&
+	git branch unstable :/sixth
 '
 
 # --stdin tabular input
@@ -56,6 +59,36 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is a ref 
 	$(git rev-parse HEAD)	refs/tags/latest-update
 	EOF
 	git ls-remote latest-update.bdl >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is not a ref name' '
+	cat >in <<-EOF &&
+	HEAD~2..HEAD~1	refs/tags/penultimate-update
+	EOF
+	git bundle create penultimate-update.bdl --stdin <in &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse HEAD~)	refs/tags/penultimate-update
+	EOF
+	git ls-remote penultimate-update.bdl >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bundle --stdin complex rev-range tabular input, multiple ranges' '
+	cat >in <<-EOF &&
+	:/initial	refs/tags/first-push
+	HEAD~6..HEAD~5	refs/tags/second-push
+	HEAD~2..HEAD~1	refs/tags/penultimate-push
+	EOF
+	git bundle create multiple-updates.bdl --stdin <in &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse :/sixth)	refs/tags/penultimate-push
+	$(git rev-parse :/second)	refs/tags/second-push
+	$(git rev-parse :/initial)	refs/tags/first-push
+	EOF
+	git ls-remote multiple-updates.bdl >actual &&
 	test_cmp expect actual
 '
 
@@ -156,6 +189,9 @@ test_expect_success 'bundle --stdin tabular input is compatible with "git for-ea
 
 	cat >expect <<-EOF &&
 	$(git rev-parse HEAD) $(git symbolic-ref HEAD)
+	$(git rev-parse next) refs/heads/next
+	$(git rev-parse trunk) refs/heads/trunk
+	$(git rev-parse unstable) refs/heads/unstable
 	$(git rev-parse tag) refs/tags/tag
 	EOF
 
@@ -172,6 +208,9 @@ test_expect_success 'bundle --stdin tabular "git for-each-ref" input ignores typ
 
 	cat >expect <<-EOF &&
 	$(git rev-parse HEAD) $(git symbolic-ref HEAD)
+	$(git rev-parse next) refs/heads/next
+	$(git rev-parse trunk) refs/heads/trunk
+	$(git rev-parse unstable) refs/heads/unstable
 	$(git rev-parse tag) refs/tags/tag
 	EOF
 
