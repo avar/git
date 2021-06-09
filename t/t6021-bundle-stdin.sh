@@ -3,6 +3,7 @@
 test_description='Test git-bundle --stdin in detail'
 
 . ./test-lib.sh
+. "$TEST_DIRECTORY"/lib-bundle.sh
 
 test_expect_success 'setup' '
 	test_commit --no-tag initial &&
@@ -39,7 +40,8 @@ test_expect_success 'bundle --stdin understands tabular-like output' '
 	$(git rev-parse :/initial)	refs/heads/initial
 	EOF
 	git ls-remote initial.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count initial.bdl 3
 '
 
 test_expect_success 'bundle --stdin mixed rev-list and tabular input' '
@@ -54,7 +56,8 @@ test_expect_success 'bundle --stdin mixed rev-list and tabular input' '
 	$(git rev-parse :/initial)	refs/heads/initial
 	EOF
 	git ls-remote mixed.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count mixed.bdl 21
 '
 
 test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is a ref name' '
@@ -67,7 +70,8 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, RHS is a ref 
 	$(git rev-parse HEAD)	refs/tags/latest-update
 	EOF
 	git ls-remote latest-update.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count --thin latest-update.bdl 4
 '
 
 test_expect_success 'bundle --stdin basic rev-range tabular input, LHS is a ref name' '
@@ -80,7 +84,8 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, LHS is a ref 
 	$(git rev-parse :/fourth)	refs/tags/post-trunk-update
 	EOF
 	git ls-remote post-trunk-update.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count post-trunk-update.bdl 3
 '
 
 test_expect_success 'bundle --stdin basic rev-range tabular input, LHS and RHS are not ref names' '
@@ -93,7 +98,8 @@ test_expect_success 'bundle --stdin basic rev-range tabular input, LHS and RHS a
 	$(git rev-parse HEAD~)	refs/tags/penultimate-update
 	EOF
 	git ls-remote penultimate-update.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count --thin penultimate-update.bdl 4
 '
 
 test_expect_success 'bundle --stdin complex rev-range tabular input, multiple ranges' '
@@ -108,7 +114,8 @@ test_expect_success 'bundle --stdin complex rev-range tabular input, multiple ra
 	$(git rev-parse :/second)	refs/tags/second-push
 	EOF
 	git ls-remote multiple-updates.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count --thin multiple-updates.bdl 4
 '
 
 test_expect_success 'bundle --stdin complex rev-range mixed tabular and ref name input' '
@@ -123,7 +130,8 @@ test_expect_success 'bundle --stdin complex rev-range mixed tabular and ref name
 	$(git rev-parse trunk)	refs/heads/trunk
 	EOF
 	git ls-remote mixed-multiple-updates.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count mixed-multiple-updates.bdl 6
 '
 
 # --stdin tabular input rev validation
@@ -152,7 +160,8 @@ test_expect_success 'bundle --stdin tabular input accepts one-level ref names' '
 	$(git rev-parse HEAD)	HEAD
 	EOF
 	git ls-remote one-level.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count one-level.bdl 21
 '
 
 test_expect_success 'bundle --stdin tabular input requires valid refs' '
@@ -231,7 +240,8 @@ test_expect_success 'bundle --stdin tabular input is compatible with "git for-ea
 	EOF
 
 	git bundle list-heads all.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count all.bdl 34
 '
 
 # --stdin tabular input for-each-ref parsing
@@ -251,7 +261,8 @@ test_expect_success 'bundle --stdin tabular "git for-each-ref" input ignores typ
 	EOF
 
 	git bundle list-heads all.bdl >actual &&
-	test_cmp expect actual
+	test_cmp expect actual &&
+	test_bundle_object_count all.bdl 34
 '
 
 test_done
