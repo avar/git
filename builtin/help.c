@@ -576,13 +576,12 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	if (show_config) {
 		int for_human = show_config == 1;
 
-		if (!for_human) {
-			list_config_help(for_human);
-			return 0;
-		}
-		setup_pager();
+		if (for_human)
+			setup_pager();
 		list_config_help(for_human);
-		printf("\n%s\n", _("'git help config' for more information"));
+		if (for_human)
+			printf("\n%s\n", _("'git help config' for more information"));
+
 		return 0;
 	}
 
