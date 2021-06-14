@@ -8,7 +8,6 @@
  * published by the Free Software Foundation.
  */
 
-#define GIT_TEST_PROGRESS_ONLY
 #include "cache.h"
 #include "gettext.h"
 #include "progress.h"
@@ -43,16 +42,15 @@ struct progress {
 	struct strbuf counters_sb;
 	int title_len;
 	int split;
+	/*
+	 * The test_* members are are only intended for testing the
+	 * progress output, i.e. exclusively for 'test-tool progress'.
+	 */
+	int test_no_signals;
+	uint64_t test_getnanotime;
 };
 
 static volatile sig_atomic_t progress_update;
-
-/*
- * These are only intended for testing the progress output, i.e. exclusively
- * for 'test-tool progress'.
- */
-int progress_testing;
-uint64_t progress_test_ns = 0;
 
 static int is_foreground_fd(int fd)
 {
@@ -135,8 +133,8 @@ static void throughput_string(struct strbuf *buf, uint64_t total,
 
 static uint64_t progress_getnanotime(struct progress *progress)
 {
-	if (progress_testing)
-		return progress->start_ns + progress_test_ns;
+	if (progress->test_getnanotime)
+		return progress->start_ns + progress->test_getnanotime;
 	else
 		return getnanotime();
 }
@@ -212,11 +210,7 @@ static void progress_interval(int signum)
 	progress_update = 1;
 }
 
-/*
- * The progress_test_force_update() function is intended for testing
- * the progress output, i.e. exclusively for 'test-tool progress'.
- */
-void progress_test_force_update(void)
+void test_progress_force_update(void)
 {
 	progress_interval(SIGALRM);
 }
@@ -226,7 +220,7 @@ static void set_progress_signal(void)
 	struct sigaction sa;
 	struct itimerval v;
 
-	if (progress_testing)
+	if (progress->test_no_signals)
 		return;
 
 	progress_update = 0;
@@ -247,7 +241,7 @@ static void clear_progress_signal(void)
 {
 	struct itimerval v = {{0,},};
 
-	if (progress_testing)
+	if (progress->test_no_signals)
 		return;
 
 	setitimer(ITIMER_REAL, &v, NULL);
@@ -270,6 +264,8 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	strbuf_init(&progress->counters_sb, 0);
 	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
+	progress->test_no_signals = 0;
+	progress->test_getnanotime = 0;
 	set_progress_signal();
 	trace2_region_enter("progress", title, the_repository);
 	return progress;
@@ -380,4 +376,20 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 		strbuf_release(&progress->throughput->display);
 	free(progress->throughput);
 	free(progress);
+}
+
+/*
+  * The test_* functions are are only intended for testing the
+  * progress output, i.e. exclusively for 'test-tool progress'.
+  */
+struct progress *test_progress_start(const char *title, uint64_t total)
+{
+	struct progress *progress = start_progress(title, total);
+	progress->test_no_signals = 1;
+	return progress;
+}
+
+void test_progress_setnanotime(struct progress *progress, uint64_t time)
+{
+	progress->test_getnanotime = time;
 }
