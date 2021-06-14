@@ -425,12 +425,14 @@ static void write_bundle_after_stdin_line(struct rev_info *revs,
 	 * With non-tabular input we append an empty line for the
 	 * convenience of having a 1=1 mapping between the "refnames"
 	 * string-list and "revs->pending" in write_bundle_refs()
-	 * below.
+	 * below. Note that for nonexistent revs we may get nothing.
 	 */
-	for (nr = refname_to_pending->nr; nr < revs->pending.nr - 1; nr++) {
-		//fprintf(stderr, "%d: padding out list\n", nr);
-		//fprintf(stderr, "inserting <> to list\n");
-		string_list_append(refname_to_pending, "");
+	if (revs->pending.nr > 0) {
+		for (nr = refname_to_pending->nr; nr < revs->pending.nr - 1; nr++) {
+			//fprintf(stderr, "%d: padding out list\n", nr);
+			//fprintf(stderr, "inserting <> to list\n");
+			string_list_append(refname_to_pending, "");
+		}
 	}
 	if (seen_refname->len) {
 		//fprintf(stderr, "inserting <%s> to list, flag now <%d>\n", seen_refname->buf, e->item->flags);
@@ -480,21 +482,21 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		const char *display_ref;
 		int flag;
 
-		fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
+		//fprintf(stderr, "name = <%s> (manual refname = <%s>)...\n", e->name, *refname ? refname : "N/A");
 		if (*refname) {
 			display_ref = refname;
 			e->item->flags &= ~UNINTERESTING;
 			e->item->flags &= SHOWN;
 			goto write_it;
 		} else if (e->item->flags & UNINTERESTING) {
-			fprintf(stderr, "...is uninteresting (%s)\n", refname);
+			//fprintf(stderr, "...is uninteresting (%s)\n", refname);
 			continue;
 		} else {
 			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
 				goto skip_write_ref;
 			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
 				flag = 0;
-			fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
+			//fprintf(stderr, "...has full name %s (or %s)\n", e->name, ref);
 			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
 		}
 

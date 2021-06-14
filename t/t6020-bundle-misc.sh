@@ -284,7 +284,6 @@ test_expect_success 'create bundle 2 - has prerequisites' '
 	# create bundle from stdin
 	# input has a non-exist reference: "topic/deleted"
 	cat >input <<-EOF &&
-	^topic/deleted
 	^$D
 	^topic/2
 	EOF
