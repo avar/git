@@ -91,7 +91,7 @@ static void list_config_help(enum show_config_type type)
 	struct slot_expansion slot_expansions[] = {
 		{ "advice", "*", list_config_advices },
 		{ "color.branch", "<slot>", list_config_color_branch_slots },
-		{ "color.decorate", "<slot>", list_config_color_decorate_slots },
+		{ "color.logDecorate", "<slot>", list_config_color_decorate_slots },
 		{ "color.diff", "<slot>", list_config_color_diff_slots },
 		{ "color.grep", "<slot>", list_config_color_grep_slots },
 		{ "color.interactive", "<slot>", list_config_color_interactive_slots },
