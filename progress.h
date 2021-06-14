@@ -3,13 +3,13 @@
 
 struct progress;
 
-#ifdef GIT_TEST_PROGRESS_ONLY
-
-extern int progress_testing;
-extern uint64_t progress_test_ns;
-void progress_test_force_update(void);
-
-#endif
+/*
+ * test_*() functions are only for use in t/helper/test-progress.c. Do
+ * not use them elsewhere!
+ */
+void test_progress_force_update(void);
+struct progress *test_progress_start(const char *title, uint64_t total);
+void test_progress_setnanotime(struct progress *progress, uint64_t time);
 
 void display_throughput(struct progress *progress, uint64_t total);
 void display_progress(struct progress *progress, uint64_t n);
