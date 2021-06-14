@@ -8,7 +8,6 @@
  * published by the Free Software Foundation.
  */
 
-#define GIT_TEST_PROGRESS_ONLY
 #include "cache.h"
 #include "gettext.h"
 #include "progress.h"
@@ -19,13 +18,6 @@
 
 static volatile sig_atomic_t progress_update;
 static struct progress *global_progress;
-
-/*
- * These are only intended for testing the progress output, i.e. exclusively
- * for 'test-tool progress'.
- */
-int progress_testing;
-uint64_t progress_test_ns = 0;
 
 static int is_foreground_fd(int fd)
 {
@@ -108,8 +100,8 @@ static void throughput_string(struct strbuf *buf, uint64_t total,
 
 static uint64_t progress_getnanotime(struct progress *progress)
 {
-	if (progress_testing)
-		return progress->start_ns + progress_test_ns;
+	if (progress->test_getnanotime)
+		return progress->start_ns + progress->test_getnanotime;
 	else
 		return getnanotime();
 }
@@ -185,11 +177,7 @@ static void progress_interval(int signum)
 	progress_update = 1;
 }
 
-/*
- * The progress_test_force_update() function is intended for testing
- * the progress output, i.e. exclusively for 'test-tool progress'.
- */
-void progress_test_force_update(void)
+void test_progress_force_update(void)
 {
 	progress_interval(SIGALRM);
 }
@@ -203,7 +191,7 @@ static void set_progress_signal(struct progress *progress)
 		BUG("should have no global_progress in set_progress_signal()");
 	global_progress = progress;
 
-	if (progress_testing)
+	if (progress->test_mode)
 		return;
 
 	progress_update = 0;
@@ -228,7 +216,7 @@ static void clear_progress_signal(struct progress *progress)
 		BUG("should have a global_progress in clear_progress_signal()");
 	global_progress = NULL;
 
-	if (progress_testing)
+	if (progress->test_mode)
 		return;
 
 	setitimer(ITIMER_REAL, &v, NULL);
@@ -237,7 +225,7 @@ static void clear_progress_signal(struct progress *progress)
 }
 
 static struct progress *start_progress_delay(const char *title, uint64_t total,
-					     unsigned delay)
+					     unsigned delay, int testing)
 {
 	struct progress *progress = xmalloc(sizeof(*progress));
 	progress->title = title;
@@ -250,9 +238,15 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	strbuf_init(&progress->counters_sb, 0);
 	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
+	progress->test_mode = testing;
 	set_progress_signal(progress);
 	trace2_region_enter("progress", title, the_repository);
 	return progress;
+}
+
+struct progress *start_progress_testing(const char *title, uint64_t total)
+{
+	return start_progress_delay(title, total, 0, 1);
 }
 
 static int get_default_delay(void)
@@ -267,12 +261,12 @@ static int get_default_delay(void)
 
 struct progress *start_delayed_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, get_default_delay());
+	return start_progress_delay(title, total, get_default_delay(), 0);
 }
 
 struct progress *start_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, 0);
+	return start_progress_delay(title, total, 0, 0);
 }
 
 void stop_progress(struct progress **p_progress)
