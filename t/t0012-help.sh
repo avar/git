@@ -91,6 +91,30 @@ test_expect_success 'git help -c' '
 	test_cmp expect actual
 '
 
+test_expect_success 'git help --config-for-completion-vars' '
+	git help -c >human &&
+	grep -E \
+	     -e "^[^.]+\.[^.]+$" \
+	     -e "^[^.]+\.[^.]+\.[^.]+$" human |
+	     sed -e "s/\*.*//" -e "s/<.*//" |
+	     sort -u >human.munged &&
+
+	git help --config-for-completion-vars >vars &&
+	test_cmp human.munged vars
+'
+
+test_expect_success 'git help --config-for-completion-sections' '
+	git help -c >human &&
+	grep -E \
+	     -e "^[^.]+\.[^.]+$" \
+	     -e "^[^.]+\.[^.]+\.[^.]+$" human |
+	     sed -e "s/\..*//" |
+	     sort -u >human.munged &&
+
+	git help --config-for-completion-sections >sections &&
+	test_cmp human.munged sections
+'
+
 test_expect_success 'generate builtin list' '
 	git --list-cmds=builtins >builtins
 '
