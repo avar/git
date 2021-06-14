@@ -198,6 +198,12 @@ int git_parse_ulong(const char *, unsigned long *);
 int git_parse_maybe_bool(const char *);
 
 /**
+ * Same as `git_parse_maybe_bool`, except that "auto" is recognized and
+ * will return "2".
+ */
+int git_parse_maybe_tristate(const char *);
+
+/**
  * Parse the string to an integer, including unit factors. Dies on error;
  * otherwise, returns the parsed result.
  */
@@ -225,6 +231,12 @@ int git_config_bool_or_int(const char *, const char *, int *);
  * parsing is successful, the return value is the result.
  */
 int git_config_bool(const char *, const char *);
+
+/**
+ * Like git_config_bool() except "auto" is also recognized and will
+ * return "2"
+ */
+int git_config_tristate(const char *, const char *);
 
 /**
  * Allocates and copies the value string into the `dest` parameter; if no
