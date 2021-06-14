@@ -1,7 +1,40 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
+#include "strbuf.h"
 
-struct progress;
+#define PROGRESS_THROUGHPUT_IDX_MAX      8
+
+struct throughput {
+	off_t curr_total;
+	off_t prev_total;
+	uint64_t prev_ns;
+	unsigned int avg_bytes;
+	unsigned int avg_misecs;
+	unsigned int last_bytes[PROGRESS_THROUGHPUT_IDX_MAX];
+	unsigned int last_misecs[PROGRESS_THROUGHPUT_IDX_MAX];
+	unsigned int idx;
+	struct strbuf display;
+};
+
+struct progress {
+	const char *title;
+	uint64_t last_value;
+	uint64_t total;
+	unsigned last_percent;
+	unsigned delay;
+	unsigned sparse;
+	struct throughput *throughput;
+	uint64_t start_ns;
+	struct strbuf counters_sb;
+	int title_len;
+	int split;
+	/*
+	 * The test_* members are are only intended for testing the
+	 * progress output, i.e. exclusively for 'test-tool progress'.
+	 */
+	int test_no_signals;
+	uint64_t test_getnanotime;
+};
 
 /*
  * test_*() functions are only for use in t/helper/test-progress.c. Do
