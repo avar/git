@@ -1260,36 +1260,13 @@ static struct ref *get_refs_list_using_list(struct transport *transport,
 	return ret;
 }
 
-static struct string_list *get_bundle_uris_using_list(struct transport *transport);
-
-static struct string_list *get_bundle_uris(struct transport *transport)
-{
-	get_helper(transport);
-
-	if (process_connect(transport, 0)) {
-		do_take_over(transport);
-		return transport->vtable->get_bundle_uris(transport);
-	}
-
-	return get_bundle_uris_using_list(transport);
-}
-
-static struct string_list *get_bundle_uris_using_list(struct transport *transport)
-{
-	struct helper_data *data = transport->data;
-	struct string_list *bundle_uris = xcalloc(1, sizeof(struct string_list));
-	fprintf(stderr, "hi %p\n", data);
-	return bundle_uris;
-}
-
 static struct transport_vtable vtable = {
-	.set_option		= set_helper_option,
-	.get_bundle_uris	= get_bundle_uris,
-	.get_refs_list		= get_refs_list,
-	.fetch_refs		= fetch_refs,
-	.push_refs		= push_refs,
-	.connect		= connect_helper,
-	.disconnect		= release_helper
+	.set_option	= set_helper_option,
+	.get_refs_list	= get_refs_list,
+	.fetch_refs	= fetch_refs,
+	.push_refs	= push_refs,
+	.connect	= connect_helper,
+	.disconnect	= release_helper
 };
 
 int transport_helper_init(struct transport *transport, const char *name)
