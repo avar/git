@@ -13,6 +13,9 @@
  *                                  specify the time elapsed since the
  *                                  start_progress() call.
  *   "update" - Set the 'progress_update' flag.
+ *   "signal" - Synonym for "update", used for self-documenting tests,
+ *              i.e. "expect signal here due to hanging ("signal")
+ *              v.s. it was time to update ("update").
  *   "stop" - Call stop_progress().
  *
  * See 't0500-progress-display.sh' for examples.
@@ -78,7 +81,8 @@ int cmd__progress(int argc, const char **argv)
 				die("invalid input: '%s'\n", line.buf);
 			progress_test_ns = test_ms * 1000 * 1000;
 			display_throughput(progress, byte_count);
-		} else if (!strcmp(line.buf, "update")) {
+		} else if (!strcmp(line.buf, "update") ||
+			   !strcmp(line.buf, "signal")) {
 			progress_test_force_update();
 		} else if (!strcmp(line.buf, "stop")) {
 			stop_progress(&progress);

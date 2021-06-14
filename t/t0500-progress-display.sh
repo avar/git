@@ -23,7 +23,7 @@ test_expect_success 'simple progress display' '
 
 	cat >in <<-\EOF &&
 	start 0
-	update
+	signal
 	progress 1
 	update
 	progress 2
@@ -197,7 +197,7 @@ test_expect_success 'progress display with throughput' '
 	cat >in <<-\EOF &&
 	start
 	throughput 102400 1000
-	update
+	signal
 	progress 10
 	throughput 204800 2000
 	update
@@ -255,7 +255,7 @@ test_expect_success 'cover up after throughput shortens' '
 	cat >in <<-\EOF &&
 	start
 	throughput 409600 1000
-	update
+	signal
 	progress 1
 	throughput 819200 2000
 	update
@@ -285,7 +285,7 @@ test_expect_success 'cover up after throughput shortens a lot' '
 	cat >in <<-\EOF &&
 	start
 	throughput 1 1000
-	update
+	signal
 	progress 1
 	throughput 1024000 2000
 	update
@@ -305,7 +305,7 @@ test_expect_success 'progress generates traces' '
 	cat >in <<-\EOF &&
 	start 40
 	throughput 102400 1000
-	update
+	signal
 	progress 10
 	throughput 204800 2000
 	update
