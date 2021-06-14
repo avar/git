@@ -36,8 +36,8 @@ enum help_format {
 
 static const char *html_path;
 
-static int show_all = 0;
-static int show_guides = 0;
+static int show_all;
+static int show_guides;
 enum show_config_type {
 	SHOW_CONFIG_UNSET = 0,
 	SHOW_CONFIG_HUMAN,
