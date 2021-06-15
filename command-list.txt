@@ -215,6 +215,7 @@ gitignore                               userformats
 gitmailmap                              userformats
 gitmodules                              userformats
 gitformats                              gitformats
+gitformat-bitmap                        gitformats
 gitformat-bundle                        gitformats
 gitformat-commit-graph                  gitformats
 gitformat-index                         gitformats
