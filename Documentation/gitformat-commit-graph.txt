@@ -76,7 +76,7 @@ CHUNK LOOKUP:
       ID appears at most once.
 
   The CHUNK LOOKUP matches the table of contents from
-  link:technical/chunk-format.html[the chunk-based file format].
+  the chunk-based file format, see linkgit:gitformat-chunk[5]
 
   The remaining data in the body is described one chunk at a time, and
   these chunks may be given in any order. Chunks are required unless

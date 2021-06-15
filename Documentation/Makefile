@@ -23,6 +23,7 @@ MAN1_TXT += gitweb.txt
 MAN5_TXT += gitattributes.txt
 MAN5_TXT += gitformat-bitmap.txt
 MAN5_TXT += gitformat-bundle.txt
+MAN5_TXT += gitformat-chunk.txt
 MAN5_TXT += gitformat-commit-graph.txt
 MAN5_TXT += gitformat-index.txt
 MAN5_TXT += gitformat-pack-protocol.txt
