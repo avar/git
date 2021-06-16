@@ -101,6 +101,9 @@ enum rev_info_stdin_line {
 typedef enum rev_info_stdin_line (*rev_info_stdin_line_func)(
 	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv);
 
+typedef void (*rev_info_after_stdin_line_func)(
+	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv);
+
 struct rev_info {
 	/* Starting list */
 	struct commit_list *commits;
@@ -170,6 +173,12 @@ struct rev_info {
 	rev_info_stdin_line_func handle_stdin_line;
 	int revarg_flags;
 	void *stdin_line_priv;
+
+	
+	/*
+	 *
+	 */
+	rev_info_after_stdin_line_func after_stdin_line;
 
 	/* topo-sort */
 	enum rev_sort_order sort_order;
