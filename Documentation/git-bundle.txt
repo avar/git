@@ -3,7 +3,7 @@ git-bundle(1)
 
 NAME
 ----
-git-bundle - Move objects and refs by archive
+git-bundle - Create, unpack and manipulate bundles
 
 
 SYNOPSIS
@@ -18,21 +18,34 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Some workflows require that one or more branches of development on one
-machine be replicated on another machine, but the two machines cannot
-be directly connected, and therefore the interactive Git protocols (git,
-ssh, http) cannot be used.
+Create, unpack and manipulate "bundles" (.bundle) files. Bundles are
+.pack files (see linkgit:git-pack-objects[1]) with a header indicating
+what references are contained within the bundle. The header is in the
+format emitted by linkgit:git-show-ref[1].
 
-The 'git bundle' command packages objects and references in an archive
-at the originating machine, which can then be imported into another
-repository using 'git fetch', 'git pull', or 'git clone',
-after moving the archive by some means (e.g., by sneakernet).
+Like the the packed archive format itself bundles can either be
+self-contained or thin (see "--thin" in linkgit:git-pack-objects[1]).
+
+Bundles are useful for numerous purposes. They were originally
+designed to facilitate the transfer of repository data between
+repositories which could not be directly connect to each other, and
+therefore the interactive Git protocols (git, ssh, http) could not be
+used.
+
+In that scenario a bundle is produced on the originating machine. It
+is then transferred to the other machine (e.g. by sneakernet), and
+unpacked on the other end. The unpacking can happen either with
+linkgit:git-clone[1] (which knows how to clone from bundle files), or
+by "git bundle unbundle".
 
 As no
 direct connection between the repositories exists, the user must specify a
 basis for the bundle that is held by the destination repository: the
 bundle assumes that all objects in the basis are already in the
 destination repository.
+
+Similarly, bundles are commonly used to produce incremental backups of
+git repositories. See the "EXAMPLES" section below.
 
 OPTIONS
 -------
