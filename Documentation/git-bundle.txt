@@ -126,7 +126,20 @@ contained in the union of the given bases.  Each basis can be
 specified explicitly (e.g. `^master~10`), or implicitly (e.g.
 `master~10..master`, `--since=10.days.ago master`).
 
-It is very important that the basis used be held by the destination.
+OPEN (THIN) AND CLOSED BUNDLES
+------------------------------
+
+When creating bundles it is possible to create bundle tips that are
+either closed or open under reachability, i.e. those that contain all
+the history needed to get to a given point (closed), and those that do
+not (open). A revision such as "master" will produce a closed tip, a
+range such as "master~2..master" will not (unless the full history is
+contained within that range).
+
+Another name for "open" bundles might be "thin bundles", as in the
+`--thin` option to linkgit:git-pack-objects[1]. Under the hood that's
+what `git bundle create` uses to write bundles. When thin bundles
+it is very important that the basis used be held by the destination.
 It is okay to err on the side of caution, causing the bundle file
 to contain objects already in the destination, as these are ignored
 when unpacking at the destination.
@@ -138,6 +151,11 @@ refs such as `refs/remotes/*`, use `--all`.
 If you want to provide the same set of refs that a clone directly
 from the source repository would get, use `--branches --tags` for
 the `<git-rev-list-args>`.
+
+See the the `--thin` option to linkgit:git-pack-objects[1] noted
+above, and the discussion of "thin pack" in
+link:technical/pack-format.html[the pack format documentation] for
+further details.
 
 EXAMPLES
 --------
