@@ -45,6 +45,7 @@ header is (mostly) in the format emitted by linkgit:git-show-ref[1].
 
 Like the the packed archive format itself bundles can either be
 self-contained, or be created using exclusions.
+See the "OBJECT PREREQUISITES" section below.
 
 Bundles created using revision exclusions are "thin packs" created
 using the `--thin` option to linkgit:git-pack-objects[1], and
@@ -153,18 +154,37 @@ contained in the union of the given bases.  Each basis can be
 specified explicitly (e.g. `^master~10`), or implicitly (e.g.
 `master~10..master`, `--since=10.days.ago master`).
 
-It is very important that the basis used be held by the destination.
+OBJECT PREREQUISITES
+--------------------
+
+When creating bundles it is possible to create a fully self-contained
+bundle with all the prerequisite objects, as well as providing
+negative revisions to exclude prerequisite objects.
+
+A revision such as `new` will produce a tip with all the prerequisite
+objects needed for the `new` reference.
+
+A revision range such as `old..new` will produce a bundle tip that'll
+require any objects existing before `new` to already be present in the
+repository performing the 'git bundle unbundle' operation.
+
+A self-contained bundle without any prerequisites can be extracted
+into anywhere, even into an empty repository, or be cloned from
+(i.e., `new`, but not `old..new`).
+
 It is okay to err on the side of caution, causing the bundle file
 to contain objects already in the destination, as these are ignored
 when unpacking at the destination.
 
-`git clone` can use any bundle created without negative refspecs
-(e.g., `new`, but not `old..new`).
 If you want to match `git clone --mirror`, which would include your
 refs such as `refs/remotes/*`, use `--all`.
 If you want to provide the same set of refs that a clone directly
 from the source repository would get, use `--branches --tags` for
 the `<git-rev-list-args>`.
+
+The 'git bundle verify' command can be used to check whether your
+recipient repository has the required prerequisite commits for a
+bundle.
 
 EXAMPLES
 --------
