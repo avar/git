@@ -164,7 +164,8 @@ $ git bundle create recent-updates.bundle master~10..master next~5..next
 ----------------
 
 A revision name or a range whose right-hand-side cannot be resolved to
-a reference is not accepted:
+a reference is not accepted unless an explicit reference name is
+provided for it:
 
 ----------------
 $ git bundle create HEAD.bundle $(git rev-parse HEAD)
@@ -172,6 +173,68 @@ fatal: Refusing to create empty bundle.
 $ git bundle create master-yesterday.bundle master~10..master~5
 fatal: Refusing to create empty bundle.
 ----------------
+
+To manally specify a reference name for the bundled revision(s) you'll
+need to provide them with the `<git-rev-list-args>` input on
+`--stdin`. This is supported by extending the linkgit:git-rev-list[1]
+syntax with a small bundle-specific extension: Provide the rev-list
+argument that the "simple" mode accepts, followed by a tab character
+and a (fully-qualified) reference name.
+
+This allows for crafting bundles from arbitrary revision names or
+ranges without having to alter the local set of references
+accordingly:
+
+----------------
+$ printf "e83c5163316f89bfbde7\trefs/heads/first-git-dot-git-commit\n" |
+  git bundle create initial.bundle --stdin
+$ printf "master~10..master~5\trefs/tags/some-master-pushes\n" |
+  git bundle create master-pushes.bundle --stdin
+----------------
+
+It is also possible to mix and match the two forms, i.e. to have some
+lines be tab-separated, and have others implicitly parse reference
+from the provided revision:
+1;5A
+----------------
+$ (echo next ; printf "master~10..master~5\trefs/tags/some-master-pushes\n" |
+  git bundle create next-and-some-master-pushes.bundle --stdin
+----------------
+
+For convenience we'll accept the output emitted by
+linkgit:git-for-each-ref[1], i.e. the `%(objectname) SPC %(objecttype)
+TAB %(refname)` format. The `SPC %(objecttype)` part of it is accepted
+but otherwise ignored (we don't validate the supposed type). This is
+for the convenience of piping linkgit:git-for-each-ref[1] output into
+`git bundle create`:
+
+----------------
+$ git for-each-ref 'refs/remotes/origin' |
+  git bundle create origin.bundle --stdin
+----------------
+
+When providing names for revisions the reference name validation is
+loose. You should probably use fully-qualified names such as
+`refs/heads/master`, which is what we'll do for you in the simpler
+mode where you don't specify a reference name.
+
+In order to provide the flexibility of having a `HEAD` reference and
+other such `.git/NAME` references, even a name like `top-level` is
+supported. A name such as `top:level` is not, as it is not a valid ref
+name in any context within git (characters like ":" are not allowed).
+
+Thus it's possible to create bundles with nonsensical names that would
+not be semantically accepted by some of git's more stricter checking,
+e.g. tag object tips in a `refs/heads/*` namespace:
+
+----------------
+$ git for-each-ref 'refs/tags/v*' |
+  sed 's!refs/tags/!refs/heads/!' |
+  git bundle create bad-heads.bdl --stdin
+----------------
+
+The objects in such an odd bundle can be extracted, but "git fetch"
+might not accept some of them.
 
 OPEN AND CLOSED BUNDLES
 -----------------------
