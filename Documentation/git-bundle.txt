@@ -44,7 +44,8 @@ header indicating what references are contained within the bundle. The
 header is (mostly) in the format emitted by linkgit:git-show-ref[1].
 
 Like the the packed archive format itself bundles can either be
-self-contained or thin (see "--thin" in linkgit:git-pack-objects[1]).
+self-contained or thin, see the "OPEN (THIN) AND CLOSED BUNDLES"
+section below.
 
 See link:technical/bundle-format.html[the `bundle-format`
 documentation] for more details.
@@ -141,10 +142,20 @@ contained in the union of the given bases.  Each basis can be
 specified explicitly (e.g. `^master~10`), or implicitly (e.g.
 `master~10..master`, `--since=10.days.ago master`).
 
-It is very important that the basis used be held by the destination.
-It is okay to err on the side of caution, causing the bundle file
-to contain objects already in the destination, as these are ignored
-when unpacking at the destination.
+OPEN AND CLOSED BUNDLES
+-----------------------
+
+When creating bundles it is possible to create bundle tips that are
+either closed or open under reachability, i.e. those that contain all
+the history needed to get to a given point (closed), and those that do
+not (open). A revision such as "master" will produce a closed tip, a
+range such as "master~2..master" will not (unless the full history is
+contained within that range).
+
+When creating "open" bundles it is very important that the basis used
+be held by the destination.  It is okay to err on the side of caution,
+causing the bundle file to contain objects already in the destination,
+as these are ignored when unpacking at the destination.
 
 `git clone` can use any bundle created without negative refspecs
 (e.g., `new`, but not `old..new`).
@@ -153,6 +164,25 @@ refs such as `refs/remotes/*`, use `--all`.
 If you want to provide the same set of refs that a clone directly
 from the source repository would get, use `--branches --tags` for
 the `<git-rev-list-args>`.
+
+THIN BUNDLES
+------------
+
+Bundles that are "open" (see above) are created "thin" by using the
+`--thin` option to linkgit:git-pack-objects[1]. Whether a bundle (or
+packfile) is "thin" is a subset of whether it's "open". What "thin"
+means is that such a packfile can store an object in a deltified form
+against a base object that is not in the same packfile.
+
+To put it another way, when creating "open" bundles we assume that the
+objects leading up to the starting range(s) already exist in the
+recipient repository, which allows us to save space. When we run 'git
+bundle unbundle' we invoke linkgit:git-index-pack[1] with the
+`--fix-thin` option.
+
+See the discussion of "thin pack" in
+link:technical/pack-format.html[the pack format documentation] for
+further details.
 
 EXAMPLES
 --------
