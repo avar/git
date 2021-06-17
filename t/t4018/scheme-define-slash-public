@@ -1,7 +1,8 @@
+t4018 header: (define/public (foo)
 (define bar-class%
   (class object%
     (field (info 5))
-    (define/public (foo) RIGHT
+    (define/public (foo)
       (+ info 42)
       (* info ChangeMe))
     (super-new)))
