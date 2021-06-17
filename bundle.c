@@ -334,6 +334,121 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	return 0;
 }
 
+struct stdin_line_cb {
+	struct strbuf *seen_refname;
+	struct string_list refname_to_pending;
+	int after_handle_revision_arg;
+};
+
+static enum rev_info_stdin_line write_bundle_after_stdin_line_again(struct rev_info *revs,
+								    struct stdin_line_cb *line_cb)
+{
+	struct strbuf *seen_refname = line_cb->seen_refname;
+	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
+	unsigned int nr;
+	struct object_array_entry *e = &revs->pending.objects[revs->pending.nr - 1];
+
+	/*
+	 * With non-tabular input we append an empty line for the
+	 * convenience of having a 1=1 mapping between the "refnames"
+	 * string-list and "revs->pending" in write_bundle_refs()
+	 * below.
+	 *
+	 * Note that for nonexistent revs we may get nothing (see the
+	 * "^topic/deleted" test), hence the "> 0" check.
+	 */
+	if (revs->pending.nr > 0) {
+		for (nr = refname_to_pending->nr; nr < revs->pending.nr - 1; nr++)
+			string_list_append(refname_to_pending, "");
+	}
+	if (seen_refname->len) {
+		string_list_append(refname_to_pending, seen_refname->buf);
+		e->item->flags &= ~UNINTERESTING;
+	} else {
+		string_list_append(refname_to_pending, "");
+	}
+
+	strbuf_reset(seen_refname);
+	line_cb->after_handle_revision_arg = 0;
+
+	return REV_INFO_STDIN_LINE_CONTINUE;
+}
+
+static enum rev_info_stdin_line write_bundle_handle_stdin_line(
+	struct rev_info *revs, struct strbuf *line, void *stdin_line_priv)
+{
+	struct stdin_line_cb *line_cb = stdin_line_priv;
+	struct strbuf *seen_refname = line_cb->seen_refname;
+	const char delim = '\t';
+	struct strbuf **s;
+	struct strbuf *refname;
+	struct strbuf *revname;
+	struct strbuf **fields;
+	int i;
+
+	if (line_cb->after_handle_revision_arg)
+		return write_bundle_after_stdin_line_again(revs, line_cb);
+
+	/* Parse "<revision>\t<refname>" input */
+	fields = strbuf_split_buf(line->buf, line->len, delim, -1);
+	for (s = fields, i = 0; *s; s++, i++) {
+		struct strbuf *field = *s;
+		enum object_type type;
+
+		/* <revision> */
+		if (!i) {
+			revname = field;
+			continue;
+		}
+
+		/* The <revision> was followed by a "\t" */
+		if (!strbuf_chomp(revname, delim))
+			BUG("strbuf_split_buf() misbehaving?");
+
+		/*
+		 * We know we'll only get to <refname> even if there's
+		 * unknown fields, since check_refname_format() will
+		 * refuse a refname with a trailing tab.
+		 *
+		 * We could supply a max of "2" to strbuf_split_buf()
+		 * above (instead of -1); but this makes for better
+		 * error messages and ease of migration to accepting
+		 * more fields in the future.
+		 */
+		refname = field;
+		if (check_refname_format(refname->buf, REFNAME_ALLOW_ONELEVEL))
+			die(_("'%s' is not a valid ref name"), refname->buf);
+		strbuf_addbuf(seen_refname, refname);
+
+		/*
+		 * Strip " commit", " tree", " blob" and " tag" from
+		 * as a special-case for consuming the default
+		 * for-each-ref format. We're lazy and don't validate
+		 * the stated type.
+		 */
+		for (type = OBJ_COMMIT; type <= OBJ_TAG; type++) {
+			const char *name = type_name(type);
+			if (strbuf_strip_suffix(revname, name)) {
+				if (revname->len > 0)
+					revname->buf[--revname->len] = '\0';
+				break;
+			}
+		}
+
+		/*
+		 * Pretend as if only the <revision> was on this line
+		 * in revision.c's read_revisions_from_stdin()
+		 */
+		strbuf_swap(line, revname);
+		strbuf_release(refname);
+		strbuf_release(revname);
+		line_cb->after_handle_revision_arg = 1;
+		return REV_INFO_STDIN_LINE_AGAIN;
+	}
+
+	return REV_INFO_STDIN_LINE_PROCESS;
+}
+
 /*
  * Write out bundle refs based on the tips already
  * parsed into revs.pending. As a side effect, may
@@ -347,21 +462,31 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 {
 	int i;
 	int ref_count = 0;
+	struct stdin_line_cb *line_cb = revs->stdin_line_priv;
+	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
 
 	for (i = 0; i < revs->pending.nr; i++) {
+		char *refname = refname_to_pending->nr > i ? refname_to_pending->items[i].string : "";
 		struct object_array_entry *e = revs->pending.objects + i;
 		struct object_id oid;
 		char *ref;
 		const char *display_ref;
 		int flag;
 
-		if (e->item->flags & UNINTERESTING)
+		if (*refname) {
+			display_ref = refname;
+			e->item->flags &= ~UNINTERESTING;
+			e->item->flags &= SHOWN;
+			goto write_it;
+		} else if (e->item->flags & UNINTERESTING) {
 			continue;
-		if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
-			goto skip_write_ref;
-		if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
-			flag = 0;
-		display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
+		} else {
+			if (dwim_ref(e->name, strlen(e->name), &oid, &ref, 0) != 1)
+				goto skip_write_ref;
+			if (read_ref_full(e->name, RESOLVE_REF_READING, &oid, &flag))
+				flag = 0;
+			display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
+		}
 
 		if (e->item->type == OBJ_TAG &&
 				!is_tag_in_date_range(e->item, revs)) {
@@ -389,7 +514,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		 * commit that is referenced by the tag, and not the tag
 		 * itself.
 		 */
-		if (!oideq(&oid, &e->item->oid)) {
+		if (!*refname && !oideq(&oid, &e->item->oid)) {
 			/*
 			 * Is this the positive end of a range expressed
 			 * in terms of a tag (e.g. v2.0 from the range
@@ -414,13 +539,15 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 			goto skip_write_ref;
 		}
 
+	write_it:
 		ref_count++;
 		write_or_die(bundle_fd, oid_to_hex(&e->item->oid), the_hash_algo->hexsz);
 		write_or_die(bundle_fd, " ", 1);
 		write_or_die(bundle_fd, display_ref, strlen(display_ref));
 		write_or_die(bundle_fd, "\n", 1);
  skip_write_ref:
-		free(ref);
+		if (!*refname)
+			free(ref);
 	}
 
 	/* end header */
@@ -471,6 +598,12 @@ int create_bundle(struct repository *r, const char *path,
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
 	int i;
+	struct strbuf seen_refname = STRBUF_INIT;
+	struct string_list refname_to_pending = STRING_LIST_INIT_DUP;
+	struct stdin_line_cb line_cb = {
+		.seen_refname = &seen_refname,
+		.refname_to_pending = refname_to_pending,
+	};
 
 	bundle_to_stdout = !strcmp(path, "-");
 	if (bundle_to_stdout)
@@ -499,6 +632,8 @@ int create_bundle(struct repository *r, const char *path,
 	/* init revs to list objects for pack-objects later */
 	save_commit_buffer = 0;
 	repo_init_revisions(r, &revs, NULL);
+	revs.stdin_line_priv = &line_cb;
+	revs.handle_stdin_line = write_bundle_handle_stdin_line;
 
 	argc = setup_revisions(argc, argv, &revs, NULL);
 

@@ -2117,19 +2117,30 @@ static void read_revisions_from_stdin(struct rev_info *revs,
 	strbuf_init(&sb, 1000);
 	while (strbuf_getline(&sb, stdin) != EOF) {
 		int len = sb.len;
+		int do_again = 0;
 		if (!len)
 			break;
 
+	line_cb:
 		if (revs->handle_stdin_line) {
 			int do_break = 0;
 			enum rev_info_stdin_line ret = revs->handle_stdin_line(
 				revs, &sb, revs->stdin_line_priv);
+
+			if (do_again &&
+			    ret != REV_INFO_STDIN_LINE_CONTINUE &&
+			    ret != REV_INFO_STDIN_LINE_BREAK)
+				BUG("a handle_stdin_line callback must return "
+				    "*_{BREAK,CONTINUE} if doing *_AGAIN processing");
 
 			switch (ret) {
 			case REV_INFO_STDIN_LINE_PROCESS:
 				break;
 			case REV_INFO_STDIN_LINE_BREAK:
 				do_break = 1;
+				break;
+			case REV_INFO_STDIN_LINE_AGAIN:
+				do_again = 1;
 				break;
 			case REV_INFO_STDIN_LINE_CONTINUE:
 				continue;
@@ -2148,6 +2159,12 @@ static void read_revisions_from_stdin(struct rev_info *revs,
 		if (handle_revision_arg(sb.buf, revs, revs->revarg_flags,
 					REVARG_CANNOT_BE_FILENAME))
 			die("bad revision '%s'", sb.buf);
+		if (do_again)
+			/*
+			 * On *_AGAIN the callback wants to update its
+			 * state after our handle_revision_arg().
+			 */
+			goto line_cb;
 	}
 	if (seen_dashdash)
 		read_pathspec_from_stdin(&sb, prune);
