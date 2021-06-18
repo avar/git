@@ -53,50 +53,6 @@ static volatile sig_atomic_t progress_update;
  */
 int progress_testing;
 uint64_t progress_test_ns = 0;
-void progress_test_force_update(void)
-{
-	progress_update = 1;
-}
-
-
-static void progress_interval(int signum)
-{
-	progress_update = 1;
-}
-
-static void set_progress_signal(void)
-{
-	struct sigaction sa;
-	struct itimerval v;
-
-	if (progress_testing)
-		return;
-
-	progress_update = 0;
-
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = progress_interval;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	sigaction(SIGALRM, &sa, NULL);
-
-	v.it_interval.tv_sec = 1;
-	v.it_interval.tv_usec = 0;
-	v.it_value = v.it_interval;
-	setitimer(ITIMER_REAL, &v, NULL);
-}
-
-static void clear_progress_signal(void)
-{
-	struct itimerval v = {{0,},};
-
-	if (progress_testing)
-		return;
-
-	setitimer(ITIMER_REAL, &v, NULL);
-	signal(SIGALRM, SIG_IGN);
-	progress_update = 0;
-}
 
 static int is_foreground_fd(int fd)
 {
@@ -135,7 +91,8 @@ static void display(struct progress *progress, uint64_t n, const char *done)
 	}
 
 	if (show_update) {
-		if (is_foreground_fd(fileno(stderr)) || done) {
+		int stderr_is_foreground_fd = is_foreground_fd(fileno(stderr));
+		if (stderr_is_foreground_fd || done) {
 			const char *eol = done ? done : "\r";
 			size_t clear_len = counters_sb->len < last_count_len ?
 					last_count_len - counters_sb->len + 1 :
@@ -159,7 +116,8 @@ static void display(struct progress *progress, uint64_t n, const char *done)
 				fprintf(stderr, "%s: %s%*s", progress->title,
 					counters_sb->buf, (int) clear_len, eol);
 			}
-			fflush(stderr);
+			if (stderr_is_foreground_fd)
+				fflush(stderr);
 		}
 		progress_update = 0;
 	}
@@ -247,6 +205,54 @@ void display_progress(struct progress *progress, uint64_t n)
 {
 	if (progress)
 		display(progress, n, NULL);
+}
+
+static void progress_interval(int signum)
+{
+	progress_update = 1;
+}
+
+/*
+ * The progress_test_force_update() function is intended for testing
+ * the progress output, i.e. exclusively for 'test-tool progress'.
+ */
+void progress_test_force_update(void)
+{
+	progress_interval(SIGALRM);
+}
+
+static void set_progress_signal(void)
+{
+	struct sigaction sa;
+	struct itimerval v;
+
+	if (progress_testing)
+		return;
+
+	progress_update = 0;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = progress_interval;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sigaction(SIGALRM, &sa, NULL);
+
+	v.it_interval.tv_sec = 1;
+	v.it_interval.tv_usec = 0;
+	v.it_value = v.it_interval;
+	setitimer(ITIMER_REAL, &v, NULL);
+}
+
+static void clear_progress_signal(void)
+{
+	struct itimerval v = {{0,},};
+
+	if (progress_testing)
+		return;
+
+	setitimer(ITIMER_REAL, &v, NULL);
+	signal(SIGALRM, SIG_IGN);
+	progress_update = 0;
 }
 
 static struct progress *start_progress_delay(const char *title, uint64_t total,
