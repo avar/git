@@ -29,9 +29,8 @@ static void display(struct progress *progress, uint64_t n,
 		    const char *update_msg, int last_update)
 {
 	const char *tp;
-	struct strbuf *counters_sb = &progress->counters_sb;
 	int show_update = 0;
-	int last_count_len = counters_sb->len;
+	size_t last_count_len = progress->status_len_utf8;
 
 	if (progress->delay && (!progress_update || --progress->delay))
 		return;
@@ -43,47 +42,57 @@ static void display(struct progress *progress, uint64_t n,
 		if (percent != progress->last_percent || progress_update) {
 			progress->last_percent = percent;
 
-			strbuf_reset(counters_sb);
-			strbuf_addf(counters_sb,
+			strbuf_reset(&progress->status);
+			strbuf_addf(&progress->status,
 				    "%3u%% (%"PRIuMAX"/%"PRIuMAX")%s", percent,
 				    (uintmax_t)n, (uintmax_t)progress->total,
 				    tp);
 			show_update = 1;
 		}
 	} else if (progress_update) {
-		strbuf_reset(counters_sb);
-		strbuf_addf(counters_sb, "%"PRIuMAX"%s", (uintmax_t)n, tp);
+		strbuf_reset(&progress->status);
+		strbuf_addf(&progress->status, "%"PRIuMAX"%s", (uintmax_t)n, tp);
 		show_update = 1;
 	}
 
 	if (show_update && update_msg)
-		strbuf_addf(counters_sb, ", %s.", update_msg);
+		strbuf_addf(&progress->status, ", %s.", update_msg);
 
 	if (show_update) {
 		int stderr_is_foreground_fd = is_foreground_fd(fileno(stderr));
 		if (stderr_is_foreground_fd || update_msg) {
 			const char *eol = last_update ? "\n" : "\r";
-			size_t clear_len = counters_sb->len < last_count_len ?
-					last_count_len - counters_sb->len + 1 :
+			size_t clear_len = progress->status.len < last_count_len ?
+					last_count_len - progress->status.len + 1 :
 					0;
 			/* The "+ 2" accounts for the ": ". */
-			size_t progress_line_len = progress->title_len +
-						counters_sb->len + 2;
+			size_t progress_line_len = progress->title_len_utf8 +
+						progress->status.len + 2;
 			int cols = term_columns();
+			progress->status_len_utf8 = utf8_strwidth(progress->status.buf);
 
 			if (progress->split) {
-				fprintf(stderr, "  %s%*s", counters_sb->buf,
-					(int) clear_len, eol);
+				fprintf(stderr, "  %*s%*s",
+					(int)progress->status_len_utf8,
+					progress->status.buf,
+					(int)clear_len, eol);
 			} else if (!update_msg && cols < progress_line_len) {
-				clear_len = progress->title_len + 1 < cols ?
-					    cols - progress->title_len - 1 : 0;
-				fprintf(stderr, "%s:%*s\n  %s%s",
-					progress->title, (int) clear_len, "",
-					counters_sb->buf, eol);
+				clear_len = progress->title_len_utf8 + 1 < cols ?
+					    cols - progress->title_len_utf8 - 1 : 0;
+				fprintf(stderr, "%*s:%*s\n  %*s%s",
+					(int)progress->title_len_utf8,
+					progress->title.buf,
+					(int)clear_len, "",
+					(int)progress->status_len_utf8,
+					progress->status.buf, eol);
 				progress->split = 1;
 			} else {
-				fprintf(stderr, "%s: %s%*s", progress->title,
-					counters_sb->buf, (int) clear_len, eol);
+				fprintf(stderr, "%*s: %*s%*s",
+					(int)progress->title_len_utf8,
+					progress->title.buf,
+					(int)progress->status_len_utf8,
+					progress->status.buf,
+					(int)clear_len, eol);
 			}
 			if (stderr_is_foreground_fd)
 				fflush(stderr);
@@ -232,15 +241,18 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 					     unsigned delay, int testing)
 {
 	struct progress *progress = xmalloc(sizeof(*progress));
-	progress->title = title;
+	strbuf_init(&progress->title, 0);
+	strbuf_addstr(&progress->title, title);
+	progress->title_len_utf8 = utf8_strwidth(title);
+	strbuf_init(&progress->status, 0);
+	progress->status_len_utf8 = 0;
+
 	progress->total = total;
 	progress->last_value = -1;
 	progress->last_percent = -1;
 	progress->delay = delay;
 	progress->throughput = NULL;
 	progress->start_ns = getnanotime();
-	strbuf_init(&progress->counters_sb, 0);
-	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
 	progress->test_mode = testing;
 	set_progress_signal(progress);
@@ -288,7 +300,7 @@ void stop_progress(struct progress **p_progress)
 					   "total_bytes",
 					   progress->throughput->curr_total);
 
-		trace2_region_leave("progress", progress->title, the_repository);
+		trace2_region_leave("progress", progress->title.buf, the_repository);
 	}
 
 	stop_progress_msg(p_progress, _("done"));
@@ -320,7 +332,8 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 		display(progress, progress->last_value, msg, 1);
 	}
 	clear_progress_signal(progress);
-	strbuf_release(&progress->counters_sb);
+	strbuf_release(&progress->title);
+	strbuf_release(&progress->status);
 	if (progress->throughput)
 		strbuf_release(&progress->throughput->display);
 	free(progress->throughput);
