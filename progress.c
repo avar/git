@@ -25,17 +25,24 @@ static int is_foreground_fd(int fd)
 	return tpgrp < 0 || tpgrp == getpgid(0);
 }
 
+static const char *counter_prefix(int split)
+{
+	switch (split) {
+	case 1: return "  ";
+	case 0: return ": ";
+	default: BUG("unknown split value");
+	}
+}
+
 static void display(struct progress *progress, uint64_t n,
 		    const char *update_msg, int last_update)
 {
 	const char *tp;
 	int show_update = 0;
-	size_t last_count_len = progress->status_len_utf8;
 
 	if (progress->delay && (!progress_update || --progress->delay))
 		return;
 
-	progress->last_value = n;
 	tp = (progress->throughput) ? progress->throughput->display.buf : "";
 	if (progress->total) {
 		unsigned percent = n * 100 / progress->total;
@@ -44,61 +51,119 @@ static void display(struct progress *progress, uint64_t n,
 
 			strbuf_reset(&progress->status);
 			strbuf_addf(&progress->status,
-				    "%3u%% (%"PRIuMAX"/%"PRIuMAX")%s", percent,
+				    "%s%3u%% (%"PRIuMAX"/%"PRIuMAX")%s",
+				    counter_prefix(progress->split), percent,
 				    (uintmax_t)n, (uintmax_t)progress->total,
 				    tp);
 			show_update = 1;
 		}
 	} else if (progress_update) {
 		strbuf_reset(&progress->status);
-		strbuf_addf(&progress->status, "%"PRIuMAX"%s", (uintmax_t)n, tp);
+		strbuf_addf(&progress->status, "%s%"PRIuMAX"%s", counter_prefix(progress->split),
+			    (uintmax_t)n, tp);
 		show_update = 1;
 	}
 
 	if (show_update && update_msg)
-		strbuf_addf(&progress->status, ", %s.", update_msg);
+		strbuf_addstr(&progress->status, update_msg);
 
 	if (show_update) {
 		int stderr_is_foreground_fd = is_foreground_fd(fileno(stderr));
 		if (stderr_is_foreground_fd || update_msg) {
 			const char *eol = last_update ? "\n" : "\r";
-			size_t clear_len = progress->status.len < last_count_len ?
-					last_count_len - progress->status.len + 1 :
-					0;
-			/* The "+ 2" accounts for the ": ". */
-			size_t progress_line_len = progress->title_len_utf8 +
-						progress->status.len + 2;
-			int cols = term_columns();
-			progress->status_len_utf8 = utf8_strwidth(progress->status.buf);
+			size_t status_len_utf8 = utf8_strwidth(progress->status.buf);
+			size_t progress_line_len = progress->title_len_utf8 + status_len_utf8;
 
-			if (progress->split) {
-				fprintf(stderr, "  %*s%*s",
-					(int)progress->status_len_utf8,
-					progress->status.buf,
-					(int)clear_len, eol);
-			} else if (!update_msg && cols < progress_line_len) {
-				clear_len = progress->title_len_utf8 + 1 < cols ?
-					    cols - progress->title_len_utf8 - 1 : 0;
-				fprintf(stderr, "%*s:%*s\n  %*s%s",
-					(int)progress->title_len_utf8,
-					progress->title.buf,
-					(int)clear_len, "",
-					(int)progress->status_len_utf8,
-					progress->status.buf, eol);
+			/*
+			 * We're back at the beginning, so we'll
+			 * always print out the title, unless we're
+			 * already split, then the title is on an
+			 * earlier line.
+			 */
+			if (!progress->split)
+				fprintf(stderr, "%s", progress->title.buf);
+
+			/*
+			 * Did the user resize the terminal and we're
+			 * splitting this progress bar? Clear previous
+			 * ": (X/Y) [msg]"
+			 */
+			if (!progress->split &&
+			    term_columns() < progress_line_len) {
+				const char *split_prefix = counter_prefix(0);
+				const char *unsplit_prefix = counter_prefix(1);
+				const char *split_colon = ":";
 				progress->split = 1;
+
+				if (progress->last_value == -1) {
+					/*
+					 * We've got no previous
+					 * output whatsoever, so we
+					 * were "always split". No
+					 * previous status output to
+					 * erase.
+					 */
+					fprintf(stderr, "%s\n", split_colon);
+				} else {
+					const char *split_colon = ":";
+					const size_t split_colon_len = strlen(split_colon);
+
+					/*
+					 * Erase whatever we had, adding a
+					 * trailing ":" (not ": ") to indicate
+					 * the progress on the next line.
+					 */
+					fprintf(stderr, "%s%*s\n", split_colon,
+						(int)(progress->status_len_utf8 - split_colon_len),
+						"");
+				}
+
+				/*
+				 * For the one-off switching from
+				 * "!progress->split" to
+				 * "progress->split" fake up the
+				 * expected strbuf and replace the ":
+				 * " with a " ".
+				 *
+				 * The length of the two delimiters
+				 * must be the same for this trick to
+				 * work.
+				 */
+				if (!starts_with(progress->status.buf, split_prefix))
+					BUG("switching from already true split mode to split mode?");
+
+				strbuf_splice(&progress->status, 0,
+					      strlen(split_prefix),
+					      unsplit_prefix,
+					      strlen(unsplit_prefix));
+
+				fprintf(stderr, "%*s%s", (int)status_len_utf8,
+					progress->status.buf, eol);
 			} else {
-				fprintf(stderr, "%*s: %*s%*s",
-					(int)progress->title_len_utf8,
-					progress->title.buf,
-					(int)progress->status_len_utf8,
-					progress->status.buf,
-					(int)clear_len, eol);
+				/*
+				 * Our current
+				 * message may be larger or smaller than the
+				 * last one. Either the progress bar went
+				 * backards (smaller numbers), or we went back
+				 * and forth with a status message.
+				 */
+				size_t clear_len = progress->status_len_utf8 > status_len_utf8
+					? progress->status_len_utf8 - status_len_utf8
+					: 0;
+				fprintf(stderr, "%*s%*s%s",
+					(int) status_len_utf8, progress->status.buf,
+					(int) clear_len, "",
+					eol);
 			}
+			progress->status_len_utf8 = status_len_utf8;
+
 			if (stderr_is_foreground_fd)
 				fflush(stderr);
 		}
 		progress_update = 0;
 	}
+	progress->last_value = n;
+
 }
 
 static void throughput_string(struct strbuf *buf, uint64_t total,
@@ -332,7 +397,7 @@ void stop_progress(struct progress **p_progress)
 		trace2_region_leave("progress", progress->title.buf, the_repository);
 	}
 
-	stop_progress_msg(p_progress, _("done"));
+	stop_progress_msg(p_progress, _(", done."));
 }
 
 void stop_progress_msg(struct progress **p_progress, const char *msg)
