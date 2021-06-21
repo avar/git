@@ -8,6 +8,11 @@ show_cr () {
 	tr '\015' Q | sed -e "s/Q/<CR>\\$LF/g"
 }
 
+test_expect_success 'setup COLUMNS' '
+	COLUMNS=80 &&
+	export COLUMNS
+'
+
 test_expect_success 'simple progress display' '
 	cat >expect <<-\EOF &&
 	Working hard: 1<CR>
