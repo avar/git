@@ -1,7 +1,7 @@
 # The default target of this Makefile is...
 all::
 
-# Define V=1 to have a more verbose compile.
+# Define V=1 to have a more verbose compile, V=2 for even more verbose.
 #
 # Define SHELL_PATH to a POSIX shell if your /bin/sh is broken.
 #
@@ -497,7 +497,7 @@ all::
 #        USE_PARENS_AROUND_GETTEXT_N to produce only relevant warnings.
 
 GIT-VERSION-FILE: FORCE
-	@$(SHELL_PATH) ./GIT-VERSION-GEN
+	$(QUIET_QUIET)$(SHELL_PATH) ./GIT-VERSION-GEN
 -include GIT-VERSION-FILE
 
 # Set our default configuration.
@@ -1960,6 +1960,8 @@ endif
 
 ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
+	QUIET_QUIET    = @
+	QUIET_CLEAN    = @echo '   ' CLEAN $@;
 	QUIET_CC       = @echo '   ' CC $@;
 	QUIET_AR       = @echo '   ' AR $@;
 	QUIET_LINK     = @echo '   ' LINK $@;
@@ -1979,6 +1981,10 @@ ifndef V
 	export V
 	export QUIET_GEN
 	export QUIET_BUILT_IN
+else
+ifneq ($(V),2)
+QUIET_QUIET    = @
+endif
 endif
 endif
 
@@ -2102,7 +2108,7 @@ GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
 GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
 GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
 GIT-USER-AGENT: FORCE
-	@if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
+	$(QUIET_QUIET)if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
 		echo '$(GIT_USER_AGENT_SQ)' >GIT-USER-AGENT; \
 	fi
 
@@ -2134,7 +2140,7 @@ endif
 profile:: profile-clean
 	$(MAKE) PROFILE=GEN all
 	$(MAKE) PROFILE=GEN -j1 test
-	@if test -n "$$GIT_PERF_REPO" || test -d .git; then \
+	$(QUIET_QUIET)if test -n "$$GIT_PERF_REPO" || test -d .git; then \
 		$(MAKE) PROFILE=GEN -j1 perf; \
 	else \
 		echo "Skipping profile of perf tests..."; \
@@ -2160,7 +2166,7 @@ endif
 	$(QUIET_SUBDIR0)templates $(QUIET_SUBDIR1) SHELL_PATH='$(SHELL_PATH_SQ)' PERL_PATH='$(PERL_PATH_SQ)'
 
 please_set_SHELL_PATH_to_a_more_modern_shell:
-	@$$(:)
+	$(QUIET_QUIET)$$(:)
 
 shell_compatibility_test: please_set_SHELL_PATH_to_a_more_modern_shell
 
@@ -2207,8 +2213,9 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
 
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
-		$(filter %.o,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) \
+		$(filter %.o,$^) $(LIBS) && \
+	mv $@+ $@
 
 help.sp help.s help.o: command-list.h
 
@@ -2273,7 +2280,7 @@ sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
 endef
 
 GIT-SCRIPT-DEFINES: FORCE
-	@FLAGS='$(SCRIPT_DEFINES)'; \
+	$(QUIET_QUIET)FLAGS='$(SCRIPT_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new script parameters"; \
 		echo "$$FLAGS" >$@; \
@@ -2293,7 +2300,8 @@ git.res: git.rc GIT-VERSION-FILE GIT-PREFIX
 	$(QUIET_RC)$(RC) \
 	  $(join -DMAJOR= -DMINOR= -DMICRO= -DPATCHLEVEL=, $(wordlist 1, 4, \
 	    $(shell echo $(GIT_VERSION) 0 0 0 0 | tr '.a-zA-Z-' ' '))) \
-	  -DGIT_VERSION="\\\"$(GIT_VERSION)\\\"" -i $< -o $@
+	  -DGIT_VERSION="\\\"$(GIT_VERSION)\\\"" -i $< -o $@+ && \
+	mv $@+ $@
 
 # This makes sure we depend on the NO_PERL setting itself.
 $(SCRIPT_PERL_GEN): GIT-BUILD-OPTIONS
@@ -2340,10 +2348,11 @@ $(SCRIPT_PERL_GEN): % : %.perl GIT-PERL-DEFINES GIT-PERL-HEADER GIT-VERSION-FILE
 
 PERL_DEFINES := $(subst $(space),:,$(PERL_DEFINES))
 GIT-PERL-DEFINES: FORCE
-	@FLAGS='$(PERL_DEFINES)'; \
+	$(QUIET_QUIET)FLAGS='$(PERL_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new perl-specific parameters"; \
-		echo "$$FLAGS" >$@; \
+		echo "$$FLAGS" >$@+; \
+		mv $@+ $@; \
 	    fi
 
 GIT-PERL-HEADER: $(PERL_HEADER_TEMPLATE) GIT-PERL-DEFINES Makefile
@@ -2361,7 +2370,7 @@ GIT-PERL-HEADER: $(PERL_HEADER_TEMPLATE) GIT-PERL-DEFINES Makefile
 
 .PHONY: perllibdir
 perllibdir:
-	@echo '$(perllibdir_SQ)'
+	$(QUIET_QUIET)echo '$(perllibdir_SQ)'
 
 .PHONY: gitweb
 gitweb:
@@ -2466,7 +2475,7 @@ dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
 
 ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
 $(dep_dirs):
-	@mkdir -p $@
+	$(QUIET_QUIET)mkdir -p $@
 
 missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
 dep_file = $(dir $@).depend/$(notdir $@).d
@@ -2484,7 +2493,7 @@ compdb_dir = compile_commands
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
 missing_compdb_dir = $(compdb_dir)
 $(missing_compdb_dir):
-	@mkdir -p $@
+	$(QUIET_QUIET)mkdir -p $@
 
 compdb_file = $(compdb_dir)/$(subst /,-,$@.json)
 compdb_args = -MJ $(compdb_file)
@@ -2505,7 +2514,8 @@ $(ASM_OBJ): %.o: %.S GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
 %.s: %.c GIT-CFLAGS FORCE
-	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+	$(QUIET_CC)$(CC) -o $@+ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $< && \
+	mv $@+ $@
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
 # Take advantage of gcc's on-the-fly dependency generation
@@ -2522,9 +2532,8 @@ endif
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
 all:: compile_commands.json
 compile_commands.json:
-	@$(RM) $@
-	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json > $@+
-	@if test -s $@+; then mv $@+ $@; else $(RM) $@+; fi
+	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json >$@+ && \
+	mv $@+ $@
 endif
 
 exec-cmd.sp exec-cmd.s exec-cmd.o: GIT-PREFIX
@@ -2571,18 +2580,22 @@ compat/nedmalloc/nedmalloc.sp: SP_EXTRA_FLAGS += -Wno-non-pointer-null
 endif
 
 git-%$X: %.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) $(LIBS) && \
+	mv $@+ $@
 
 git-imap-send$X: imap-send.o $(IMAP_SEND_BUILDDEPS) GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(IMAP_SEND_LDFLAGS) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(IMAP_SEND_LDFLAGS) $(LIBS) && \
+	mv $@+ $@
 
 git-http-fetch$X: http.o http-walker.o http-fetch.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(LIBS) && \
+	mv $@+ $@
 git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS) && \
+	mv $@+ $@
 
 $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 	$(QUIET_LNCP)$(RM) $@ && \
@@ -2591,19 +2604,22 @@ $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 	cp $< $@
 
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS) && \
+	mv $@+ $@
 
 $(LIB_FILE): $(LIB_OBJS)
-	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
+	$(QUIET_AR)$(AR) $(ARFLAGS) $@+ $^ && \
+	mv $@+ $@
 
 $(XDIFF_LIB): $(XDIFF_OBJS)
-	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
+	$(QUIET_AR)$(AR) $(ARFLAGS) $@+ $^&& \
+	mv $@+ $@
 
 export DEFAULT_EDITOR DEFAULT_PAGER
 
 Documentation/GIT-EXCLUDED-PROGRAMS: FORCE
-	@EXCLUDED='EXCLUDED_PROGRAMS := $(EXCLUDED_PROGRAMS)'; \
+	$(QUIET_QUIET)EXCLUDED='EXCLUDED_PROGRAMS := $(EXCLUDED_PROGRAMS)'; \
 	    if test x"$$EXCLUDED" != \
 		x"`cat Documentation/GIT-EXCLUDED-PROGRAMS 2>/dev/null`" ; then \
 		echo >&2 "    * new documentation flags"; \
@@ -2664,7 +2680,7 @@ po/git.pot: $(GENERATED_H) FORCE
 	# want to have any local change.
 	git diff --quiet HEAD && git diff --quiet --cached
 
-	@for s in $(LOCALIZED_C) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
+	$(QUIET_QUIET)for s in $(LOCALIZED_C) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
 	do \
 		sed -e 's|PRItime|PRIuMAX|g' <"$$s" >"$$s+" && \
 		cat "$$s+" >"$$s" && rm "$$s+"; \
@@ -2711,11 +2727,13 @@ perl/build/lib/%.pm: perl/%.pm GIT-PERL-DEFINES
 	sed -e 's|@@LOCALEDIR@@|$(perl_localedir_SQ)|g' \
 	    -e 's|@@NO_GETTEXT@@|$(NO_GETTEXT_SQ)|g' \
 	    -e 's|@@NO_PERL_CPAN_FALLBACKS@@|$(NO_PERL_CPAN_FALLBACKS_SQ)|g' \
-	< $< > $@
+	< $< >$@+ && \
+	mv $@+ $@
 
 perl/build/man/man3/Git.3pm: perl/Git.pm
 	$(QUIET_GEN)mkdir -p $(dir $@) && \
-	pod2man $< $@
+	pod2man $< $@+ && \
+	mv $@+ $@
 
 FIND_SOURCE_FILES = ( \
 	git ls-files \
@@ -2754,7 +2772,7 @@ TRACK_PREFIX = $(bindir_SQ):$(gitexecdir_SQ):$(template_dir_SQ):$(prefix_SQ):\
 		$(localedir_SQ)
 
 GIT-PREFIX: FORCE
-	@FLAGS='$(TRACK_PREFIX)'; \
+	$(QUIET_QUIET)FLAGS='$(TRACK_PREFIX)'; \
 	if test x"$$FLAGS" != x"`cat GIT-PREFIX 2>/dev/null`" ; then \
 		echo >&2 "    * new prefix flags"; \
 		echo "$$FLAGS" >GIT-PREFIX; \
@@ -2763,7 +2781,7 @@ GIT-PREFIX: FORCE
 TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS)):$(USE_GETTEXT_SCHEME)
 
 GIT-CFLAGS: FORCE
-	@FLAGS='$(TRACK_CFLAGS)'; \
+	$(QUIET_QUIET)FLAGS='$(TRACK_CFLAGS)'; \
 	    if test x"$$FLAGS" != x"`cat GIT-CFLAGS 2>/dev/null`" ; then \
 		echo >&2 "    * new build flags"; \
 		echo "$$FLAGS" >GIT-CFLAGS; \
@@ -2772,7 +2790,7 @@ GIT-CFLAGS: FORCE
 TRACK_LDFLAGS = $(subst ','\'',$(ALL_LDFLAGS))
 
 GIT-LDFLAGS: FORCE
-	@FLAGS='$(TRACK_LDFLAGS)'; \
+	$(QUIET_QUIET)FLAGS='$(TRACK_LDFLAGS)'; \
 	    if test x"$$FLAGS" != x"`cat GIT-LDFLAGS 2>/dev/null`" ; then \
 		echo >&2 "    * new link flags"; \
 		echo "$$FLAGS" >GIT-LDFLAGS; \
@@ -2782,70 +2800,71 @@ GIT-LDFLAGS: FORCE
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
 # and the first level quoting from the shell that runs "echo".
 GIT-BUILD-OPTIONS: FORCE
-	@echo SHELL_PATH=\''$(subst ','\'',$(SHELL_PATH_SQ))'\' >$@+
-	@echo TEST_SHELL_PATH=\''$(subst ','\'',$(TEST_SHELL_PATH_SQ))'\' >>$@+
-	@echo PERL_PATH=\''$(subst ','\'',$(PERL_PATH_SQ))'\' >>$@+
-	@echo DIFF=\''$(subst ','\'',$(subst ','\'',$(DIFF)))'\' >>$@+
-	@echo PYTHON_PATH=\''$(subst ','\'',$(PYTHON_PATH_SQ))'\' >>$@+
-	@echo TAR=\''$(subst ','\'',$(subst ','\'',$(TAR)))'\' >>$@+
-	@echo NO_CURL=\''$(subst ','\'',$(subst ','\'',$(NO_CURL)))'\' >>$@+
-	@echo NO_EXPAT=\''$(subst ','\'',$(subst ','\'',$(NO_EXPAT)))'\' >>$@+
-	@echo USE_LIBPCRE2=\''$(subst ','\'',$(subst ','\'',$(USE_LIBPCRE2)))'\' >>$@+
-	@echo NO_PERL=\''$(subst ','\'',$(subst ','\'',$(NO_PERL)))'\' >>$@+
-	@echo NO_PTHREADS=\''$(subst ','\'',$(subst ','\'',$(NO_PTHREADS)))'\' >>$@+
-	@echo NO_PYTHON=\''$(subst ','\'',$(subst ','\'',$(NO_PYTHON)))'\' >>$@+
-	@echo NO_UNIX_SOCKETS=\''$(subst ','\'',$(subst ','\'',$(NO_UNIX_SOCKETS)))'\' >>$@+
-	@echo PAGER_ENV=\''$(subst ','\'',$(subst ','\'',$(PAGER_ENV)))'\' >>$@+
-	@echo DC_SHA1=\''$(subst ','\'',$(subst ','\'',$(DC_SHA1)))'\' >>$@+
-	@echo X=\'$(X)\' >>$@+
+	$(QUIET_QUIET)echo SHELL_PATH=\''$(subst ','\'',$(SHELL_PATH_SQ))'\' >$@+
+	$(QUIET_QUIET)echo TEST_SHELL_PATH=\''$(subst ','\'',$(TEST_SHELL_PATH_SQ))'\' >>$@+
+	$(QUIET_QUIET)echo PERL_PATH=\''$(subst ','\'',$(PERL_PATH_SQ))'\' >>$@+
+	$(QUIET_QUIET)echo DIFF=\''$(subst ','\'',$(subst ','\'',$(DIFF)))'\' >>$@+
+	$(QUIET_QUIET)echo PYTHON_PATH=\''$(subst ','\'',$(PYTHON_PATH_SQ))'\' >>$@+
+	$(QUIET_QUIET)echo TAR=\''$(subst ','\'',$(subst ','\'',$(TAR)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_CURL=\''$(subst ','\'',$(subst ','\'',$(NO_CURL)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_EXPAT=\''$(subst ','\'',$(subst ','\'',$(NO_EXPAT)))'\' >>$@+
+	$(QUIET_QUIET)echo USE_LIBPCRE2=\''$(subst ','\'',$(subst ','\'',$(USE_LIBPCRE2)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_PERL=\''$(subst ','\'',$(subst ','\'',$(NO_PERL)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_PTHREADS=\''$(subst ','\'',$(subst ','\'',$(NO_PTHREADS)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_PYTHON=\''$(subst ','\'',$(subst ','\'',$(NO_PYTHON)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_UNIX_SOCKETS=\''$(subst ','\'',$(subst ','\'',$(NO_UNIX_SOCKETS)))'\' >>$@+
+	$(QUIET_QUIET)echo PAGER_ENV=\''$(subst ','\'',$(subst ','\'',$(PAGER_ENV)))'\' >>$@+
+	$(QUIET_QUIET)echo DC_SHA1=\''$(subst ','\'',$(subst ','\'',$(DC_SHA1)))'\' >>$@+
+	$(QUIET_QUIET)echo X=\'$(X)\' >>$@+
 ifdef TEST_OUTPUT_DIRECTORY
-	@echo TEST_OUTPUT_DIRECTORY=\''$(subst ','\'',$(subst ','\'',$(TEST_OUTPUT_DIRECTORY)))'\' >>$@+
+	$(QUIET_QUIET)echo TEST_OUTPUT_DIRECTORY=\''$(subst ','\'',$(subst ','\'',$(TEST_OUTPUT_DIRECTORY)))'\' >>$@+
 endif
 ifdef GIT_TEST_OPTS
-	@echo GIT_TEST_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_OPTS)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_TEST_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_OPTS)))'\' >>$@+
 endif
 ifdef GIT_TEST_CMP
-	@echo GIT_TEST_CMP=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_CMP)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_TEST_CMP=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_CMP)))'\' >>$@+
 endif
 ifdef GIT_TEST_CMP_USE_COPIED_CONTEXT
-	@echo GIT_TEST_CMP_USE_COPIED_CONTEXT=YesPlease >>$@+
+	$(QUIET_QUIET)echo GIT_TEST_CMP_USE_COPIED_CONTEXT=YesPlease >>$@+
 endif
-	@echo NO_GETTEXT=\''$(subst ','\'',$(subst ','\'',$(NO_GETTEXT)))'\' >>$@+
+	$(QUIET_QUIET)echo NO_GETTEXT=\''$(subst ','\'',$(subst ','\'',$(NO_GETTEXT)))'\' >>$@+
 ifdef GIT_PERF_REPEAT_COUNT
-	@echo GIT_PERF_REPEAT_COUNT=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_REPEAT_COUNT)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_PERF_REPEAT_COUNT=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_REPEAT_COUNT)))'\' >>$@+
 endif
 ifdef GIT_PERF_REPO
-	@echo GIT_PERF_REPO=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_REPO)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_PERF_REPO=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_REPO)))'\' >>$@+
 endif
 ifdef GIT_PERF_LARGE_REPO
-	@echo GIT_PERF_LARGE_REPO=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_LARGE_REPO)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_PERF_LARGE_REPO=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_LARGE_REPO)))'\' >>$@+
 endif
 ifdef GIT_PERF_MAKE_OPTS
-	@echo GIT_PERF_MAKE_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_MAKE_OPTS)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_PERF_MAKE_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_MAKE_OPTS)))'\' >>$@+
 endif
 ifdef GIT_PERF_MAKE_COMMAND
-	@echo GIT_PERF_MAKE_COMMAND=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_MAKE_COMMAND)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_PERF_MAKE_COMMAND=\''$(subst ','\'',$(subst ','\'',$(GIT_PERF_MAKE_COMMAND)))'\' >>$@+
 endif
 ifdef GIT_INTEROP_MAKE_OPTS
-	@echo GIT_INTEROP_MAKE_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_INTEROP_MAKE_OPTS)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_INTEROP_MAKE_OPTS=\''$(subst ','\'',$(subst ','\'',$(GIT_INTEROP_MAKE_OPTS)))'\' >>$@+
 endif
 ifdef GIT_TEST_INDEX_VERSION
-	@echo GIT_TEST_INDEX_VERSION=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_INDEX_VERSION)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_TEST_INDEX_VERSION=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_INDEX_VERSION)))'\' >>$@+
 endif
 ifdef GIT_TEST_PERL_FATAL_WARNINGS
-	@echo GIT_TEST_PERL_FATAL_WARNINGS=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_PERL_FATAL_WARNINGS)))'\' >>$@+
+	$(QUIET_QUIET)echo GIT_TEST_PERL_FATAL_WARNINGS=\''$(subst ','\'',$(subst ','\'',$(GIT_TEST_PERL_FATAL_WARNINGS)))'\' >>$@+
 endif
-	@if cmp $@+ $@ >/dev/null 2>&1; then $(RM) $@+; else mv $@+ $@; fi
+	$(QUIET_QUIET)if cmp $@+ $@ >/dev/null 2>&1; then $(RM) $@+; else mv $@+ $@; fi
 
 ### Detect Python interpreter path changes
 ifndef NO_PYTHON
 TRACK_PYTHON = $(subst ','\'',-DPYTHON_PATH='$(PYTHON_PATH_SQ)')
 
 GIT-PYTHON-VARS: FORCE
-	@VARS='$(TRACK_PYTHON)'; \
+	$(QUIET_QUIET)VARS='$(TRACK_PYTHON)'; \
 	    if test x"$$VARS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new Python interpreter location"; \
-		echo "$$VARS" >$@; \
+		echo "$$VARS" >$@+; \
+		mv $@+ $@; \
             fi
 endif
 
@@ -2854,11 +2873,12 @@ test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(
 all:: $(TEST_PROGRAMS) $(test_bindir_programs)
 
 bin-wrappers/%: wrap-for-bin.sh
-	@mkdir -p bin-wrappers
+	$(QUIET_QUIET)mkdir -p bin-wrappers
 	$(QUIET_GEN)sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
 	     -e 's|@@BUILD_DIR@@|$(shell pwd)|' \
-	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(BINDIR_PROGRAMS_NEED_X)))|' < $< > $@ && \
-	chmod +x $@
+	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(BINDIR_PROGRAMS_NEED_X)))|' < $< >$@+ && \
+	chmod +x $@+ && \
+	mv $@+ $@
 
 # GNU make supports exporting all variables by "export" without parameters.
 # However, the environment gets quite big, and some programs have problems
@@ -2882,7 +2902,8 @@ perf: all
 t/helper/test-tool$X: $(patsubst %,t/helper/%,$(TEST_BUILTINS_OBJS))
 
 t/helper/test-%$X: t/helper/test-%.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) $(filter %.a,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) $(filter %.a,$^) $(LIBS) && \
+	mv $@+ $@
 
 check-sha1:: t/helper/test-tool$X
 	t/helper/test-sha1.sh
@@ -2905,8 +2926,9 @@ HCO = $(patsubst %.h,%.hco,$(CHK_HDRS))
 HCC = $(HCO:hco=hcc)
 
 %.hcc: %.h
-	@echo '#include "git-compat-util.h"' >$@
-	@echo '#include "$<"' >>$@
+	$(QUIET_QUIET)echo '#include "git-compat-util.h"' >$@+ && \
+	$(QUIET_QUIET)echo '#include "$<"' >>$@+ && \
+	mv $@+ $@
 
 $(HCO): %.hco: %.hcc FORCE
 	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $<
@@ -2920,7 +2942,7 @@ style:
 
 .PHONY: check
 check: $(GENERATED_H)
-	@if sparse; \
+	$(QUIET_QUIET)if sparse; \
 	then \
 		echo >&2 "Use 'make sparse' instead"; \
 		$(MAKE) --no-print-directory sparse; \
@@ -3136,19 +3158,19 @@ GIT_ARCHIVE_EXTRA_FILES += \
 	--add-file=sha1collisiondetection/lib/ubc_check.h
 endif
 dist: git-archive$(X) configure
-	@$(RM) -r .dist-tmp-dir
-	@mkdir .dist-tmp-dir
-	@echo $(GIT_VERSION) > .dist-tmp-dir/version
-	@$(MAKE) -C git-gui TARDIR=../.dist-tmp-dir/git-gui dist-version
+	$(QUIET_QUIET)$(RM) -r .dist-tmp-dir
+	$(QUIET_QUIET)mkdir .dist-tmp-dir
+	$(QUIET_QUIET)echo $(GIT_VERSION) > .dist-tmp-dir/version
+	$(QUIET_QUIET)$(MAKE) -C git-gui TARDIR=../.dist-tmp-dir/git-gui dist-version
 	./git-archive --format=tar \
 		$(GIT_ARCHIVE_EXTRA_FILES) \
 		--prefix=$(GIT_TARNAME)/ HEAD^{tree} > $(GIT_TARNAME).tar
-	@$(RM) -r .dist-tmp-dir
+	$(QUIET_QUIET)$(RM) -r .dist-tmp-dir
 	gzip -f -9 $(GIT_TARNAME).tar
 
 rpm::
-	@echo >&2 "Use distro packaged sources to run rpmbuild"
-	@false
+	$(QUIET_QUIET)echo >&2 "Use distro packaged sources to run rpmbuild"
+	$(QUIET_QUIET)false
 .PHONY: rpm
 
 ifneq ($(INCLUDE_DLLS_IN_ARTIFACTS),)
@@ -3197,47 +3219,40 @@ dist-doc: git$X
 ### Cleaning rules
 
 distclean: clean
-	$(RM) configure
-	$(RM) config.log config.status config.cache
-	$(RM) config.mak.autogen config.mak.append
+	$(QUIET_CLEAN)$(RM) configure && \
+	$(RM) config.log config.status config.cache && \
+	$(RM) config.mak.autogen config.mak.append && \
 	$(RM) -r autom4te.cache
 
 profile-clean:
-	$(RM) $(addsuffix *.gcda,$(addprefix $(PROFILE_DIR)/, $(object_dirs)))
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcda,$(addprefix $(PROFILE_DIR)/, $(object_dirs))) && \
 	$(RM) $(addsuffix *.gcno,$(addprefix $(PROFILE_DIR)/, $(object_dirs)))
 
 cocciclean:
-	$(RM) contrib/coccinelle/*.cocci.patch*
+	$(QUIET_QUIET)$(RM) contrib/coccinelle/*.cocci.patch*
 
-clean: profile-clean coverage-clean cocciclean
-	$(RM) *.res
-	$(RM) $(OBJECTS)
-	$(RM) $(LIB_FILE) $(XDIFF_LIB)
-	$(RM) $(ALL_PROGRAMS) $(SCRIPT_LIB) $(BUILT_INS) git$X
-	$(RM) $(TEST_PROGRAMS)
-	$(RM) $(FUZZ_PROGRAMS)
-	$(RM) $(HCC)
-	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json
-	$(RM) -r po/build/
-	$(RM) *.pyc *.pyo */*.pyc */*.pyo $(GENERATED_H) $(ETAGS_TARGET) tags cscope*
-	$(RM) -r .dist-tmp-dir .doc-tmp-dir
-	$(RM) $(GIT_TARNAME).tar.gz
-	$(RM) $(htmldocs).tar.gz $(manpages).tar.gz
-	$(MAKE) -C Documentation/ clean
-	$(RM) Documentation/GIT-EXCLUDED-PROGRAMS
+clean-test:
+	$(QUIET_QUIET)$(MAKE) -C t/ clean >/dev/null
+
+clean-documentation:
+	$(QUIET_QUIET)$(MAKE) -C Documentation/ clean >/dev/null
+
+clean-templates:
+	$(QUIET_QUIET)$(MAKE) -C templates/ clean >/dev/null
+
+clean-perl:
 ifndef NO_PERL
-	$(MAKE) -C gitweb clean
+	$(QUIET_QUIET)$(MAKE) -C gitweb clean >/dev/null && \
 	$(RM) -r perl/build/
 endif
-	$(MAKE) -C templates/ clean
-	$(MAKE) -C t/ clean
+
+clean-tcltk:
 ifndef NO_TCLTK
-	$(MAKE) -C gitk-git clean
-	$(MAKE) -C git-gui clean
+	$(QUIET_QUIET)$(MAKE) -C gitk-git clean >/dev/null && \
+	$(MAKE) -C git-gui clean 2>/dev/null
 endif
-	$(RM) GIT-VERSION-FILE GIT-CFLAGS GIT-LDFLAGS GIT-BUILD-OPTIONS
-	$(RM) GIT-USER-AGENT GIT-PREFIX
-	$(RM) GIT-SCRIPT-DEFINES GIT-PERL-DEFINES GIT-PERL-HEADER GIT-PYTHON-VARS
+
+clean-msvc:
 ifdef MSVC
 	$(RM) $(patsubst %.o,%.o.pdb,$(OBJECTS))
 	$(RM) $(patsubst %.exe,%.pdb,$(OTHER_PROGRAMS))
@@ -3251,6 +3266,26 @@ ifdef MSVC
 	$(RM) $(patsubst %.exe,%.ipdb,$(TEST_PROGRAMS))
 	$(RM) compat/vcbuild/MSVC-DEFS-GEN
 endif
+.PHONY: clean-test clean-documentation clean-templates clean-perl clean-templates clean-msvc
+
+clean: profile-clean coverage-clean cocciclean clean-test clean-templates clean-documentation clean-perl clean-tcltk clean-msvc
+	$(QUIET_CLEAN)$(RM) *.res && \
+	$(RM) $(OBJECTS) && \
+	$(RM) $(LIB_FILE) $(XDIFF_LIB) && \
+	$(RM) $(ALL_PROGRAMS) $(SCRIPT_LIB) $(BUILT_INS) git$X && \
+	$(RM) $(TEST_PROGRAMS) && \
+	$(RM) $(FUZZ_PROGRAMS) && \
+	$(RM) $(HCC) && \
+	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json && \
+	$(RM) -r po/build/ && \
+	$(RM) *.pyc *.pyo */*.pyc */*.pyo $(GENERATED_H) $(ETAGS_TARGET) tags cscope* && \
+	$(RM) -r .dist-tmp-dir .doc-tmp-dir && \
+	$(RM) $(GIT_TARNAME).tar.gz && \
+	$(RM) $(htmldocs).tar.gz $(manpages).tar.gz && \
+	$(RM) Documentation/GIT-EXCLUDED-PROGRAMS && \
+	$(RM) GIT-VERSION-FILE GIT-CFLAGS GIT-LDFLAGS GIT-BUILD-OPTIONS && \
+	$(RM) GIT-USER-AGENT GIT-PREFIX && \
+	$(RM) GIT-SCRIPT-DEFINES GIT-PERL-DEFINES GIT-PERL-HEADER GIT-PYTHON-VARS
 
 .PHONY: all install profile-clean cocciclean clean strip
 .PHONY: shell_compatibility_test please_set_SHELL_PATH_to_a_more_modern_shell
@@ -3268,7 +3303,7 @@ ALL_COMMANDS += gitweb
 .PHONY: check-docs
 check-docs::
 	$(MAKE) -C Documentation lint-docs
-	@(for v in $(patsubst %$X,%,$(ALL_COMMANDS)); \
+	$(QUIET_QUIET)(for v in $(patsubst %$X,%,$(ALL_COMMANDS)); \
 	do \
 		case "$$v" in \
 		git-merge-octopus | git-merge-ours | git-merge-recursive | \
@@ -3321,14 +3356,14 @@ coverage:
 
 object_dirs := $(sort $(dir $(OBJECTS)))
 coverage-clean-results:
-	$(RM) $(addsuffix *.gcov,$(object_dirs))
-	$(RM) $(addsuffix *.gcda,$(object_dirs))
-	$(RM) coverage-untested-functions
-	$(RM) -r cover_db/
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcov,$(object_dirs)) && \
+	$(RM) $(addsuffix *.gcda,$(object_dirs)) && \
+	$(RM) coverage-untested-functions && \
+	$(RM) -r cover_db/ && \
 	$(RM) -r cover_db_html/
 
 coverage-clean: coverage-clean-results
-	$(RM) $(addsuffix *.gcno,$(object_dirs))
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcno,$(object_dirs))
 
 COVERAGE_CFLAGS = $(CFLAGS) -O0 -ftest-coverage -fprofile-arcs
 COVERAGE_LDFLAGS = $(CFLAGS)  -O0 -lgcov
@@ -3382,6 +3417,7 @@ FUZZ_CXXFLAGS ?= $(CFLAGS)
 
 $(FUZZ_PROGRAMS): all
 	$(QUIET_LINK)$(CXX) $(FUZZ_CXXFLAGS) $(LIB_OBJS) $(BUILTIN_OBJS) \
-		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@
+		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@+ && \
+	mv $@+ $@
 
 fuzz-all: $(FUZZ_PROGRAMS)
