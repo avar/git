@@ -1,4 +1,5 @@
-(library (my-helpers id-stuff) RIGHT
+t4018 header: (library (my-helpers id-stuff)
+(library (my-helpers id-stuff)
   (export find-dup)
   (import (ChangeMe))
   (define (find-dup l)
