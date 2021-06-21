@@ -99,12 +99,31 @@ struct object *deref_tag_noverify(struct object *o)
 	return o;
 }
 
-struct tag *lookup_tag(struct repository *r, const struct object_id *oid)
+static struct tag *create_tag(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_tag_node(r));
+}
+
+struct tag *lookup_tag_type(struct repository *r, const struct object_id *oid,
+			    enum object_type type)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_tag_node(r));
-	return object_as_type(obj, OBJ_TAG, 0);
+		return create_tag(r, oid);
+	if (type != OBJ_NONE &&
+	    obj->type != OBJ_NONE) {
+		enum object_type want = OBJ_TAG;
+		if (oid_is_type_or_error(oid, obj->type, &want)) {
+			obj->type = want;
+			return NULL;
+		}
+	}
+	return object_as_type(obj, OBJ_TAG);
+}
+
+struct tag *lookup_tag(struct repository *r, const struct object_id *oid)
+{
+	return lookup_tag_type(r, oid, OBJ_NONE);
 }
 
 static timestamp_t parse_tag_date(const char *buf, const char *tail)
@@ -134,8 +153,9 @@ void release_tag_memory(struct tag *t)
 
 int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, unsigned long size)
 {
+	struct object *obj;
 	struct object_id oid;
-	char type[20];
+	enum object_type type;
 	const char *bufptr = data;
 	const char *tail = bufptr + size;
 	const char *nl;
@@ -162,26 +182,36 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 		return -1;
 	bufptr += 5;
 	nl = memchr(bufptr, '\n', tail - bufptr);
-	if (!nl || sizeof(type) <= (nl - bufptr))
+	if (!nl)
 		return -1;
-	memcpy(type, bufptr, nl - bufptr);
-	type[nl - bufptr] = '\0';
+	type = type_from_string_gently(bufptr, nl - bufptr);
+	if (type < 0)
+		return -1;
 	bufptr = nl + 1;
 
-	if (!strcmp(type, blob_type)) {
+	obj = lookup_object(r, &oid);
+	if (obj) {
+		item->tagged = obj;
+	} else if (type == OBJ_BLOB) {
 		item->tagged = (struct object *)lookup_blob(r, &oid);
-	} else if (!strcmp(type, tree_type)) {
+	} else if (type == OBJ_TREE) {
 		item->tagged = (struct object *)lookup_tree(r, &oid);
-	} else if (!strcmp(type, commit_type)) {
+	} else if (type == OBJ_COMMIT) {
 		item->tagged = (struct object *)lookup_commit(r, &oid);
-	} else if (!strcmp(type, tag_type)) {
+	} else if (type == OBJ_TAG) {
 		item->tagged = (struct object *)lookup_tag(r, &oid);
 	} else {
 		return error("unknown tag type '%s' in %s",
-			     type, oid_to_hex(&item->object.oid));
+			     type_name(type), oid_to_hex(&item->object.oid));
 	}
 
-	if (!item->tagged)
+	if (type != item->tagged->type)
+		error("object %s is a %s, not a %s",
+		      oid_to_hex(&oid),
+		      type_name(obj->type),
+		      type_name(type));
+		      
+	if (!item->tagged || type != item->tagged->type)
 		return error("bad tag pointer to %s in %s",
 			     oid_to_hex(&oid),
 			     oid_to_hex(&item->object.oid));
