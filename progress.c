@@ -244,18 +244,47 @@ void display_throughput(struct progress *progress, uint64_t total)
 		display(progress, progress->last_value, NULL, 0);
 }
 
+static uint64_t stalled_on_source(struct progress *progress,
+				  enum progress_update_source update_source)
+{
+	if (progress->last_update_source == update_source) {
+		progress->num_last_updates_from++;
+	} else {
+		progress->last_update_source = update_source;
+		progress->num_last_updates_from = 1;
+	}
+	return progress->num_last_updates_from;
+}
+
 void display_progress(struct progress *progress, uint64_t n)
 {
 	if (progress)
 		display(progress, n, NULL, 0);
 }
 
+/*
+  https://stackoverflow.com/questions/2685435/cooler-ascii-spinners
+  https://www.npmjs.com/package/cli-spinners
+*/
+static const char * const spinner[] = {
+	"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏",
+	NULL,
+};
+
 static void progress_interval(int signum)
 {
 	progress_update = 1;
 
-	if (global_progress->last_value != -1)
+	if (global_progress->last_value != -1) {
+		uint64_t n_stalled = stalled_on_source(global_progress, PROGRESS_UPDATE_SOURCE_SIGNAL);
+		if (n_stalled > 2) {
+			int mod = (n_stalled + 2) % (ARRAY_SIZE(spinner) - 1);
+			display(global_progress, global_progress->last_value,
+				spinner[mod], 0);
+			progress_update = 1;
+		}
 		return;
+	}
 
 	display(global_progress, 0, _(", stalled."), 0);
 	progress_update = 1;
@@ -329,6 +358,8 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	progress->throughput = NULL;
 	progress->start_ns = getnanotime();
 	progress->split = 0;
+	progress->last_update_source = PROGRESS_UPDATE_SOURCE_NONE;
+	progress->num_last_updates_from = 0;
 	progress->test_no_signals = 0;
 	progress->test_getnanotime = 0;
 	set_progress_signal(progress);
