@@ -230,11 +230,21 @@ test_expect_success 'corrupt tag' '
 '
 
 test_expect_success 'hash-object complains about bogus type name' '
-	test_must_fail git hash-object -t bogus --stdin </dev/null
+	test_expect_code 129 git hash-object -t bogus --stdin 2>err </dev/null &&
+	grep ^error err >actual &&
+	cat >expect <<-\EOF &&
+	error: the object type "bogus" is invalid, did you mean to use --literally?
+	EOF
+	test_cmp expect actual
 '
 
 test_expect_success 'hash-object complains about truncated type name' '
-	test_must_fail git hash-object -t bl --stdin </dev/null
+	test_expect_code 129 git hash-object -t bl --stdin 2>err </dev/null &&
+	grep ^error err >actual &&
+	cat >expect <<-\EOF &&
+	error: the object type "bl" is invalid, did you mean to use --literally?
+	EOF
+	test_cmp expect actual
 '
 
 test_expect_success '--literally' '
