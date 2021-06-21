@@ -37,8 +37,9 @@ enum help_format {
 
 static const char *html_path;
 
-static int show_all = 0;
-static int show_guides = 0;
+static int show_all;
+static int show_guides;
+static int show_user_formats;
 enum show_config_type {
 	SHOW_CONFIG_UNSET = 0,
 	SHOW_CONFIG_HUMAN,
@@ -54,6 +55,7 @@ static struct option builtin_help_options[] = {
 	OPT_BOOL('a', "all", &show_all, N_("print all available commands")),
 	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides, N_("exclude guides")),
 	OPT_BOOL('g', "guides", &show_guides, N_("print list of useful guides")),
+	OPT_BOOL(0, "user-formats", &show_user_formats, N_("print list of user-facing file formats")),
 	OPT_BOOL('c', "config", &show_config, N_("print all configuration variable names")),
 	OPT_SET_INT_F(0, "config-for-completion-vars", &show_config, "",
 		      SHOW_CONFIG_VARS, PARSE_OPT_HIDDEN),
@@ -73,6 +75,7 @@ static const char * const builtin_help_usage[] = {
 	   "       [[-i|--info] [-m|--man] [-w|--web]] [<command>]"),
 	N_("git help [-g|--guides]"),
 	N_("git help [-c|--config]"),
+	N_("git help [--user-formats]"),
 	NULL
 };
 
@@ -613,7 +616,7 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 		usage_with_options(builtin_help_usage, builtin_help_options);
 
 	/* Options that take no further arguments */
-	standalone = show_config || show_guides;
+	standalone = show_config || show_guides || show_user_formats;
 	if (standalone && argc)
 		usage_with_options(builtin_help_usage, builtin_help_options);
 
@@ -635,7 +638,10 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	if (show_guides)
 		list_guides_help();
 
-	if (show_all || show_guides) {
+	if (show_user_formats)
+		list_user_formats_help();
+
+	if (show_all || show_guides || show_user_formats) {
 		printf("%s\n", _(git_more_info_string));
 		return 0;
 	}
