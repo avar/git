@@ -763,6 +763,8 @@ static void add_pair(struct merge_options *opt,
 	struct diff_filespec *one, *two;
 	struct rename_info *renames = &opt->priv->renames;
 	int names_idx = is_add ? side : 0;
+	const struct object_id *oid = &names[names_idx].oid;
+	unsigned int mode = names[names_idx].mode;
 
 	if (is_add) {
 		if (strset_contains(&renames->cached_target_names[side],
@@ -810,8 +812,7 @@ static void add_pair(struct merge_options *opt,
 
 	one = alloc_filespec(pathname);
 	two = alloc_filespec(pathname);
-	fill_filespec(is_add ? two : one,
-		      &names[names_idx].oid, 1, names[names_idx].mode);
+	fill_filespec(is_add ? two : one, oid, 1, mode);
 	diff_queue(&renames->pairs[side], one, two);
 }
 
@@ -998,7 +999,7 @@ static int collect_merge_info_callback(int n,
 	 * setup_path_info() for tracking.
 	 */
 	p = names;
-	while (!p->mode)
+	while (p->object_type == OBJ_NONE)
 		p++;
 	len = traverse_path_len(info, p->pathlen);
 
@@ -1474,7 +1475,7 @@ static int handle_content_merge(struct merge_options *opt,
 		/*
 		 * FIXME: If opt->priv->call_depth && !clean, then we really
 		 * should not make result->mode match either a->mode or
-		 * b->mode; that causes t6036 "check conflicting mode for
+		 * b->mode; that causes t6416 "check conflicting modes for
 		 * regular file" to fail.  It would be best to use some other
 		 * mode, but we'll confuse all kinds of stuff if we use one
 		 * where S_ISREG(result->mode) isn't true, and if we use
@@ -2878,8 +2879,8 @@ static int tree_entry_order(const void *a_, const void *b_)
 
 	const struct merged_info *ami = a->util;
 	const struct merged_info *bmi = b->util;
-	return base_name_compare(a->string, strlen(a->string), ami->result.mode,
-				 b->string, strlen(b->string), bmi->result.mode);
+	return base_name_compare(a->string, strlen(a->string), S_ISDIR(ami->result.mode),
+				 b->string, strlen(b->string), S_ISDIR(bmi->result.mode));
 }
 
 static void write_tree(struct object_id *result_oid,
