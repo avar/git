@@ -1040,10 +1040,12 @@ test_cmp_config () {
 		GD="-C $1" &&
 		shift
 	fi &&
-	printf "%s\n" "$1" >expect.config &&
+	printf "%s\n" "$1" >"$TRASH_DIRECTORY_TEST_LIB"/expect.config &&
 	shift &&
-	git $GD config "$@" >actual.config &&
-	test_cmp expect.config actual.config
+	git $GD config "$@" >"$TRASH_DIRECTORY_TEST_LIB"/actual.config &&
+	test_cmp \
+		"$TRASH_DIRECTORY_TEST_LIB"/expect.config \
+		"$TRASH_DIRECTORY_TEST_LIB"/actual.config
 }
 
 # test_cmp_bin - helper to compare binary files
