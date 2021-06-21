@@ -64,9 +64,31 @@ test_expect_success 'progress display with total' '
 test_expect_success 'stalled progress display' '
 	cat >expect <<-\EOF &&
 	Working hard:   0% (0/3), stalled.<CR>
-	Working hard:  33% (1/3)          <CR>
-	Working hard:  66% (2/3)<CR>
-	Working hard: 100% (3/3)<CR>
+	Working hard:   0% (0/3)⠴         <CR>
+	Working hard:   0% (0/3)⠦<CR>
+	Working hard:   0% (0/3)⠧<CR>
+	Working hard:   0% (0/3)⠇<CR>
+	Working hard:   0% (0/3)⠏<CR>
+	Working hard:   0% (0/3)⠋<CR>
+	Working hard:   0% (0/3)⠙<CR>
+	Working hard:   0% (0/3)⠹<CR>
+	Working hard:   0% (0/3)⠸<CR>
+	Working hard:   0% (0/3)⠼<CR>
+	Working hard:   0% (0/3)⠴<CR>
+	Working hard:   0% (0/3)⠦<CR>
+	Working hard:   0% (0/3)⠧<CR>
+	Working hard:   0% (0/3)⠇<CR>
+	Working hard:   0% (0/3)⠏<CR>
+	Working hard:  33% (1/3) <CR>
+	Working hard:  33% (1/3)⠋<CR>
+	Working hard:  33% (1/3)⠙<CR>
+	Working hard:  33% (1/3)⠹<CR>
+	Working hard:  33% (1/3)⠸<CR>
+	Working hard:  33% (1/3)⠼<CR>
+	Working hard:  33% (1/3)⠴<CR>
+	Working hard:  66% (2/3) <CR>
+	Working hard:  66% (2/3)⠦<CR>
+	Working hard: 100% (3/3) <CR>
 	Working hard: 100% (3/3), done.
 	EOF
 
@@ -257,7 +279,8 @@ test_expect_success 'progress display with throughput' '
 	Working hard: 10         <CR>
 	Working hard: 20, 200.00 KiB | 100.00 KiB/s<CR>
 	Working hard: 30, 300.00 KiB | 100.00 KiB/s<CR>
-	Working hard: 40, 400.00 KiB | 100.00 KiB/s<CR>
+	Working hard: 30, 400.00 KiB | 100.00 KiB/s⠴<CR>
+	Working hard: 40, 400.00 KiB | 100.00 KiB/s <CR>
 	Working hard: 40, 400.00 KiB | 100.00 KiB/s, done.
 	EOF
 
@@ -316,7 +339,8 @@ test_expect_success 'cover up after throughput shortens' '
 	Working hard: 1          <CR>
 	Working hard: 2, 800.00 KiB | 400.00 KiB/s<CR>
 	Working hard: 3, 1.17 MiB | 400.00 KiB/s  <CR>
-	Working hard: 4, 1.56 MiB | 400.00 KiB/s<CR>
+	Working hard: 3, 1.56 MiB | 400.00 KiB/s⠴<CR>
+	Working hard: 4, 1.56 MiB | 400.00 KiB/s <CR>
 	Working hard: 4, 1.56 MiB | 400.00 KiB/s, done.
 	EOF
 
