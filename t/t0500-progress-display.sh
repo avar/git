@@ -15,7 +15,8 @@ test_expect_success 'setup COLUMNS' '
 
 test_expect_success 'simple progress display' '
 	cat >expect <<-\EOF &&
-	Working hard: 1<CR>
+	Working hard: 0, stalled.<CR>
+	Working hard: 1          <CR>
 	Working hard: 2<CR>
 	Working hard: 5<CR>
 	Working hard: 5, done.
@@ -60,6 +61,97 @@ test_expect_success 'progress display with total' '
 	test_cmp expect out
 '
 
+test_expect_success 'stalled progress display' '
+	cat >expect <<-\EOF &&
+	Working hard:   0% (0/3), stalled.<CR>
+	Working hard:   0% (0/3)⠴         <CR>
+	Working hard:   0% (0/3)⠦<CR>
+	Working hard:   0% (0/3)⠧<CR>
+	Working hard:   0% (0/3)⠇<CR>
+	Working hard:   0% (0/3)⠏<CR>
+	Working hard:   0% (0/3)⠋<CR>
+	Working hard:   0% (0/3)⠙<CR>
+	Working hard:   0% (0/3)⠹<CR>
+	Working hard:   0% (0/3)⠸<CR>
+	Working hard:   0% (0/3)⠼<CR>
+	Working hard:   0% (0/3)⠴<CR>
+	Working hard:   0% (0/3)⠦<CR>
+	Working hard:   0% (0/3)⠧<CR>
+	Working hard:   0% (0/3)⠇<CR>
+	Working hard:   0% (0/3)⠏<CR>
+	Working hard:  33% (1/3) <CR>
+	Working hard:  33% (1/3)⠋<CR>
+	Working hard:  33% (1/3)⠙<CR>
+	Working hard:  33% (1/3)⠹<CR>
+	Working hard:  33% (1/3)⠸<CR>
+	Working hard:  33% (1/3)⠼<CR>
+	Working hard:  33% (1/3)⠴<CR>
+	Working hard:  66% (2/3) <CR>
+	Working hard:  66% (2/3)⠦<CR>
+	Working hard: 100% (3/3) <CR>
+	Working hard: 100% (3/3), done.
+	EOF
+
+	cat >in <<-\EOF &&
+	start 3
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	progress 1
+	signal
+	signal
+	signal
+	signal
+	signal
+	signal
+	progress 2
+	update
+	progress 3
+	stop
+	EOF
+	STALLED=1 test-tool progress <in 2>stderr &&
+
+	show_cr <stderr >out &&
+	test_cmp expect out
+'
+
+test_expect_success 'progress display breaks long lines #0, stalled' '
+	sed -e "s/Z$//" >expect <<\EOF &&
+Working hard.......2.........3.........4.........5.........6.........7:
+    0% (0/100), stalled.<CR>
+    1% (1/100)          <CR>
+   50% (50/100)<CR>
+   50% (50/100), done.
+EOF
+
+	cat >in <<-\EOF &&
+	start 100 Working hard.......2.........3.........4.........5.........6.........7
+	signal
+	progress 1
+	progress 50
+	stop
+	EOF
+	test-tool progress <in 2>stderr &&
+
+	show_cr <stderr >out &&
+	test_cmp expect out
+'
+
 test_expect_success 'progress display breaks long lines #1' '
 	sed -e "s/Z$//" >expect <<\EOF &&
 Working hard.......2.........3.........4.........5.........6:   0% (100/100000)<CR>
@@ -85,12 +177,10 @@ EOF
 '
 
 test_expect_success 'progress display breaks long lines #2' '
-	# Note: we do not need that many spaces after the title to cover up
-	# the last line before breaking the progress line.
 	sed -e "s/Z$//" >expect <<\EOF &&
 Working hard.......2.........3.........4.........5.........6:   0% (1/100000)<CR>
 Working hard.......2.........3.........4.........5.........6:   0% (2/100000)<CR>
-Working hard.......2.........3.........4.........5.........6:                   Z
+Working hard.......2.........3.........4.........5.........6:                Z
    10% (10000/100000)<CR>
   100% (100000/100000)<CR>
   100% (100000/100000), done.
@@ -112,10 +202,8 @@ EOF
 '
 
 test_expect_success 'progress display breaks long lines #3 - even the first is too long' '
-	# Note: we do not actually need any spaces at the end of the title
-	# line, because there is no previous progress line to cover up.
 	sed -e "s/Z$//" >expect <<\EOF &&
-Working hard.......2.........3.........4.........5.........6:                   Z
+Working hard.......2.........3.........4.........5.........6:
    25% (25000/100000)<CR>
    50% (50000/100000)<CR>
    75% (75000/100000)<CR>
@@ -187,10 +275,12 @@ test_expect_success 'progress shortens - crazy caller' '
 
 test_expect_success 'progress display with throughput' '
 	cat >expect <<-\EOF &&
-	Working hard: 10<CR>
+	Working hard: 0, stalled.<CR>
+	Working hard: 10         <CR>
 	Working hard: 20, 200.00 KiB | 100.00 KiB/s<CR>
 	Working hard: 30, 300.00 KiB | 100.00 KiB/s<CR>
-	Working hard: 40, 400.00 KiB | 100.00 KiB/s<CR>
+	Working hard: 30, 400.00 KiB | 100.00 KiB/s⠴<CR>
+	Working hard: 40, 400.00 KiB | 100.00 KiB/s <CR>
 	Working hard: 40, 400.00 KiB | 100.00 KiB/s, done.
 	EOF
 
@@ -245,10 +335,12 @@ test_expect_success 'progress display with throughput and total' '
 
 test_expect_success 'cover up after throughput shortens' '
 	cat >expect <<-\EOF &&
-	Working hard: 1<CR>
+	Working hard: 0, stalled.<CR>
+	Working hard: 1          <CR>
 	Working hard: 2, 800.00 KiB | 400.00 KiB/s<CR>
 	Working hard: 3, 1.17 MiB | 400.00 KiB/s  <CR>
-	Working hard: 4, 1.56 MiB | 400.00 KiB/s<CR>
+	Working hard: 3, 1.56 MiB | 400.00 KiB/s⠴<CR>
+	Working hard: 4, 1.56 MiB | 400.00 KiB/s <CR>
 	Working hard: 4, 1.56 MiB | 400.00 KiB/s, done.
 	EOF
 
@@ -276,7 +368,8 @@ test_expect_success 'cover up after throughput shortens' '
 
 test_expect_success 'cover up after throughput shortens a lot' '
 	cat >expect <<-\EOF &&
-	Working hard: 1<CR>
+	Working hard: 0, stalled.<CR>
+	Working hard: 1          <CR>
 	Working hard: 2, 1000.00 KiB | 1000.00 KiB/s<CR>
 	Working hard: 3, 3.00 MiB | 1.50 MiB/s      <CR>
 	Working hard: 3, 3.00 MiB | 1024.00 KiB/s, done.

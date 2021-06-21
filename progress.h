@@ -16,8 +16,19 @@ struct throughput {
 	struct strbuf display;
 };
 
+enum progress_update_source {
+	PROGRESS_UPDATE_SOURCE_NONE = 0,
+	PROGRESS_UPDATE_SOURCE_SIGNAL,
+	PROGRESS_UPDATE_SOURCE_FUNCTION,
+};
+
 struct progress {
-	const char *title;
+	struct strbuf title;
+	size_t title_len_utf8;
+
+	struct strbuf status;
+	size_t status_len_utf8;
+
 	uint64_t last_value;
 	uint64_t total;
 	unsigned last_percent;
@@ -25,9 +36,11 @@ struct progress {
 	unsigned sparse;
 	struct throughput *throughput;
 	uint64_t start_ns;
-	struct strbuf counters_sb;
-	int title_len;
 	int split;
+
+	enum progress_update_source last_update_source;
+	uint64_t num_last_updates_from;
+
 	/*
 	 * The test_* members are are only intended for testing the
 	 * progress output, i.e. exclusively for 'test-tool progress'.
