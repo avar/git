@@ -232,7 +232,10 @@ int finish_delayed_checkout(struct checkout *state, int *nr_checkouts)
 		}
 		string_list_remove_empty_items(&dco->filters, 0);
 	}
-	stop_progress(&progress);
+	if (!errs && !dco->paths.nr)
+		stop_progress(&progress);
+	else
+		stop_progress_early(&progress);
 	string_list_clear(&dco->filters, 0);
 
 	/* At this point we should not have any delayed paths anymore. */
