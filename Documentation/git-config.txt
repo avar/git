@@ -187,6 +187,12 @@ Valid `<type>`'s include:
   1073741824 upon input.
 - 'bool-or-int': canonicalize according to either 'bool' or 'int', as described
   above.
+- 'bool-or-str: canonicalize according to either 'bool' (as described
+  above), or emit the value as-is.
+- 'bool-or-auto: canonicalize according to either 'bool', as described
+  above, or whether the value is "auto". This is used by various
+  "tristate" variables such as `core.restrictInheritedHandles`,
+  `format.numbered` etc.
 - 'path': canonicalize by adding a leading `~` to the value of `$HOME` and
   `~user` to the home directory for the specified user. This specifier has no
   effect when setting the value (but you can use `git config section.variable
@@ -202,6 +208,7 @@ Valid `<type>`'s include:
 --bool::
 --int::
 --bool-or-int::
+--bool-or-str::
 --path::
 --expiry-date::
   Historical options for selecting a type specifier. Prefer instead `--type`
