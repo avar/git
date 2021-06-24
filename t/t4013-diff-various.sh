@@ -200,10 +200,12 @@ do
 	esac
 	test=$(echo "$label" | sed -e 's|[/ ][/ ]*|_|g')
 	pfx=$(printf "%04d" $test_count)
-	expect="$TEST_DIRECTORY/t4013/diff.$test"
+	expect_relative="t4013/diff.$test"
+	expect="$TEST_DIRECTORY/$expect_relative"
 	actual="$pfx-diff.$test"
 
 	test_expect_$status "git $cmd # magic is ${magic:-(not used)}" '
+		test_when_finished "rm $actual" &&
 		{
 			echo "$ git $cmd"
 			case "$magic" in
@@ -216,22 +218,19 @@ do
 			    -e "s/^\\(.*mixed; boundary=\"-*\\)$V\\(-*\\)\"\$/\\1g-i-t--v-e-r-s-i-o-n\2\"/"
 			echo "\$"
 		} >"$actual" &&
-		if test -f "$expect"
+
+		if ! test -f "$expect"
 		then
-			process_diffs "$actual" >actual &&
-			process_diffs "$expect" >expect &&
-			case $cmd in
-			*format-patch* | *-stat*)
-				test_cmp expect actual;;
-			*)
-				test_cmp expect actual;;
-			esac &&
-			rm -f "$actual" actual expect
-		else
-			# this is to help developing new tests.
-			cp "$actual" "$expect"
-			false
-		fi
+			expect_new="$expect.new" &&
+			cp "$actual" "$expect_new" &&
+			BUG "Have no \"$expect_relative\", new test? The output is in \"$expect_new\", maybe use that?"
+		fi &&
+
+		test_when_finished "rm actual" &&
+		process_diffs "$actual" >actual &&
+		test_when_finished "rm expect" &&
+		process_diffs "$expect" >expect &&
+		test_cmp expect actual
 	'
 done <<\EOF
 diff-tree initial
