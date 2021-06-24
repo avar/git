@@ -40,6 +40,8 @@ static void display(struct progress *progress, uint64_t n,
 	const char *tp;
 	int show_update = 0;
 
+	progress->last_update = n;
+
 	if (progress->delay && (!progress_update || --progress->delay))
 		return;
 
@@ -412,4 +414,22 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 		strbuf_release(&progress->throughput->display);
 	free(progress->throughput);
 	free(progress);
+}
+
+void stop_progress_early(struct progress **p_progress)
+{
+	struct progress *progress;
+	struct strbuf sb = STRBUF_INIT;
+
+	if (!p_progress)
+		BUG("don't provide NULL to stop_progress_early");
+	progress = *p_progress;
+	if (!progress)
+		return;
+
+	strbuf_addf(&sb, _(", done at %"PRIuMAX" items, expected %"PRIuMAX"."),
+		    progress->total, progress->last_update);
+	progress->total = progress->last_update;
+	stop_progress_msg(p_progress, sb.buf);
+	strbuf_release(&sb);
 }
