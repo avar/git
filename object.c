@@ -35,22 +35,18 @@ const char *type_name(unsigned int type)
 	return object_type_strings[type];
 }
 
-int type_from_string_gently(const char *str, ssize_t len, int gentle)
+enum object_type type_from_string_gently(const char *str, size_t len)
 {
-	int i;
+	enum object_type i;
 
-	if (len < 0)
-		len = strlen(str);
+	if (len == ~(size_t)0)
+		BUG("type-from-string-gently no longer allows unspecified length");
 
 	for (i = 1; i < ARRAY_SIZE(object_type_strings); i++)
 		if (!strncmp(str, object_type_strings[i], len) &&
 		    object_type_strings[i][len] == '\0')
 			return i;
-
-	if (gentle)
-		return -1;
-
-	die(_("invalid object type \"%s\""), str);
+	return -1;
 }
 
 /*
@@ -157,22 +153,58 @@ void *create_object(struct repository *r, const struct object_id *oid, void *o)
 	return obj;
 }
 
-void *object_as_type(struct object *obj, enum object_type type, int quiet)
+static const char *object_type_mismatch_msg = N_("object %s is a %s, not a %s");
+static const char *object_maybe_type_mismatch_msg = N_("object %s is referred to as a %s, not a %s");
+
+void oid_is_type_or_die(const struct object_id *oid,
+			enum object_type want,
+			enum object_type *type)
 {
-	if (obj->type == type)
+	if (want == *type)
+		return;
+	die(_(object_type_mismatch_msg), oid_to_hex(oid),
+	    type_name(*type), type_name(want));
+}
+
+int oid_is_type_or_error(const struct object_id *oid,
+			 enum object_type want,
+			 enum object_type *type)
+{
+	if (want == *type)
+		return 0;
+	return error(_(object_type_mismatch_msg),
+		     oid_to_hex(oid), type_name(*type),
+		     type_name(want));
+}
+
+char* oid_is_type_or_die_msg(const struct object_id *oid,
+				   enum object_type want,
+				   enum object_type *type)
+{
+	struct strbuf sb = STRBUF_INIT;
+	if (want == *type)
+		BUG("call this just to get the message!");
+	strbuf_addf(&sb, _(object_type_mismatch_msg), oid_to_hex(oid),
+		    type_name(*type), type_name(want));
+	return strbuf_detach(&sb, NULL);
+}
+
+void *object_as_type(struct object *obj, enum object_type type)
+{
+	if (obj->type == type) {
 		return obj;
-	else if (obj->type == OBJ_NONE) {
+	} else if (obj->type == OBJ_NONE) {
 		if (type == OBJ_COMMIT)
 			init_commit_node((struct commit *) obj);
 		else
 			obj->type = type;
 		return obj;
-	}
-	else {
-		if (!quiet)
-			error(_("object %s is a %s, not a %s"),
-			      oid_to_hex(&obj->oid),
-			      type_name(obj->type), type_name(type));
+	} else {
+		error(obj->parsed
+		      ? _(object_type_mismatch_msg)
+		      : _(object_maybe_type_mismatch_msg),
+		      oid_to_hex(&obj->oid),
+		      type_name(obj->type), type_name(type));
 		return NULL;
 	}
 }
@@ -187,21 +219,17 @@ struct object *lookup_unknown_object(struct repository *r, const struct object_i
 
 struct object *parse_object_buffer(struct repository *r, const struct object_id *oid, enum object_type type, unsigned long size, void *buffer, int *eaten_p)
 {
-	struct object *obj;
 	*eaten_p = 0;
 
-	obj = NULL;
 	if (type == OBJ_BLOB) {
-		struct blob *blob = lookup_blob(r, oid);
+		struct blob *blob = lookup_blob_type(r, oid, type);
 		if (blob) {
-			if (parse_blob_buffer(blob, buffer, size))
-				return NULL;
-			obj = &blob->object;
+			blob->object.parsed = 1;
+			return &blob->object;
 		}
 	} else if (type == OBJ_TREE) {
-		struct tree *tree = lookup_tree(r, oid);
+		struct tree *tree = lookup_tree_type(r, oid, type);
 		if (tree) {
-			obj = &tree->object;
 			if (!tree->buffer)
 				tree->object.parsed = 0;
 			if (!tree->object.parsed) {
@@ -209,9 +237,10 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 					return NULL;
 				*eaten_p = 1;
 			}
+			return &tree->object;
 		}
 	} else if (type == OBJ_COMMIT) {
-		struct commit *commit = lookup_commit(r, oid);
+		struct commit *commit = lookup_commit_type(r, oid, type);
 		if (commit) {
 			if (parse_commit_buffer(r, commit, buffer, size, 1))
 				return NULL;
@@ -219,20 +248,19 @@ struct object *parse_object_buffer(struct repository *r, const struct object_id 
 				set_commit_buffer(r, commit, buffer, size);
 				*eaten_p = 1;
 			}
-			obj = &commit->object;
+			return &commit->object;
 		}
 	} else if (type == OBJ_TAG) {
-		struct tag *tag = lookup_tag(r, oid);
+		struct tag *tag = lookup_tag_type(r, oid, type);
 		if (tag) {
 			if (parse_tag_buffer(r, tag, buffer, size))
 			       return NULL;
-			obj = &tag->object;
+			return &tag->object;
 		}
 	} else {
 		warning(_("object %s has unknown type id %d"), oid_to_hex(oid), type);
-		obj = NULL;
 	}
-	return obj;
+	return NULL;
 }
 
 struct object *parse_object_or_die(const struct object_id *oid,
@@ -261,12 +289,16 @@ struct object *parse_object(struct repository *r, const struct object_id *oid)
 	if ((obj && obj->type == OBJ_BLOB && repo_has_object_file(r, oid)) ||
 	    (!obj && repo_has_object_file(r, oid) &&
 	     oid_object_info(r, oid, NULL) == OBJ_BLOB)) {
+		if (!obj) {
+			struct blob *blob = create_blob(r, oid);
+			obj = &blob->object;
+		}
 		if (check_object_signature(r, repl, NULL, 0, NULL, NULL) < 0) {
 			error(_("hash mismatch %s"), oid_to_hex(oid));
 			return NULL;
 		}
-		parse_blob_buffer(lookup_blob(r, oid), NULL, 0);
-		return lookup_object(r, oid);
+		obj->parsed = 1;
+		return obj;
 	}
 
 	buffer = repo_read_object_file(r, oid, &type, &size);
