@@ -521,8 +521,10 @@ test_expect_success 'setup: fake a SHA1 hash collision' '
 	git init corrupt &&
 	(
 		cd corrupt &&
-		long_a=$(git hash-object -w ../a | sed -e "s!^..!&/!") &&
-		long_b=$(git hash-object -w ../b | sed -e "s!^..!&/!") &&
+		obj_a=$(git hash-object -w ../a) &&
+		long_a=$(test_oid_to_path "$obj_a") &&
+		obj_b=$(git hash-object -w ../b) &&
+		long_b=$(test_oid_to_path "$obj_b") &&
 		test -f	.git/objects/$long_b &&
 		cp -f	.git/objects/$long_a \
 			.git/objects/$long_b
