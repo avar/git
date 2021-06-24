@@ -1,3 +1,4 @@
+t4018 header: def RIGHT(self, x: int):
 class Foo:
     def RIGHT(self, x: int):
         return [
