@@ -9,6 +9,13 @@ difftool.<tool>.cmd::
 	file containing the contents of the diff pre-image and 'REMOTE'
 	is set to the name of the temporary file containing the contents
 	of the diff post-image.
++
+See the `--tool=<tool>` option linkgit:git-difftool[1] for more details.
 
 difftool.prompt::
 	Prompt before each invocation of the diff tool.
+
+difftool.trustExitCode::
+	Exit difftool if the invoked diff tool returns a non-zero exit status.
++
+See the `--trust-exit-code` option in linkgit:git-difftool[1] for more details.
