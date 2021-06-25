@@ -30,6 +30,17 @@ test_expect_success 'test capability advertisement' '
 	test_cmp expect actual
 '
 
+test_expect_success 'test capability advertisement with uploadpack.packfileURI' '
+	test_config uploadpack.blobPackfileUri FAKE &&
+
+	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uris/" <expect >expect.packfileURI &&
+
+	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
+		--advertise-capabilities >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect.packfileURI actual
+'
+
 test_expect_success 'stateless-rpc flag does not list capabilities' '
 	# Empty request
 	test-tool pkt-line pack >in <<-EOF &&
