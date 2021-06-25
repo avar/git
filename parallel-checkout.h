@@ -5,7 +5,6 @@
 
 struct cache_entry;
 struct checkout;
-struct progress;
 
 /****************************************************************
  * Users of parallel checkout
