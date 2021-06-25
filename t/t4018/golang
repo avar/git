@@ -1,0 +1,148 @@
+t4018 description: package
+t4018 header: package main
+package main
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- ALLCAPS
+t4018 header: package main
+package ALLCAPS
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- CamelCase
+t4018 header: package main
+package CamelCase
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is selective -- 123
+t4018 header: package main
+package 123
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- x509
+t4018 header: package x509
+package x509
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- underbars
+t4018 header: package not_conventional
+package not_conventional
+
+import "fmt"
+// ChangeMe
+
+t4018 description: package regex is not overly selective -- camelCase
+t4018 header: package camelCase
+package camelCase
+
+import "fmt"
+// ChangeMe
+
+t4018 description: import (
+t4018 header: import (
+package somePackage
+
+import (
+	"os"
+	ChangeMe
+)
+
+t4018 description: const (
+t4018 header: const (
+package somePackage
+
+const (
+	Foo = 1
+	Bar = ChangeMe
+)
+
+t4018 description: const rule is selective
+t4018 header: package main
+package main
+
+const Foo = "Bar"
+
+// ChangeMe
+
+t4018 description: complex function
+t4018 header: func (t *Test) RIGHT(a Type) (Type, error) {
+type Test struct {
+	a Type
+}
+
+func (t *Test) RIGHT(a Type) (Type, error) {
+	t.a = a
+	return ChangeMe, nil
+}
+
+t4018 description: func
+t4018 header: func RIGHT() {
+func RIGHT() {
+	a := 5
+	b := ChangeMe
+}
+
+t4018 description: func with comment after {
+t4018 header: func name() { // comment
+func name() { // comment
+	a := 5
+	b := ChangeMe
+}
+
+t4018 description: interface
+t4018 header: type RIGHT interface {
+type RIGHT interface {
+	a() Type
+	b() ChangeMe
+}
+
+t4018 description: long func
+t4018 header: func RIGHT(aVeryVeryVeryLongVariableName AVeryVeryVeryLongType,
+func RIGHT(aVeryVeryVeryLongVariableName AVeryVeryVeryLongType,
+	anotherLongVariableName AnotherLongType) {
+	a := 5
+	b := ChangeMe
+}
+
+t4018 description: struct
+t4018 header: type RIGHT struct {
+type RIGHT struct {
+	a Type
+	b ChangeMe
+}
+
+t4018 description: struct with comment after {
+t4018 header: type some struct { // comment
+type some struct { // comment
+	a Type
+	b ChangeMe
+}
+
+t4018 description: func combined with type
+t4018 header: func myfunc() {
+func myfunc() {
+	type mystruct struct {
+		a Foo
+		b Bar
+	}
+	ChangeMe
+
+t4018 description: anonymous indented func()
+t4018 header: func SomeThing() bool {
+func SomeThing() bool {
+	func() {
+		defer func() {
+			fmt.Println("hello")
+		}()
+	}()
+
+	ChangeMe
