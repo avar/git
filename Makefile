@@ -2231,12 +2231,30 @@ config-list.h: Documentation/*config.txt Documentation/config/*.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-configlist.sh \
 		>$@+ && mv $@+ $@
 
-command-list.h: generate-cmdlist.sh command-list.txt
+build/Documentation:
+	$(QUIET_GEN)mkdir -p build/Documentation
+.PRECIOUS: build/Documentation/git%.txt.cmdlist.in
+build/Documentation/git%.txt.cmdlist.in: build/Documentation Documentation/git%.txt
+	$(QUIET_GEN)if ! grep -w $(patsubst build/Documentation/%.txt.cmdlist.in,%,$@) command-list.txt >$@; \
+	then \
+		# For e.g. git-init-db, which has a *.txt file, but no \
+		# command-list.h entry \
+		>$@; \
+	fi
+build/Documentation/git%.txt.cmdlist: build/Documentation/git%.txt.cmdlist.in
+	$(QUIET_GEN)./generate-cmdlist.sh --tail $< >$@
 
-command-list.h: $(wildcard Documentation/git*.txt)
-	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh \
+COMMAND_LIST_H_FILES = $(filter-out Documentation/git.txt,$(wildcard Documentation/git*.txt))
+
+COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/Documentation/%.txt.cmdlist,$(COMMAND_LIST_H_FILES))
+command-list.h: build/Documentation generate-cmdlist.sh command-list.txt $(COMMAND_LIST_GEN)
+	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
 		$(patsubst %,--exclude-program %,$(EXCLUDED_PROGRAMS)) \
-		command-list.txt >$@+ && mv $@+ $@
+		command-list.txt >$@+ && \
+	echo "static struct cmdname_help command_list[] = {" >>$@+ && \
+	cat build/Documentation/*.txt.cmdlist >>$@+ && \
+	echo "};" >>$@+ && \
+	mv $@+ $@
 
 SCRIPT_DEFINES = $(SHELL_PATH_SQ):$(DIFF_SQ):$(GIT_VERSION):\
 	$(localedir_SQ):$(NO_CURL):$(USE_GETTEXT_SCHEME):$(SANE_TOOL_PATH_SQ):\

@@ -13,6 +13,7 @@
 /GIT-USER-AGENT
 /GIT-VERSION-FILE
 /bin-wrappers/
+/build/
 /git
 /git-add
 /git-add--interactive
