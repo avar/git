@@ -112,6 +112,7 @@ static struct protocol_capability capabilities[] = {
 	},
 	{
 		.name = "fetch",
+		.startup_config = serve_upload_pack_startup_config,
 		.advertise = upload_pack_advertise,
 		.command = upload_pack_v2,
 	},
