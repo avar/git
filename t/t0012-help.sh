@@ -39,7 +39,9 @@ test_expect_success 'invalid usage' '
 	test_expect_code 129 git help -g git-add &&
 
 	test_expect_code 129 git help -a -c &&
-	test_expect_code 129 git help -g -c
+	test_expect_code 129 git help -g -c &&
+
+	test_expect_code 129 git help --user-formats git-add
 '
 
 test_expect_success "works for commands and guides by default" '
@@ -74,11 +76,23 @@ test_expect_success 'git help' '
 	test_i18ngrep "^   commit " help.output &&
 	test_i18ngrep "^   fetch  " help.output
 '
+
+test_expect_success 'git help -a' '
+	git help -a >help.output &&
+	grep "^Main Porcelain Commands" help.output &&
+	grep "^User-facing file formats" help.output
+'
+
 test_expect_success 'git help -g' '
 	git help -g >help.output &&
-	test_i18ngrep "^   attributes " help.output &&
 	test_i18ngrep "^   everyday   " help.output &&
 	test_i18ngrep "^   tutorial   " help.output
+'
+
+test_expect_success 'git help --formats' '
+	git help --user-formats >help.output &&
+	grep "^   gitattributes   " help.output &&
+	grep "^   gitmailmap   " help.output
 '
 
 test_expect_success 'git help -c' '
