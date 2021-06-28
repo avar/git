@@ -227,10 +227,11 @@ static int write_directory(struct archiver_context *c)
 
 static int queue_or_write_archive_entry(const struct object_id *oid,
 					struct strbuf *base, const char *filename,
-					enum object_type object_type, unsigned mode,
+					enum object_type object_type, unsigned raw_mode,
 					void *context)
 {
 	struct archiver_context *c = context;
+	unsigned mode = canon_mode(raw_mode);
 
 	while (c->bottom &&
 	       !(base->len >= c->bottom->len &&
@@ -377,7 +378,7 @@ struct path_exists_context {
 
 static int reject_entry(const struct object_id *oid, struct strbuf *base,
 			const char *filename,
-			enum object_type object_type, unsigned mode,
+			enum object_type object_type, unsigned raw_mode,
 			void *context)
 {
 	int ret = -1;
