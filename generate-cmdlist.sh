@@ -71,10 +71,6 @@ print_command_list () {
 	done <"$1"
 }
 
-end_print_command_list () {
-	echo "};"
-}
-
 if test "$mode" = "--tail"
 then
 	print_command_list "$1"
