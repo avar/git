@@ -2235,18 +2235,6 @@ config-list.h: Documentation/*config.txt Documentation/config/*.txt
 
 EXCLUDED_PROGRAMS_EXTRA =
 EXCLUDED_PROGRAMS_EXTRA += git
-EXCLUDED_PROGRAMS_EXTRA += githooks
-EXCLUDED_PROGRAMS_EXTRA += git-mergetool--lib
-EXCLUDED_PROGRAMS_EXTRA += git-web--browse
-EXCLUDED_PROGRAMS_EXTRA += git-tools
-EXCLUDED_PROGRAMS_EXTRA += git-credential-cache--daemon
-EXCLUDED_PROGRAMS_EXTRA += git-remote-ext
-EXCLUDED_PROGRAMS_EXTRA += git-remote-fd
-#EXCLUDED_PROGRAMS_EXTRA += git-fsck-objects
-EXCLUDED_PROGRAMS_EXTRA += git-bisect-lk2009
-EXCLUDED_PROGRAMS_EXTRA += git-sh-i18n--envsubst
-EXCLUDED_PROGRAMS_EXTRA += git-init-db
-EXCLUDED_PROGRAMS_EXTRA += gitweb.conf
 
 EXCLUDED_TXT += $(patsubst %,Documentation/%.txt,$(EXCLUDED_PROGRAMS) $(EXCLUDED_PROGRAMS_EXTRA))
 COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/git*.txt))
@@ -2258,8 +2246,12 @@ build/command-list.h:
 
 $(COMMAND_LIST_GEN): build/command-list.h
 $(COMMAND_LIST_GEN): build/command-list.h/%.gen: Documentation/%.txt
-	$(QUIET_GEN)grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
-	./generate-cmdlist.sh --tail $@+ >$@
+	$(QUIET_GEN)if grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+; \
+	then \
+		./generate-cmdlist.sh --tail $@+ >$@; \
+	else \
+		>$@; \
+	fi
 
 command-list.h: build/command-list.h
 command-list.h: command-list.txt generate-cmdlist.sh $(COMMAND_LIST_GEN)
