@@ -97,6 +97,7 @@ git-for-each-ref                        plumbinginterrogators
 git-for-each-repo                       plumbinginterrogators
 git-format-patch                        mainporcelain
 git-fsck                                ancillaryinterrogators          complete
+git-fsck-objects                        mainporcelain
 git-gc                                  mainporcelain
 git-get-tar-commit-id                   plumbinginterrogators
 git-grep                                mainporcelain           info
