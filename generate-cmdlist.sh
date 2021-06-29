@@ -10,7 +10,7 @@ die () {
 
 get_category_line () {
 	tr ' ' '\012' |
-	sort -u 
+	LC_ALL=C sort -u 
 }
 
 category_list () {
