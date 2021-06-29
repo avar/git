@@ -91,3 +91,4 @@ struct cmdname_help {
 define_categories "$1"
 echo
 define_category_names "$1"
+echo

@@ -2260,7 +2260,6 @@ command-list.h: command-list.txt generate-cmdlist.sh $(COMMAND_LIST_GEN)
 	echo "static struct cmdname_help command_list[] = {" >>$@+ && \
 	LC_ALL=C sort $(COMMAND_LIST_GEN) >>$@+ && \
 	echo "};" >>$@+ && \
-	echo >>$@+ && \
 	mv $@+ $@
 
 SCRIPT_DEFINES = $(SHELL_PATH_SQ):$(DIFF_SQ):$(GIT_VERSION):\
