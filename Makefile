@@ -2250,6 +2250,7 @@ $(COMMAND_LIST_GEN): build/command-list.h/%.gen: Documentation/%.txt
 	$(QUIET_GEN)if grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+; \
 	then \
 		./generate-cmdlist.sh --tail $@+ >$@; \
+		$(RM) $@+; \
 	else \
 		>$@; \
 	fi
