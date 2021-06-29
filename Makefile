@@ -2256,11 +2256,13 @@ COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/command-list.h/%.gen,$(C
 build/command-list.h:
 	$(QUIET_GEN)mkdir -p build/command-list.h
 
+$(COMMAND_LIST_GEN): build/command-list.h
 $(COMMAND_LIST_GEN): build/command-list.h/%.gen: Documentation/%.txt
 	$(QUIET_GEN)grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
 	./generate-cmdlist.sh --tail $@+ >$@
 
-command-list.h: command-list.txt generate-cmdlist.sh build/command-list.h $(COMMAND_LIST_GEN)
+command-list.h: build/command-list.h
+command-list.h: command-list.txt generate-cmdlist.sh $(COMMAND_LIST_GEN)
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
 		command-list.txt >$@+ && \
 	echo "static struct cmdname_help command_list[] = {" >>$@+ && \
