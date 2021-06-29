@@ -24,13 +24,14 @@ category_list () {
 get_synopsis () {
 	file="$1"
 	cmd="$2"
+	head -n 10 "Documentation/$cmd.txt" |
 	sed -n '
 		/^NAME/,/'"$cmd"'/H
 		${
 			x
 			s/.*'"$cmd"' - \(.*\)/N_("\1")/
 			p
-		}' "$file"
+		}'
 }
 
 define_categories () {
