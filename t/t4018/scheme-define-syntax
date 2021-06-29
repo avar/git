@@ -1,4 +1,5 @@
-(define-syntax define-test-suite RIGHT
+t4018 header: (define-syntax define-test-suite
+(define-syntax define-test-suite
   (syntax-rules ()
     ((_ suite-name (name test) ChangeMe ...)
      (define suite-name
