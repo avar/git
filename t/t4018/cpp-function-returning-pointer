@@ -1,3 +1,4 @@
+t4018 header: const char *get_it_RIGHT(char *ptr)
 const char *get_it_RIGHT(char *ptr)
 {
 	ChangeMe;
