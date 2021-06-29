@@ -8,10 +8,6 @@ die () {
 	exit 1
 }
 
-command_list () {
-	eval "grep -ve '^#' $exclude_programs" <"$1"
-}
-
 get_categories () {
 	tr ' ' '\012'|
 	grep -v '^$' |
@@ -20,8 +16,7 @@ get_categories () {
 }
 
 category_list () {
-	command_list "$1" |
-	cut -c 40- |
+	cut -c 40- < "$1" |
 	get_categories
 }
 
@@ -64,7 +59,6 @@ define_category_names () {
 }
 
 print_command_list () {
-	command_list "$1" |
 	while read cmd rest
 	do
 		printf "	{ \"$cmd\", $(get_synopsis $cmd), 0"
@@ -73,20 +67,12 @@ print_command_list () {
 			printf " | CAT_$cat"
 		done
 		echo " },"
-	done
+	done <"$1"
 }
 
 end_print_command_list () {
 	echo "};"
 }
-
-exclude_programs=
-while test "--exclude-program" = "$1"
-do
-	shift
-	exclude_programs="$exclude_programs -e \"^$1 \""
-	shift
-done
 
 if test "$mode" = "--tail"
 then

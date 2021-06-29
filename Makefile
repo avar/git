@@ -2231,28 +2231,42 @@ config-list.h: Documentation/*config.txt Documentation/config/*.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-configlist.sh \
 		>$@+ && mv $@+ $@
 
-build/Documentation:
-	$(QUIET_GEN)mkdir -p build/Documentation
-.PRECIOUS: build/Documentation/git%.txt.cmdlist.in
-build/Documentation/git%.txt.cmdlist.in: build/Documentation Documentation/git%.txt
-	$(QUIET_GEN)if ! grep -w $(patsubst build/Documentation/%.txt.cmdlist.in,%,$@) command-list.txt >$@; \
-	then \
-		# For e.g. git-init-db, which has a *.txt file, but no \
-		# command-list.h entry \
-		>$@; \
-	fi
-build/Documentation/git%.txt.cmdlist: build/Documentation/git%.txt.cmdlist.in
-	$(QUIET_GEN)./generate-cmdlist.sh --tail $< >$@
 
-COMMAND_LIST_H_FILES = $(filter-out Documentation/git.txt,$(wildcard Documentation/git*.txt))
 
-COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/Documentation/%.txt.cmdlist,$(COMMAND_LIST_H_FILES))
-command-list.h: build/Documentation generate-cmdlist.sh command-list.txt $(COMMAND_LIST_GEN)
+EXCLUDED_PROGRAMS_EXTRA =
+EXCLUDED_PROGRAMS_EXTRA += git
+EXCLUDED_PROGRAMS_EXTRA += githooks
+EXCLUDED_PROGRAMS_EXTRA += git-mergetool--lib
+EXCLUDED_PROGRAMS_EXTRA += git-web--browse
+EXCLUDED_PROGRAMS_EXTRA += git-tools
+EXCLUDED_PROGRAMS_EXTRA += git-credential-cache--daemon
+EXCLUDED_PROGRAMS_EXTRA += git-remote-ext
+EXCLUDED_PROGRAMS_EXTRA += git-remote-fd
+EXCLUDED_PROGRAMS_EXTRA += git-fsck-objects
+EXCLUDED_PROGRAMS_EXTRA += git-bisect-lk2009
+EXCLUDED_PROGRAMS_EXTRA += git-sh-i18n--envsubst
+EXCLUDED_PROGRAMS_EXTRA += git-init-db
+EXCLUDED_PROGRAMS_EXTRA += gitweb.conf
+
+EXCLUDED_TXT += $(patsubst %,Documentation/%.txt,$(EXCLUDED_PROGRAMS) $(EXCLUDED_PROGRAMS_EXTRA))
+COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/git*.txt))
+
+COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/command-list.h/%.gen,$(COMMAND_LIST_TXT_DEP))
+
+build/command-list.h:
+	$(QUIET_GEN)mkdir -p build/command-list.h
+$(COMMAND_LIST_GEN): build/command-list.h
+
+$(COMMAND_LIST_GEN):
+	$(QUIET_GEN) \
+	grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
+	cat $@+ && \
+	./generate-cmdlist.sh --tail $@+ >$@
+command-list.h: command-list.txt generate-cmdlist.sh build/command-list.h $(COMMAND_LIST_GEN)
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
-		$(patsubst %,--exclude-program %,$(EXCLUDED_PROGRAMS)) \
 		command-list.txt >$@+ && \
 	echo "static struct cmdname_help command_list[] = {" >>$@+ && \
-	cat build/Documentation/*.txt.cmdlist >>$@+ && \
+	cat $(COMMAND_LIST_GEN) >>$@+ && \
 	echo "};" >>$@+ && \
 	mv $@+ $@
 
