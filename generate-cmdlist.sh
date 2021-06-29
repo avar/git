@@ -22,13 +22,15 @@ category_list () {
 }
 
 get_synopsis () {
+	file="$1"
+	cmd="$2"
 	sed -n '
-		/^NAME/,/'"$1"'/H
+		/^NAME/,/'"$cmd"'/H
 		${
 			x
-			s/.*'"$1"' - \(.*\)/N_("\1")/
+			s/.*'"$cmd"' - \(.*\)/N_("\1")/
 			p
-		}' "Documentation/$1.txt"
+		}' "$file"
 }
 
 define_categories () {
@@ -60,9 +62,10 @@ define_category_names () {
 }
 
 print_command_list () {
+	file="$1"
 	while read cmd rest
 	do
-		printf "	{ \"$cmd\", $(get_synopsis $cmd), 0"
+		printf "	{ \"$cmd\", $(get_synopsis $file $cmd), 0"
 		for cat in $(echo "$rest" | get_category_line)
 		do
 			printf " | CAT_$cat"
