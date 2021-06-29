@@ -2254,13 +2254,11 @@ COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/gi
 COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/command-list.h/%.gen,$(COMMAND_LIST_TXT_DEP))
 
 build/command-list.h:
-	$(QUIET_GEN)mkdir -p build/command-list.h
+	@mkdir -p build/command-list.h
 $(COMMAND_LIST_GEN): build/command-list.h
 
-$(COMMAND_LIST_GEN):
-	$(QUIET_GEN) \
-	grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
-	cat $@+ && \
+$(COMMAND_LIST_GEN): build/command-list.h
+	@grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
 	./generate-cmdlist.sh --tail $@+ >$@
 command-list.h: command-list.txt generate-cmdlist.sh build/command-list.h $(COMMAND_LIST_GEN)
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
