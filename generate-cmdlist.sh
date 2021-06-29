@@ -8,16 +8,17 @@ die () {
 	exit 1
 }
 
-get_categories () {
-	tr ' ' '\012'|
-	grep -v '^$' |
-	sort |
-	uniq
+get_category_line () {
+	tr ' ' '\012' |
+	sort -u 
 }
 
 category_list () {
-	cut -c 40- < "$1" |
-	get_categories
+	grep -v '^#' "$1" |
+	cut -c 40- |
+	tr ' ' '\012' |
+	grep -v '^$' |
+	sort -u
 }
 
 get_synopsis () {
@@ -62,7 +63,7 @@ print_command_list () {
 	while read cmd rest
 	do
 		printf "	{ \"$cmd\", $(get_synopsis $cmd), 0"
-		for cat in $(echo "$rest" | get_categories)
+		for cat in $(echo "$rest" | get_category_line)
 		do
 			printf " | CAT_$cat"
 		done
