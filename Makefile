@@ -2255,11 +2255,12 @@ COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/command-list.h/%.gen,$(C
 
 build/command-list.h:
 	@mkdir -p build/command-list.h
-$(COMMAND_LIST_GEN): build/command-list.h
 
+build/command-list.h/%.gen: Documentation/git%.txt
 $(COMMAND_LIST_GEN): build/command-list.h
-	@grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
+	$(QUIET_GEN)grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
 	./generate-cmdlist.sh --tail $@+ >$@
+
 command-list.h: command-list.txt generate-cmdlist.sh build/command-list.h $(COMMAND_LIST_GEN)
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
 		command-list.txt >$@+ && \
