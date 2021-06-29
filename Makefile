@@ -2266,7 +2266,7 @@ command-list.h: command-list.txt generate-cmdlist.sh $(COMMAND_LIST_GEN)
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh --header \
 		command-list.txt >$@+ && \
 	echo "static struct cmdname_help command_list[] = {" >>$@+ && \
-	cat $(COMMAND_LIST_GEN) >>$@+ && \
+	sort $(COMMAND_LIST_GEN) >>$@+ && \
 	echo "};" >>$@+ && \
 	mv $@+ $@
 
