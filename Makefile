@@ -2254,10 +2254,9 @@ COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/gi
 COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,build/command-list.h/%.gen,$(COMMAND_LIST_TXT_DEP))
 
 build/command-list.h:
-	@mkdir -p build/command-list.h
+	$(QUIET_GEN)mkdir -p build/command-list.h
 
-build/command-list.h/%.gen: Documentation/git%.txt
-$(COMMAND_LIST_GEN): build/command-list.h
+$(COMMAND_LIST_GEN): build/command-list.h/%.gen: Documentation/%.txt
 	$(QUIET_GEN)grep "^$(patsubst build/command-list.h/%.gen,%,$@) " command-list.txt >$@+ && \
 	./generate-cmdlist.sh --tail $@+ >$@
 
