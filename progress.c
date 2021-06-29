@@ -255,6 +255,13 @@ void display_progress(struct progress *progress, uint64_t n)
 static void progress_interval(int signum)
 {
 	progress_update = 1;
+
+	if (global_progress->last_value != -1)
+		return;
+
+	display(global_progress, 0, _(", stalled."), 0);
+	progress_update = 1;
+	return;
 }
 
 void test_progress_force_update(void)
