@@ -2235,6 +2235,7 @@ config-list.h: Documentation/*config.txt Documentation/config/*.txt
 
 EXCLUDED_PROGRAMS_EXTRA =
 EXCLUDED_PROGRAMS_EXTRA += git
+EXCLUDED_PROGRAMS_EXTRA += git-fsck-objects
 
 EXCLUDED_TXT += $(patsubst %,Documentation/%.txt,$(EXCLUDED_PROGRAMS) $(EXCLUDED_PROGRAMS_EXTRA))
 COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/git*.txt))
