@@ -1,3 +1,4 @@
+t4018 header: / { RIGHT /* Technically just supposed to be a slash and brace */
 / { RIGHT /* Technically just supposed to be a slash and brace */
 	#size-cells = <1>;
 

@@ -153,10 +153,21 @@ diff.<driver>.command::
 	The custom diff driver command.  See linkgit:gitattributes[5]
 	for details.
 
+diff.<driver>.funcname::
 diff.<driver>.xfuncname::
 	The regular expression that the diff driver should use to
 	recognize the hunk header.  A built-in pattern may also be used.
 	See linkgit:gitattributes[5] for details.
++
+When provided as `diff.<driver>.funcname` the regular expression is
+interpreted as a basic regular expression. With
+`diff.<driver>.xfuncname` it's interpreted as an extended regular
+expression.
++
+The `*.funcname` and `*.xfuncname` variables behave as if though they
+were one configuration variable for the purposes of what value
+eventually gets used. Setting `*.funcname` will override an earlier
+`*.xfuncname` and vice-versa.
 
 diff.<driver>.binary::
 	Set this option to true to make the diff driver treat files as

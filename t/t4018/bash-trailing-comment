@@ -1,3 +1,4 @@
+t4018 header: RIGHT()
 RIGHT() { # Comment
 
     ChangeMe
