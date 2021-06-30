@@ -503,7 +503,7 @@ static void fill_blob_sha1(struct repository *r, struct commit *commit,
 	unsigned short mode;
 	struct object_id oid;
 
-	if (get_tree_entry(r, &commit->object.oid, spec->path, &oid, &mode))
+	if (get_tree_entry_mode(r, &commit->object.oid, spec->path, &oid, &mode))
 		die("There is no path %s in the commit", spec->path);
 	fill_filespec(spec, &oid, 1, mode);
 
