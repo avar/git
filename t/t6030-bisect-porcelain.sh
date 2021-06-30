@@ -641,7 +641,7 @@ test_expect_success 'broken branch creation' '
 	git rm missing/MISSING &&
 	git commit -m "9(broken): Remove missing file" &&
 	git tag BROKEN_HASH9 &&
-	rm .git/objects/$(test_oid_to_path $deleted)
+	test_rm_loose_oid "$deleted"
 '
 
 echo "" > expected.ok
