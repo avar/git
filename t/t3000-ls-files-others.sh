@@ -37,6 +37,7 @@ test_expect_success 'setup: expected output' '
 	cat >expected1 <<-\EOF &&
 	expected1
 	expected2
+	expected2.noempty
 	expected3
 	output
 	path0
@@ -47,7 +48,10 @@ test_expect_success 'setup: expected output' '
 
 	sed -e "s|path2/file2|path2/|" <expected1 >expected2 &&
 	cp expected2 expected3 &&
-	echo path4/ >>expected2
+	echo path4/ >>expected2 &&
+
+	echo .test-lib-trash/ >expected2.noempty &&
+	cat expected2 >>expected2.noempty
 '
 
 test_expect_success 'ls-files --others' '
@@ -57,7 +61,7 @@ test_expect_success 'ls-files --others' '
 
 test_expect_success 'ls-files --others --directory' '
 	git ls-files --others --directory >output &&
-	test_cmp expected2 output
+	test_cmp expected2.noempty output
 '
 
 test_expect_success '--no-empty-directory hides empty directory' '
