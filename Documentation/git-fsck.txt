@@ -3,7 +3,7 @@ git-fsck(1)
 
 NAME
 ----
-git-fsck - Verifies the connectivity and validity of the objects in the database
+git-fsck - Verifies the connectivity and validity of Git data
 
 
 SYNOPSIS
@@ -16,7 +16,17 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-Verifies the connectivity and validity of the objects in the database.
+Verifies the connectivity and validity of Git data.
+
+This command can be run stand-alone to check an existing repository,
+or by other git commands such as linkgit:git-fetch-pack[1] and
+linkgit:git-receive-pack[1] when retrieving or accepting data from
+remote repositories (see `transfer.fsckObjects`
+linkgit:git-config[1]).
+
+It may also be used as a library by e.g. linkgit:git-unpack-objects[1]
+and linkgit:git-mktag[1] to exhaustively check the validity of newly
+added local data.
 
 OPTIONS
 -------
