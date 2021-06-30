@@ -1,3 +1,4 @@
+t4018 header: subroutine RIGHT
       module a
 
       contains
