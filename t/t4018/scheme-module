@@ -1,4 +1,5 @@
-(module A RIGHT
+t4018 header: (module A
+(module A
   (export with-display-exception)
   (extern (display-exception display-exception ChangeMe))
   (def (with-display-exception thunk)
