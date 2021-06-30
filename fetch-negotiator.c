@@ -8,8 +8,11 @@
 void fetch_negotiator_init(struct repository *r,
 			   struct fetch_negotiator *negotiator)
 {
+	enum fetch_negotiation_setting setting;
 	prepare_repo_settings(r);
-	switch(r->settings.fetch_negotiation_algorithm) {
+	setting = r->settings.fetch_negotiation_algorithm;
+
+	switch (setting) {
 	case FETCH_NEGOTIATION_SKIPPING:
 		skipping_negotiator_init(negotiator);
 		return;
@@ -19,7 +22,6 @@ void fetch_negotiator_init(struct repository *r,
 		return;
 
 	case FETCH_NEGOTIATION_DEFAULT:
-	default:
 		default_negotiator_init(negotiator);
 		return;
 	}
