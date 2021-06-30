@@ -37,6 +37,7 @@ static struct category_description main_categories[] = {
 	{ CAT_synchingrepositories, N_("Low-level Commands / Syncing Repositories") },
 	{ CAT_purehelpers, N_("Low-level Commands / Internal Helpers") },
 	{ CAT_userformats, N_("User-facing file formats") },
+	{ CAT_gitformats, N_("Internal file- and wire formats formats") },
 	{ 0, NULL }
 };
 
@@ -49,7 +50,6 @@ static const char *drop_prefix(const char *name, uint32_t category)
 	if (category == CAT_guide && skip_prefix(name, "git", &new_name))
 		return new_name;
 	return name;
-
 }
 
 static void extract_cmds(struct cmdname_help **p_cmds, uint32_t mask)
@@ -97,6 +97,14 @@ static int cmd_name_cmp(const void *elem1, const void *elem2)
 {
 	const struct cmdname_help *e1 = elem1;
 	const struct cmdname_help *e2 = elem2;
+
+	/*
+	 * "-" sorts before "s", but it makes sense to have the
+	 * "gitformats" index page sorted at the top of its category.
+	 */
+	if (!strcmp(e1->name, "gitformats") &&
+	    starts_with(e2->name, "gitformat-"))
+		return -1;
 
 	return strcmp(e1->name, e2->name);
 }
@@ -414,6 +422,16 @@ void list_user_formats_help(void)
 {
 	struct category_description catdesc[] = {
 		{ CAT_userformats, N_("The user-facing file formats are:") },
+		{ 0, NULL }
+	};
+	print_cmd_by_category(catdesc, NULL);
+	putchar('\n');
+}
+
+void list_git_formats_help(void)
+{
+	struct category_description catdesc[] = {
+		{ CAT_gitformats, N_("Git's internal file and network formats are:") },
 		{ 0, NULL }
 	};
 	print_cmd_by_category(catdesc, NULL);
