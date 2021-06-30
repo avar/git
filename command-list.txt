@@ -43,6 +43,10 @@
 # specified here, which can only have "guide" attribute and nothing
 # else.
 #
+# User-facing file formats such as documentation for the .gitmodules,
+# .mailmap etc. files lives in man section 5. Those entries can only
+# have the "userformats" "userformats" attribute and nothing else.
+#
 ### command list (do not change this line, also do not change alignment)
 # command name                          category [category] [category]
 git-add                                 mainporcelain           worktree
@@ -194,7 +198,7 @@ gitweb                                  ancillaryinterrogators
 git-whatchanged                         ancillaryinterrogators          complete
 git-worktree                            mainporcelain
 git-write-tree                          plumbingmanipulators
-gitattributes                           guide
+gitattributes                           userformats
 gitcli                                  guide
 gitcore-tutorial                        guide
 gitcredentials                          guide
@@ -203,10 +207,10 @@ gitdiffcore                             guide
 giteveryday                             guide
 gitfaq                                  guide
 gitglossary                             guide
-githooks                                guide
-gitignore                               guide
-gitmailmap                              guide
-gitmodules                              guide
+githooks                                userformats
+gitignore                               userformats
+gitmailmap                              userformats
+gitmodules                              userformats
 gitnamespaces                           guide
 gitremote-helpers                       guide
 gitrepository-layout                    guide
