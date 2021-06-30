@@ -293,6 +293,8 @@ static int protect_ntfs_hfs_benchmark(int argc, const char **argv)
 
 int cmd__path_utils(int argc, const char **argv)
 {
+	int is_file_size, is_file_sizes;
+
 	if (argc == 3 && !strcmp(argv[1], "normalize_path_copy")) {
 		char *buf = xmallocz(strlen(argv[2]));
 		int rv = normalize_path_copy(buf, argv[2]);
@@ -415,9 +417,16 @@ int cmd__path_utils(int argc, const char **argv)
 				     is_ntfs_dotmailmap);
 	}
 
-	if (argc > 2 && !strcmp(argv[1], "file-size")) {
+	is_file_size = !strcmp(argv[1], "file-size");
+	is_file_sizes = !strcmp(argv[1], "file-sizes");
+	if (argc > 2 && (is_file_size || is_file_sizes)) {
 		int res = 0, i;
 		struct stat st;
+
+		if (is_file_size && argc > 3) {
+			res = error("too many arguments to is-file-size, use is-file-sizes?");
+			return res;
+		}
 
 		for (i = 2; i < argc; i++)
 			if (stat(argv[i], &st))
@@ -474,7 +483,7 @@ int cmd__path_utils(int argc, const char **argv)
 	if (argc > 1 && !strcmp(argv[1], "protect_ntfs_hfs"))
 		return !!protect_ntfs_hfs_benchmark(argc - 1, argv + 1);
 
-	if (argc > 1 && !strcmp(argv[1], "is_valid_path")) {
+	if (argc > 1 && !strcmp(argv[1], "is-valid-paths")) {
 		int res = 0, expect = 1, i;
 
 		for (i = 2; i < argc; i++)
