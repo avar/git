@@ -187,14 +187,17 @@ static void resolve(const struct traverse_info *info, struct name_entry *ours, s
 {
 	struct merge_list *orig, *final;
 	const char *path;
+	unsigned int orig_mode, final_mode;
 
 	/* If it's already ours, don't bother showing it */
 	if (!ours)
 		return;
 
 	path = traverse_path(info, result);
-	orig = create_entry(2, ours->mode, &ours->oid, path);
-	final = create_entry(0, result->mode, &result->oid, path);
+	orig_mode = ours->mode;
+	orig = create_entry(2, orig_mode, &ours->oid, path);
+	final_mode = result->mode;
+	final = create_entry(0, final_mode, &result->oid, path);
 
 	final->link = orig;
 
@@ -211,7 +214,7 @@ static void unresolved_directory(const struct traverse_info *info,
 	void *buf0, *buf1, *buf2;
 
 	for (p = n; p < n + 3; p++) {
-		if (p->mode && S_ISDIR(p->mode))
+		if (p->object_type == OBJ_TREE)
 			break;
 	}
 	if (n + 3 <= p)
@@ -219,7 +222,7 @@ static void unresolved_directory(const struct traverse_info *info,
 
 	newbase = traverse_path(info, p);
 
-#define ENTRY_OID(e) (((e)->mode && S_ISDIR((e)->mode)) ? &(e)->oid : NULL)
+#define ENTRY_OID(e) (((e)->object_type == OBJ_TREE) ? &(e)->oid : NULL)
 	buf0 = fill_tree_descriptor(r, t + 0, ENTRY_OID(n + 0));
 	buf1 = fill_tree_descriptor(r, t + 1, ENTRY_OID(n + 1));
 	buf2 = fill_tree_descriptor(r, t + 2, ENTRY_OID(n + 2));
@@ -238,14 +241,17 @@ static struct merge_list *link_entry(unsigned stage, const struct traverse_info 
 {
 	const char *path;
 	struct merge_list *link;
+	unsigned int link_mode;
 
-	if (!n->mode)
+	if (n->object_type == OBJ_NONE)
 		return entry;
 	if (entry)
 		path = entry->path;
 	else
 		path = traverse_path(info, n);
-	link = create_entry(stage, n->mode, &n->oid, path);
+	link_mode = n->mode;
+	link = create_entry(stage, link_mode, &n->oid, path);
+
 	link->link = entry;
 	return link;
 }
@@ -262,7 +268,8 @@ static void unresolved(const struct traverse_info *info, struct name_entry n[3])
 		 * Treat missing entries as directories so that we return
 		 * after unresolved_directory has handled this.
 		 */
-		if (!n[i].mode || S_ISDIR(n[i].mode))
+		if (n[i].object_type == OBJ_NONE ||
+		    n[i].object_type == OBJ_TREE)
 			dirmask |= (1 << i);
 	}
 
@@ -271,11 +278,11 @@ static void unresolved(const struct traverse_info *info, struct name_entry n[3])
 	if (dirmask == mask)
 		return;
 
-	if (n[2].mode && !S_ISDIR(n[2].mode))
+	if (n[2].object_type != OBJ_TREE)
 		entry = link_entry(3, info, n + 2, entry);
-	if (n[1].mode && !S_ISDIR(n[1].mode))
+	if (n[1].object_type != OBJ_TREE)
 		entry = link_entry(2, info, n + 1, entry);
-	if (n[0].mode && !S_ISDIR(n[0].mode))
+	if (n[0].object_type != OBJ_TREE)
 		entry = link_entry(1, info, n + 0, entry);
 
 	add_merge_entry(entry);
@@ -320,7 +327,8 @@ static int threeway_callback(int n, unsigned long mask, unsigned long dirmask, s
 	}
 
 	if (same_entry(entry+0, entry+1)) {
-		if (!is_null_oid(&entry[2].oid) && !S_ISDIR(entry[2].mode)) {
+		if (!is_null_oid(&entry[2].oid) &&
+		    entry[2].object_type != OBJ_TREE) {
 			/* We did not touch, they modified -- take theirs */
 			resolve(info, entry+1, entry+2);
 			return mask;
