@@ -77,7 +77,6 @@ struct pack_idx_entry {
 };
 
 
-struct progress;
 /* Note, the data argument could be NULL if object type is blob */
 typedef int (*verify_fn)(const struct object_id *, enum object_type, unsigned long, void*, int*);
 
