@@ -274,7 +274,9 @@ pre_context_calculation:
 		 */
 
 		if (xecfg->flags & XDL_EMIT_FUNCNAMES) {
-			get_func_line(xe, xecfg, &func_line,
+			get_func_line(xe, xecfg,
+				      xecfg->flags & XDL_EMIT_FUNCCONTEXT
+				      ? NULL : &func_line,
 				      s1 - 1, funclineprev);
 			funclineprev = s1 - 1;
 		}
