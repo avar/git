@@ -90,7 +90,7 @@ void *fill_tree_descriptor(struct repository *r,
 	void *buf = NULL;
 
 	if (oid) {
-		buf = read_object_with_reference(r, oid, tree_type, &size, NULL);
+		buf = read_object_with_reference(r, oid, OBJ_TREE, &size, NULL);
 		if (!buf)
 			die("unable to read tree %s", oid_to_hex(oid));
 	}
@@ -609,7 +609,7 @@ int get_tree_entry_all(struct repository *r,
 	unsigned long size;
 	struct object_id root;
 
-	tree = read_object_with_reference(r, tree_oid, tree_type, &size, &root);
+	tree = read_object_with_reference(r, tree_oid, OBJ_TREE, &size, &root);
 	if (!tree)
 		return -1;
 
@@ -715,7 +715,7 @@ enum get_oid_result get_tree_entry_follow_symlinks(struct repository *r,
 			unsigned long size;
 			tree = read_object_with_reference(r,
 							  &current_tree_oid,
-							  tree_type, &size,
+							  OBJ_TREE, &size,
 							  &root);
 			if (!tree)
 				goto done;
