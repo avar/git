@@ -62,9 +62,11 @@ test_expect_success 'copy commit and tree but not blob by hand' '
 	) ) &&
 	test $cnt -eq 6 &&
 
-	blob=$(git rev-parse HEAD:file | sed -e "s|..|&/|") &&
-	test -f "cloned/.git/objects/$blob" &&
-	rm -f "cloned/.git/objects/$blob" &&
+	oid=$(git rev-parse HEAD:file) &&
+	(
+		cd cloned &&
+		test_rm_loose_oid "$oid"
+	) &&
 
 	cnt=$( (
 		cd cloned &&
