@@ -190,8 +190,19 @@ void strbuf_ltrim(struct strbuf *sb);
 /* Strip trailing directory separators */
 void strbuf_trim_trailing_dir_sep(struct strbuf *sb);
 
-/* Strip trailing LF or CR/LF */
+/**
+ * Similar to Perl's chomp(). Chops off the last character and returns
+ * 1 if it was chopped off, returns 0 otherwise.
+ */
+int strbuf_chomp(struct strbuf *sb, unsigned char ch);
+
+/**
+ * Strip trailing LF or CR/LF. Implemented in terms of strbuf_chomp().
+ */
 void strbuf_trim_trailing_newline(struct strbuf *sb);
+
+/* Strip trailing char */
+void strbuf_trim_trailing_char(struct strbuf *sb, unsigned char ch);
 
 /**
  * Replace the contents of the strbuf with a reencoded form.  Returns -1
