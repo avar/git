@@ -12,11 +12,12 @@ SYNOPSIS
 	   [[-i|--info] [-m|--man] [-w|--web]] [COMMAND|GUIDE]
 'git help' [-g|--guides]
 'git help' [-c|--config]
+'git help' [--user-formats]
 
 DESCRIPTION
 -----------
 
-With no options and no COMMAND or GUIDE given, the synopsis of the 'git'
+With no options and no COMMAND or DOC given, the synopsis of the 'git'
 command and a list of the most commonly used Git commands are printed
 on the standard output.
 
@@ -26,8 +27,8 @@ printed on the standard output.
 If the option `--guides` or `-g` is given, a list of the
 Git concept guides is also printed on the standard output.
 
-If a command, or a guide, is given, a manual page for that command or
-guide is brought up. The 'man' program is used by default for this
+If a command or other documentation is given, the relevant manual page
+will be brought up. The 'man' program is used by default for this
 purpose, but this can be overridden by other options or configuration
 variables.
 
@@ -61,6 +62,10 @@ OPTIONS
 -g::
 --guides::
 	Prints a list of the Git concept guides on the standard output.
+
+--user-formats::
+	Prints a list of the Git user-facing format documentation on
+	the standard output.
 
 -i::
 --info::
