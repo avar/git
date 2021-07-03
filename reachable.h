@@ -1,7 +1,6 @@
 #ifndef REACHEABLE_H
 #define REACHEABLE_H
 
-struct progress;
 struct rev_info;
 
 int add_unseen_recent_objects_to_traversal(struct rev_info *revs,
