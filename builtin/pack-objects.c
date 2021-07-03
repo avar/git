@@ -3311,6 +3311,16 @@ static void read_packs_list_from_stdin(void)
 	}
 
 	/*
+	 * Arguments we got on stdin may not even be packs. Check that
+	 * to avoid segfaulting later on in e.g. pack_mtime_cmp().
+	 */
+	for_each_string_list_item(item, &include_packs) {
+		struct packed_git *p = item->util;
+		if (!p)
+			die(_("could not find pack '%s'"), item->string);
+	}
+
+	/*
 	 * First handle all of the excluded packs, marking them as kept in-core
 	 * so that later calls to add_object_entry() discards any objects that
 	 * are also found in excluded packs.
