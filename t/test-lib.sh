@@ -260,6 +260,8 @@ case "$TRASH_DIRECTORY" in
 /*) ;; # absolute path is good
  *) TRASH_DIRECTORY="$TEST_OUTPUT_DIRECTORY/$TRASH_DIRECTORY" ;;
 esac
+TRASH_DIRECTORY_TEST_LIB="$TRASH_DIRECTORY/.test-lib-trash"
+TRASH_DIRECTORY_TEST_LIB_EMPTY="$TRASH_DIRECTORY_TEST_LIB/empty-dir"
 
 # If --stress was passed, run this test repeatedly in several parallel loops.
 if test "$GIT_TEST_STRESS_STARTED" = "done"
@@ -849,7 +851,8 @@ maybe_teardown_verbose () {
 last_verbose=t
 maybe_setup_verbose () {
 	test -z "$verbose_only" && return
-	if match_pattern_list $test_count $verbose_only
+	if (cd "$TRASH_DIRECTORY_TEST_LIB_EMPTY" &&
+	    match_pattern_list $test_count $verbose_only)
 	then
 		exec 4>&2 3>&1
 		# Emit a delimiting blank line when going from
@@ -879,7 +882,8 @@ maybe_setup_valgrind () {
 		return
 	fi
 	GIT_VALGRIND_ENABLED=
-	if match_pattern_list $test_count $valgrind_only
+	if (cd "$TRASH_DIRECTORY_TEST_LIB_EMPTY" &&
+	    match_pattern_list $test_count $valgrind_only)
 	then
 		GIT_VALGRIND_ENABLED=t
 	fi
@@ -1007,7 +1011,8 @@ test_finish_ () {
 test_skip () {
 	to_skip=
 	skipped_reason=
-	if match_pattern_list $this_test.$test_count $GIT_SKIP_TESTS
+	if (cd "$TRASH_DIRECTORY_TEST_LIB_EMPTY" &&
+	    match_pattern_list $this_test.$test_count $GIT_SKIP_TESTS)
 	then
 		to_skip=t
 		skipped_reason="GIT_SKIP_TESTS"
@@ -1178,7 +1183,7 @@ test_done () {
 			esac
 		fi
 
-		if test -z "$debug" && test -n "$remove_trash"
+		if test -z "$debug"
 		then
 			test -d "$TRASH_DIRECTORY" ||
 			error "Tests passed but trash directory already removed before test cleanup; aborting"
@@ -1343,11 +1348,22 @@ then
 	exit 1
 fi
 
+# Test repository
+rm -fr "$TRASH_DIRECTORY" || {
+	GIT_EXIT_OK=t
+	echo >&5 "FATAL: Cannot prepare test area"
+	exit 1
+}
+
+# Set up an early work area for the test code itself
+mkdir -p "$TRASH_DIRECTORY_TEST_LIB_EMPTY" >&3 2>&4 ||
+	error "cannot create test-lib.sh trash directory"
+
 # Are we running this test at all?
-remove_trash=
 this_test=${0##*/}
 this_test=${this_test%%-*}
-if match_pattern_list "$this_test" $GIT_SKIP_TESTS
+if (cd "$TRASH_DIRECTORY_TEST_LIB_EMPTY" &&
+    match_pattern_list "$this_test" $GIT_SKIP_TESTS)
 then
 	say_color info >&3 "skipping test $this_test altogether"
 	skip_all="skip all tests in $this_test"
@@ -1359,20 +1375,12 @@ HOME="$TRASH_DIRECTORY"
 GNUPGHOME="$HOME/gnupg-home-not-used"
 export HOME GNUPGHOME
 
-# Test repository
-rm -fr "$TRASH_DIRECTORY" || {
-	GIT_EXIT_OK=t
-	echo >&5 "FATAL: Cannot prepare test area"
-	exit 1
-}
-
-remove_trash=t
+# "We have the $TRASH_DIRECTORY already, but let's create a
+# $TRASH_DIRECTORY/.git
 if test -z "$TEST_NO_CREATE_REPO"
 then
 	git init "$TRASH_DIRECTORY" >&3 2>&4 ||
 	error "cannot run git init"
-else
-	mkdir -p "$TRASH_DIRECTORY"
 fi
 
 # Use -P to resolve symlinks in our working directory so that the cwd
