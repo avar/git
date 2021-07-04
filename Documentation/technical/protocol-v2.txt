@@ -556,3 +556,62 @@ and associated requested information, each separated by a single space.
 	attr = "size"
 
 	obj-info = obj-id SP obj-size
+
+bundle-uri
+~~~~~~~~~~
+
+If the 'bundle-uri' feature is advertised, the server supports the
+`bundle-uri' command.
+
+Additional features not supported in the base command will be
+advertised as the value of the command in the same manner as `ls-refs`
+and `fetch`, see above.
+
+The 'bundle-uri' command isintended to be issued before `ls-refs` and
+`fetch` to point to bundle(s) to "seed" an inform subsequent `ls-refs`
+and `fetch` commands.
+
+The client MAY provide reference tips found in the bundle(s) to be
+downloaded out-of-bounds as `have` lines in the `fetch` request. They
+MAY also ignore the bundle(s) entirely (e.g. if they can't be
+downloaded) or some combination of the two.
+
+The intent of the feature is optimize for server resource consumption
+in the common case by changing the common case of fetching a very
+large PACK during linkgit:git-clone[1] into a smaller incremental
+fetch.
+
+It also allows servers to achieve better caching in combination with
+an `uploadpack.packObjectsHook` (see linkgit:git-config[1]), by having
+new clones or fetches be a more predictable and common negotiation
+against the tips of recently produces *.bundle file(s), servers might
+even pre-generate the results of such negotiations for the
+`uploadpack.packObjectsHook` as new pushes come in, anticpating
+e.g. that most fresh clones will download a known bundle, followed by
+catching up to the current state of the repository using that bundle.
+
+A `bundle-uri` takes no arguments. The response is a list of URIs the
+server would like the client to fetch out-of-bounds before proceeding
+with the `fetch` request.
+
+	output = bundle-uri-line
+		 bundle-uri-line* flush-pkt
+
+	bundle-uri-line = PKT-LINE(bundle-uri)
+			  *(SP bundle-feature-key *(=bundle-feature-val))
+			  LF
+
+	bundle-uri = A URI such as a https://, ssh:// etc. URI
+
+	bundle-feature-key = Any printable ASCII characters except space
+	bundle-feature-val = Any printable ASCII characters except space
+
+No `bundle-feature-key`=`bundle-feature-value` fields are currently
+defined. If present, the client MAY provide them along with the
+request in a matter similar to e.g. the 'unborn' feature to 'ls-refs',
+or otherwise act upon them (e.g. it might skip 'bundle-uri' entirely
+depending on some key-value).
+
+How that'll work for will be specified in a future version of this
+document. a client MUST NOT request feature(s) the server has not
+advertised or otherwise specified the future behavior of.
