@@ -8,6 +8,7 @@
 #include "protocol-caps.h"
 #include "serve.h"
 #include "upload-pack.h"
+#include "bundle-uri.h"
 
 static int advertise_sid;
 
@@ -133,6 +134,12 @@ static struct protocol_capability capabilities[] = {
 		.name = "object-info",
 		.advertise = always_advertise,
 		.command = cap_object_info,
+	},
+	{
+		.name = "bundle-uri",
+		.startup_config = bundle_uri_startup_config,
+		.advertise = bundle_uri_advertise,
+		.command = bundle_uri_command,
 	},
 };
 
