@@ -242,4 +242,8 @@ void packet_writer_error(struct packet_writer *writer, const char *fmt, ...);
 void packet_writer_delim(struct packet_writer *writer);
 void packet_writer_flush(struct packet_writer *writer);
 
+/* Client error handling */
+__attribute__((format (printf, 2, 3)))
+void packet_client_error(struct packet_writer *writer, const char *fmt, ...);
+
 #endif
