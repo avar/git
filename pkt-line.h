@@ -227,7 +227,9 @@ struct packet_writer {
 	unsigned use_sideband : 1;
 };
 
-void packet_writer_init(struct packet_writer *writer, int dest_fd);
+#define PACKET_WRITER_INIT { \
+	.dest_fd = 1, \
+}
 
 /* These functions die upon failure. */
 __attribute__((format (printf, 2, 3)))
