@@ -106,7 +106,7 @@ int cap_object_info(struct repository *r, struct packet_reader *request)
 
 	string_list_clear(&oid_str_list, 1);
 
-	packet_flush(1);
+	packet_writer_flush(&writer);
 
 	return 0;
 }
