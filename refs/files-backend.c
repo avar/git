@@ -1001,6 +1001,7 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 {
 	struct strbuf ref_file = STRBUF_INIT;
 	struct ref_lock *lock;
+	int resolve_errno = 0;
 
 	files_assert_main_repository(refs, "lock_ref_oid_basic");
 	assert(err);
@@ -1008,17 +1009,18 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 	CALLOC_ARRAY(lock, 1);
 
 	files_ref_path(refs, &ref_file, refname);
-	if (!refs_resolve_ref_unsafe(&refs->base, refname,
-				     RESOLVE_REF_NO_RECURSE,
-				     &lock->old_oid, type) &&
-	    (errno != ENOTDIR ||
+	if (!refs_resolve_ref_unsafe_with_errno(&refs->base, refname,
+						RESOLVE_REF_NO_RECURSE,
+						&lock->old_oid, type,
+						&resolve_errno) &&
+	    (resolve_errno != ENOTDIR ||
 	     /* in case of D/F conflict, try to generate a better error
 	      * message. If that fails, fall back to strerror(ENOTDIR).
 	      */
 	     !refs_verify_refname_available(&refs->base, refname, NULL,
 					    NULL, err))) {
 		strbuf_addf(err, "unable to resolve reference '%s': %s",
-			    refname, strerror(errno));
+			    refname, strerror(resolve_errno));
 		goto error_return;
 	}
 
