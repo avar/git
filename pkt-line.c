@@ -600,6 +600,12 @@ void packet_writer_write(struct packet_writer *writer, const char *fmt, ...)
 	va_end(args);
 }
 
+void packet_writer_write_len(struct packet_writer *writer, const char *buf,
+			     size_t size)
+{
+	packet_writer_write(writer, "%*s", (int)size, buf);
+}
+
 void packet_writer_error(struct packet_writer *writer, const char *fmt, ...)
 {
 	va_list args;
