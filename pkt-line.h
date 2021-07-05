@@ -232,6 +232,8 @@ struct packet_writer {
 }
 
 /* These functions die upon failure. */
+void packet_writer_write_len(struct packet_writer *writer, const char *buf,
+			     size_t size);
 __attribute__((format (printf, 2, 3)))
 void packet_writer_write(struct packet_writer *writer, const char *fmt, ...);
 __attribute__((format (printf, 2, 3)))
