@@ -150,11 +150,15 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 			strvec_push(&data.prefixes, out);
 		else if (!strcmp("unborn", arg))
 			data.unborn = allow_unborn;
+		else
+			packet_client_error(&data.writer,
+					    N_("ls-refs: unexpected argument: '%s'"),
+					    request->line);
 	}
 
 	if (request->status != PACKET_READ_FLUSH)
 		packet_client_error(&data.writer,
-				    N_("expected flush after ls-refs arguments"));
+				    N_("ls-refs: expected flush after arguments"));
 
 	send_possibly_unborn_head(&data);
 	if (!data.prefixes.nr)
