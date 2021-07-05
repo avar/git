@@ -135,6 +135,24 @@ test_expect_success 'push with git:// and a config of v2 does not request v2' '
 	! grep "push< version 2" log
 '
 
+test_expect_success 'fetch handling a bad client using git:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	test_commit -C "$daemon_parent" four &&
+
+	test_must_fail env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_FETCH=true \
+		git -C daemon_child -c protocol.version=2 \
+		fetch >out 2>err &&
+
+	test_must_be_empty out &&
+	# We grep this out because it contains an OS-specific strerror()
+	grep "^fatal: read error: " err &&
+	grep "fetch> test-bad-client$" log >sent-bad-request &&
+	test_file_not_empty sent-bad-request
+'
+
 stop_git_daemon
 
 # Test protocol v2 with 'file://' transport
@@ -284,6 +302,27 @@ test_expect_success 'server-options are sent when fetching' '
 
 	grep "server-option=hello" log &&
 	grep "server-option=world" log
+'
+
+test_expect_success 'fetch handling a bad client using file:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	test_commit -C file_parent five &&
+
+	cat >err.expect <<-\EOF &&
+	fatal: unexpected line: '"'"'test-bad-client'"'"'
+	EOF
+	test_must_fail env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_FETCH=true \
+		git -C file_child -c protocol.version=2 \
+		fetch >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered &&
+	grep "fetch> test-bad-client$" log >sent-bad-request &&
+	test_file_not_empty sent-bad-request
 '
 
 test_expect_success 'warn if using server-option with fetch with legacy protocol' '
@@ -776,6 +815,27 @@ test_expect_success 'fetch with http:// by hash without tag following with proto
 
 	grep "fetch< version 2" log &&
 	! grep "fetch> command=ls-refs" log
+'
+
+test_expect_success 'fetch handling a bad client using http:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	test_commit -C "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" three &&
+
+	cat >err.expect <<-\EOF &&
+	fatal: error reading section header '"'"'acknowledgments'"'"'
+	EOF
+
+	test_must_fail env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_FETCH=true \
+		git -C http_child -c protocol.version=2 \
+		fetch >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered &&
+	grep "fetch> test-bad-client$" log >sent-bad-request
 '
 
 test_expect_success 'fetch from namespaced repo respects namespaces' '
