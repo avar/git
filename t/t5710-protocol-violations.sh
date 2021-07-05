@@ -16,7 +16,7 @@ test_expect_success 'extra delim packet in v2 ls-refs args' '
 	EOF
 
 	cat >err.expect <<-\EOF &&
-	fatal: expected flush after ls-refs arguments
+	fatal: ls-refs: expected flush after arguments
 	EOF
 	test_must_fail env GIT_PROTOCOL=version=2 \
 		git upload-pack . <input 2>err.actual &&

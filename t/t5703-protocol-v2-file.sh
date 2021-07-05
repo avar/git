@@ -32,18 +32,28 @@ test_expect_success 'list refs with file:// using protocol v2' '
 test_expect_success 'ls-remote handling a bad client using file:// protocol v2' '
 	test_when_finished "rm -f log" &&
 
-	cat >expect <<-EOF &&
-	$(git -C file_parent rev-parse refs/heads/main)$(printf "\t")refs/heads/main
+	cat >log.expect <<-\EOF &&
+	packet:  upload-pack> ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
-	env \
+	cat >err.expect <<-\EOF &&
+	fatal: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	EOF
+	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
 		git -c protocol.version=2 \
-		ls-remote "file://$(pwd)/file_parent" main >actual 2>err &&
+		ls-remote "file://$(pwd)/file_parent" main >out 2>err.actual &&
 
-	test_must_be_empty err &&
-	test_cmp expect actual &&
-	grep "git> test-bad-client$" log
+	grep "unexpected argument.*test-bad-client" err.actual &&
+	test_must_be_empty out &&
+	grep ERR log >log.actual &&
+	test_cmp log.expect log.actual
+'
+
+test_expect_failure 'ls-remote ERR and die() is racy under file:// protocol v2' '
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'ref advertisement is filtered with ls-remote using protocol v2' '
