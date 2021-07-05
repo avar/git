@@ -48,6 +48,21 @@ test_expect_success 'ref advertisement is filtered with ls-remote using protocol
 	test_cmp expect actual
 '
 
+test_expect_success 'ls-remote handling a bad client using git:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	git ls-remote "$daemon_parent" >expect &&
+	env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
+		git -c protocol.version=2 \
+		ls-remote "$GIT_DAEMON_URL/parent" >actual 2>err &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual &&
+	grep "git> test-bad-client$" log
+'
+
 test_expect_success 'clone with git:// using protocol v2' '
 	test_when_finished "rm -f log" &&
 
@@ -173,6 +188,23 @@ test_expect_success 'list refs with file:// using protocol v2' '
 
 	git ls-remote --symref "file://$(pwd)/file_parent" >expect &&
 	test_cmp expect actual
+'
+
+test_expect_success 'ls-remote handling a bad client using file:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	cat >expect <<-EOF &&
+	$(git -C file_parent rev-parse refs/heads/main)$(printf "\t")refs/heads/main
+	EOF
+	env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
+		git -c protocol.version=2 \
+		ls-remote "file://$(pwd)/file_parent" main >actual 2>err &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual &&
+	grep "git> test-bad-client$" log
 '
 
 test_expect_success 'ref advertisement is filtered with ls-remote using protocol v2' '
@@ -857,6 +889,21 @@ test_expect_success 'fetch from namespaced repo respects namespaces' '
 	git -C "$HTTPD_DOCUMENT_ROOT_PATH/nsrepo" rev-parse one >expect &&
 	git -C http_child rev-parse theirs >actual &&
 	test_cmp expect actual
+'
+
+test_expect_success 'ls-remote handling a bad client using http:// protocol v2' '
+	test_when_finished "rm -f log" &&
+
+	git ls-remote "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" >expect &&
+	env \
+		GIT_TRACE_PACKET="$(pwd)/log" \
+		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
+		git -c protocol.version=2 \
+		ls-remote "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" >actual 2>err &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual &&
+	grep "git> test-bad-client$" log
 '
 
 test_expect_success 'ls-remote with v2 http sends only one POST' '
