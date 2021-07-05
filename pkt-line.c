@@ -625,3 +625,34 @@ void packet_writer_flush(struct packet_writer *writer)
 {
 	packet_flush(writer->dest_fd);
 }
+
+void NORETURN packet_client_error(struct packet_writer *writer,
+				  const char *fmt, ...)
+{
+	struct strbuf err = STRBUF_INIT;
+	struct strbuf err_i18n = STRBUF_INIT;
+	va_list args;
+	va_list args_cp;
+
+	/*
+	 * Here we use _(fmt) because we're emitting things locally
+	 * via die(). Our API users have hopefully marked their
+	 * formats with N_() already, ...
+	 */
+	va_copy(args_cp, args);
+	va_start(args_cp, fmt);
+	strbuf_vaddf(&err_i18n, _(fmt), args_cp);
+	va_end(args_cp);
+
+	/*
+	 * ...but here we *MUST NOT* change "fmt" to "_(fmt)", since
+	 * we're writing errors over the wire. Those must (currently)
+	 * be in LANG=C.
+	 */
+	va_start(args, fmt);
+	strbuf_vaddf(&err, fmt, args);
+	va_end(args);
+
+	packet_writer_error(writer, "%s", err.buf);
+	die("%s", err_i18n.buf);
+}
