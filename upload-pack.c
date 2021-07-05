@@ -132,6 +132,7 @@ static void upload_pack_data_init(struct upload_pack_data *data)
 	struct string_list uri_protocols = STRING_LIST_INIT_DUP;
 	struct object_array extra_edge_obj = OBJECT_ARRAY_INIT;
 	struct string_list allowed_filters = STRING_LIST_INIT_DUP;
+	struct packet_writer writer = PACKET_WRITER_INIT;
 
 	memset(data, 0, sizeof(*data));
 	data->symref = symref;
@@ -146,7 +147,7 @@ static void upload_pack_data_init(struct upload_pack_data *data)
 	data->allowed_filters = allowed_filters;
 	data->allow_filter_fallback = 1;
 	data->tree_filter_max_depth = ULONG_MAX;
-	packet_writer_init(&data->writer, 1);
+	data->writer = writer;
 }
 
 static void upload_pack_data_clear(struct upload_pack_data *data)

@@ -77,10 +77,8 @@ static void send_info(struct repository *r, struct packet_writer *writer,
 int cap_object_info(struct repository *r, struct packet_reader *request)
 {
 	struct requested_info info;
-	struct packet_writer writer;
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct string_list oid_str_list = STRING_LIST_INIT_DUP;
-
-	packet_writer_init(&writer, 1);
 
 	while (packet_reader_read(request) == PACKET_READ_NORMAL) {
 		if (!strcmp("size", request->line)) {
