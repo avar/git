@@ -282,4 +282,28 @@ test_expect_success !SANITIZE_LEAK 'basics of object-info' '
 	test_cmp expect actual
 '
 
+test_expect_success 'object-info with unknown arguments' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=object-info
+	object-format=$(test_oid algo)
+	0001
+	we-do-not
+	know-about=this
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	ERR object-info: unexpected argument: '"'"'we-do-not'"'"'
+	EOF
+
+	cat >expect.err <<-EOF &&
+	fatal: object-info: unexpected argument: '"'"'we-do-not'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>actual.err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual &&
+	test_cmp expect.err actual.err
+'
+
 test_done
