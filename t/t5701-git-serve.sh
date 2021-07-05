@@ -83,6 +83,8 @@ test_expect_success 'request invalid command' '
 	test_i18ngrep "invalid command" err
 '
 
+# Test the basics of fetch
+#
 test_expect_success 'wrong object-format' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=fetch
@@ -92,6 +94,26 @@ test_expect_success 'wrong object-format' '
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
 	test_i18ngrep "mismatched object format" err
+'
+
+test_expect_success 'fetch with unknown features' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=fetch
+	object-format=$(test_oid algo)
+	0001
+	we-do-not
+	know-about=this
+	0000
+	EOF
+
+	cat >expect.err <<-EOF &&
+	fatal: unexpected line: '"'"'we-do-not'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>actual.err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_must_be_empty actual &&
+	test_cmp expect.err actual.err
 '
 
 # Test the basics of ls-refs
@@ -232,24 +254,6 @@ test_expect_success 'sending server-options' '
 	test-tool serve-v2 --stateless-rpc <in >out &&
 	test-tool pkt-line unpack <out >actual &&
 	test_cmp expect actual
-'
-
-test_expect_success 'unexpected lines are not allowed in fetch request' '
-	git init server &&
-
-	test-tool pkt-line pack >in <<-EOF &&
-	command=fetch
-	object-format=$(test_oid algo)
-	0001
-	this-is-not-a-command
-	0000
-	EOF
-
-	(
-		cd server &&
-		test_must_fail test-tool serve-v2 --stateless-rpc
-	) <in >/dev/null 2>err &&
-	grep "unexpected line: .this-is-not-a-command." err
 '
 
 # Test the basics of object-info
