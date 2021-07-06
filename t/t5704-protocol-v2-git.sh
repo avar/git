@@ -161,15 +161,17 @@ test_expect_success 'fetch handling a bad client using git:// protocol v2' '
 
 	test_commit -C "$daemon_parent" four &&
 
+	cat >err.expect <<-EOF &&
+	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
+	EOF
 	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_FETCH=true \
 		git -C daemon_child -c protocol.version=2 \
-		fetch >out 2>err &&
+		fetch >out 2>err.actual &&
 
 	test_must_be_empty out &&
-	# We grep this out because it contains an OS-specific strerror()
-	grep "^fatal: read error: " err &&
+	test_cmp err.expect err.actual &&
 	grep "fetch> test-bad-client$" log >sent-bad-request &&
 	test_file_not_empty sent-bad-request
 '
