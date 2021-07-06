@@ -106,13 +106,17 @@ test_expect_success 'fetch with unknown features' '
 	0000
 	EOF
 
+	cat >expect <<-EOF &&
+	ERR fetch: unexpected argument: '"'"'we-do-not'"'"'
+	EOF
+
 	cat >expect.err <<-EOF &&
-	fatal: unexpected line: '"'"'we-do-not'"'"'
+	fatal: fetch: unexpected argument: '"'"'we-do-not'"'"'
 	EOF
 
 	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>actual.err &&
 	test-tool pkt-line unpack <out >actual &&
-	test_must_be_empty actual &&
+	test_cmp expect actual &&
 	test_cmp expect.err actual.err
 '
 
