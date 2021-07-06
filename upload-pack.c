@@ -1548,15 +1548,17 @@ static void process_args(struct packet_reader *request,
 			continue;
 		}
 
-		/* ignore unknown lines maybe? */
-		die("unexpected line: '%s'", arg);
+		packet_client_error(&data->writer,
+				    N_("fetch: unexpected argument: '%s'"),
+				    arg);
 	}
 
 	if (data->uri_protocols.nr && !data->writer.use_sideband)
 		string_list_clear(&data->uri_protocols, 0);
 
 	if (request->status != PACKET_READ_FLUSH)
-		die(_("expected flush after fetch arguments"));
+		packet_client_error(&data->writer,
+				    N_("fetch: expected flush after arguments"));
 }
 
 static int process_haves(struct upload_pack_data *data, struct oid_array *common)
