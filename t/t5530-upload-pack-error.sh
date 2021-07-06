@@ -67,7 +67,7 @@ test_expect_success 'upload-pack fails due to bad want (no object)' '
 	EOF
 
 	cat >expect.err <<-EOF &&
-	fatal: git upload-pack: not our ref $(test_oid deadbeef)
+	fatal: upload-pack: not our ref $(test_oid deadbeef)
 	EOF
 
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
@@ -89,7 +89,7 @@ test_expect_success 'upload-pack fails due to bad want (not tip)' '
 	EOF
 
 	cat >expect.err <<-EOF &&
-	fatal: git upload-pack: not our ref $oid
+	fatal: upload-pack: not our ref $oid
 	EOF
 
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
