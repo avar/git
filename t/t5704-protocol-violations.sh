@@ -32,4 +32,21 @@ test_expect_success 'extra delim packet in v2 fetch args' '
 	test_i18ngrep "expected flush after fetch arguments" err
 '
 
+test_expect_success 'extra delim packet in v2 object-info args' '
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=object-info
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
+	cat >err.expect <<-\EOF &&
+	fatal: object-info: expected flush after arguments
+	EOF
+	test_must_fail env GIT_PROTOCOL=version=2 \
+		git upload-pack . <input 2>err.actual &&
+	test_cmp err.expect err.actual
+'
+
 test_done
