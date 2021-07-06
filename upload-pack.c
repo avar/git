@@ -1430,10 +1430,8 @@ static int parse_want_ref(struct packet_writer *writer, const char *line,
 		struct string_list_item *item;
 		struct object *o;
 
-		if (read_ref(arg, &oid)) {
-			packet_writer_error(writer, "unknown ref %s", arg);
-			die("unknown ref %s", arg);
-		}
+		if (read_ref(arg, &oid))
+			packet_client_error(writer, N_("unknown ref %s"), arg);
 
 		item = string_list_append(wanted_refs, arg);
 		item->util = oiddup(&oid);
