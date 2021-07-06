@@ -33,7 +33,7 @@ test_expect_success 'extra delim packet in v2 fetch args' '
 	EOF
 
 	cat >err.expect <<-\EOF &&
-	fatal: expected flush after fetch arguments
+	fatal: fetch: expected flush after arguments
 	EOF
 	test_must_fail env GIT_PROTOCOL=version=2 \
 		git upload-pack . <input 2>err.actual &&
