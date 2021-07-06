@@ -153,7 +153,7 @@ test_expect_success 'fetch handling a bad client using http:// protocol v2' '
 	test_commit -C "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" three &&
 
 	cat >err.expect <<-\EOF &&
-	fatal: error reading section header '"'"'acknowledgments'"'"'
+	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 
 	test_must_fail env \
