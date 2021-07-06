@@ -197,7 +197,8 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 	test_commit -C file_parent five &&
 
 	cat >err.expect <<-\EOF &&
-	fatal: unexpected line: '"'"'test-bad-client'"'"'
+	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
+	fatal: fetch: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
@@ -206,11 +207,14 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 		fetch >out 2>err.actual &&
 
 	test_must_be_empty out &&
-	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
-	test_cmp err.expect err.filtered &&
+	grep "unexpected argument.*test-bad-client" err.actual &&
 
 	grep "fetch> test-bad-client$" log >sent-bad-request &&
 	test_file_not_empty sent-bad-request
+'
+
+test_expect_failure 'fetch ERR and die() is racy under file:// protocol v2' '
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'server-options are sent when cloning' '

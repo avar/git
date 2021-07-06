@@ -130,13 +130,17 @@ test_expect_success 'even with handcrafted request, filter does not work if not 
 	0000
 	EOF
 
+	cat >expect <<-EOF &&
+	ERR fetch: unexpected argument: '"'"'filter blob:none'"'"'
+	EOF
+
 	cat >err.expect <<-\EOF &&
-	fatal: unexpected line: '"'"'filter blob:none'"'"'
+	fatal: fetch: unexpected argument: '"'"'filter blob:none'"'"'
 	EOF
 	test_must_fail test-tool -C server serve-v2 --stateless-rpc \
 		<in >out 2>err.actual &&
-
-	test_must_be_empty out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual &&
 	test_cmp err.expect err.actual &&
 
 	# Exercise to ensure that if advertised, filter works
