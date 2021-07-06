@@ -1054,7 +1054,9 @@ static void receive_needs(struct upload_pack_data *data,
 		if (skip_prefix(reader->line, "filter ", &arg)) {
 			if (!data->filter_capability_requested)
 				die("git upload-pack: filtering capability not negotiated");
-			list_objects_filter_die_if_populated(&data->filter_options);
+			if (data->filter_options.choice)
+				packet_client_error(&data->writer,
+						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, arg);
 			die_if_using_banned_filter(data);
 			continue;
@@ -1521,7 +1523,9 @@ static void process_args(struct packet_reader *request,
 		}
 
 		if (data->allow_filter && skip_prefix(arg, "filter ", &p)) {
-			list_objects_filter_die_if_populated(&data->filter_options);
+			if (data->filter_options.choice)
+				packet_client_error(&data->writer,
+						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, p);
 			die_if_using_banned_filter(data);
 			continue;
