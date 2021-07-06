@@ -758,13 +758,10 @@ error:
 	/* Pick one of them (we know there at least is one) */
 	for (i = 0; i < data->want_obj.nr; i++) {
 		struct object *o = data->want_obj.objects[i].item;
-		if (!is_our_ref(o)) {
-			packet_writer_error(&data->writer,
-					    "upload-pack: not our ref %s",
+		if (!is_our_ref(o))
+			packet_client_error(&data->writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&o->oid));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&o->oid));
-		}
 	}
 }
 
@@ -1100,13 +1097,10 @@ static void receive_needs(struct upload_pack_data *data,
 		}
 
 		o = parse_object(the_repository, &oid_buf);
-		if (!o) {
-			packet_writer_error(&data->writer,
-					    "upload-pack: not our ref %s",
+		if (!o)
+			packet_client_error(&data->writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&oid_buf));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&oid_buf));
-		}
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
 			if (!((config_allow_uor & ALLOW_ANY_SHA1) == ALLOW_ANY_SHA1
@@ -1405,13 +1399,10 @@ static int parse_want(struct packet_writer *writer, const char *line,
 			    "expected to get oid, not '%s'", line);
 
 		o = parse_object(the_repository, &oid);
-		if (!o) {
-			packet_writer_error(writer,
-					    "upload-pack: not our ref %s",
+		if (!o)
+			packet_client_error(writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&oid));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&oid));
-		}
 
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
