@@ -1149,14 +1149,14 @@ static int fsck_gitmodules_fn(const char *var, const char *value, void *vdata)
 				    FSCK_MSG_GITMODULES_URL,
 				    "disallowed submodule url: %s",
 				    value);
-	if (!strcmp(key, "path") && value &&
+	else if (!strcmp(key, "path") && value &&
 	    looks_like_command_line_option(value))
 		data->ret |= report(data->options,
 				    data->oid, OBJ_BLOB,
 				    FSCK_MSG_GITMODULES_PATH,
 				    "disallowed submodule path: %s",
 				    value);
-	if (!strcmp(key, "update") && value &&
+	else if (!strcmp(key, "update") && value &&
 	    parse_submodule_update_type(value) == SM_UPDATE_COMMAND)
 		data->ret |= report(data->options, data->oid, OBJ_BLOB,
 				    FSCK_MSG_GITMODULES_UPDATE,
