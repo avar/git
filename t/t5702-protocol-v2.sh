@@ -1192,13 +1192,21 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodul
 	git -C "$P" add .gitmodules &&
 	git -C "$P" commit -m x &&
 
-	configure_exclusion "$P" .gitmodules >h &&
+	bad_oid=$(configure_exclusion "$P" .gitmodules) &&
 
+	cat >err.expect <<-EOF &&
+	Cloning into '"'"'http_child'"'"'...
+	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
+	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
+	fatal: fsck failed
+	EOF
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
 	test_must_fail git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
-		clone "$HTTPD_URL/smart/http_parent" http_child 2>err &&
-	test_i18ngrep "disallowed submodule name" err
+		clone "$HTTPD_URL/smart/http_parent" http_child >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'http:// --negotiate-only' '
