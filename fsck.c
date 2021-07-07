@@ -1121,8 +1121,18 @@ static int check_submodule_url(const char *url)
 struct fsck_gitmodules_data {
 	const struct object_id *oid;
 	struct fsck_options *options;
+	int first_after_section;
 	int ret;
 };
+
+static int fsck_gitmodules_event_fn(enum config_event_t type,
+				    size_t begin, size_t end, void *vdata)
+{
+	struct fsck_gitmodules_data *data = vdata;
+	if (type == CONFIG_EVENT_SECTION)
+		data->first_after_section = 1;
+	return 0;
+}
 
 static int fsck_gitmodules_fn(const char *var, const char *value, void *vdata)
 {
@@ -1136,12 +1146,30 @@ static int fsck_gitmodules_fn(const char *var, const char *value, void *vdata)
 		return 0;
 
 	name = xmemdupz(subsection, subsection_len);
-	if (check_submodule_name(name) < 0)
+
+	/*
+	 * The "first_after_section" state machine ensures that we
+	 * don't warn N times about the same bad section for every N
+	 * variables in that section. See the commit that introduced
+	 * this comment for more details, ....
+	 */
+	if (data->first_after_section &&
+	    check_submodule_name(name)) {
 		data->ret |= report(data->options,
 				    data->oid, OBJ_BLOB,
 				    FSCK_MSG_GITMODULES_NAME,
 				    "disallowed submodule name: %s",
 				    name);
+		data->first_after_section = 0;
+	}
+
+	/*
+	 * ...we do not need to worry about the same special case for
+	 * specific keys such as "submodule.<name>.url", either they
+	 * appear once, or if there's more than one we do want to warn
+	 * about every bad one (and should probably warn separately
+	 * about duplicates, but that's another matter).
+	 */
 	if (!strcmp(key, "url") && value &&
 	    check_submodule_url(value) < 0)
 		data->ret |= report(data->options,
@@ -1195,6 +1223,8 @@ static int fsck_blob(const struct object_id *oid, const char *buf,
 	data.options = options;
 	data.ret = 0;
 	config_opts.error_action = CONFIG_ERROR_SILENT;
+	config_opts.event_fn = fsck_gitmodules_event_fn;
+	config_opts.event_fn_data = &data;
 	if (git_config_from_mem(fsck_gitmodules_fn, CONFIG_ORIGIN_BLOB,
 				".gitmodules", buf, size, &data, &config_opts))
 		data.ret |= report(options, oid, OBJ_BLOB,
