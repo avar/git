@@ -14,9 +14,12 @@ test_expect_success 'extra delim packet in v2 ls-refs args' '
 		# protocol expects 0000 flush here
 		printf 0001
 	} >input &&
+	cat >err.expect <<-\EOF &&
+	fatal: expected flush after ls-refs arguments
+	EOF
 	test_must_fail env GIT_PROTOCOL=version=2 \
-		git upload-pack . <input 2>err &&
-	test_i18ngrep "expected flush after ls-refs arguments" err
+		git upload-pack . <input 2>err.actual &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'extra delim packet in v2 fetch args' '
@@ -27,9 +30,12 @@ test_expect_success 'extra delim packet in v2 fetch args' '
 		# protocol expects 0000 flush here
 		printf 0001
 	} >input &&
+	cat >err.expect <<-\EOF &&
+	fatal: expected flush after fetch arguments
+	EOF
 	test_must_fail env GIT_PROTOCOL=version=2 \
-		git upload-pack . <input 2>err &&
-	test_i18ngrep "expected flush after fetch arguments" err
+		git upload-pack . <input 2>err.actual &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'extra delim packet in v2 object-info args' '
