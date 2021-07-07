@@ -236,11 +236,17 @@ test_expect_success 'server-options are sent when using ls-remote' '
 '
 
 test_expect_success 'warn if using server-option with ls-remote with legacy protocol' '
-	test_must_fail env GIT_TEST_PROTOCOL_VERSION=0 git -c protocol.version=0 \
-		ls-remote -o hello -o world "file://$(pwd)/file_parent" main 2>err &&
 
-	test_i18ngrep "see protocol.version in" err &&
-	test_i18ngrep "server options require protocol version 2 or later" err
+	cat >err.expect <<-\EOF &&
+	hint: see protocol.version in '"'"'git help config'"'"' for more details
+	fatal: server options require protocol version 2 or later
+	EOF
+	test_must_fail env GIT_TEST_PROTOCOL_VERSION=0 git -c protocol.version=0 \
+		ls-remote -o hello -o world "file://$(pwd)/file_parent" main >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered
 '
 
 test_expect_success 'clone with file:// using protocol v2' '
@@ -362,11 +368,16 @@ test_expect_success 'warn if using server-option with fetch with legacy protocol
 
 	git init temp_child &&
 
+	cat >err.expect <<-\EOF &&
+	hint: see protocol.version in '"'"'git help config'"'"' for more details
+	fatal: server options require protocol version 2 or later
+	EOF
 	test_must_fail env GIT_TEST_PROTOCOL_VERSION=0 git -C temp_child -c protocol.version=0 \
-		fetch -o hello -o world "file://$(pwd)/file_parent" main 2>err &&
+		fetch -o hello -o world "file://$(pwd)/file_parent" main >out 2>err.actual &&
 
-	test_i18ngrep "see protocol.version in" err &&
-	test_i18ngrep "server options require protocol version 2 or later" err
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered
 '
 
 test_expect_success 'server-options are sent when cloning' '
@@ -383,12 +394,18 @@ test_expect_success 'server-options are sent when cloning' '
 test_expect_success 'warn if using server-option with clone with legacy protocol' '
 	test_when_finished "rm -rf myclone" &&
 
+	cat >err.expect <<-\EOF &&
+	Cloning into '"'"'myclone'"'"'...
+	hint: see protocol.version in '"'"'git help config'"'"' for more details
+	fatal: server options require protocol version 2 or later
+	EOF
 	test_must_fail env GIT_TEST_PROTOCOL_VERSION=0 git -c protocol.version=0 \
 		clone --server-option=hello --server-option=world \
-		"file://$(pwd)/file_parent" myclone 2>err &&
+		"file://$(pwd)/file_parent" myclone >out 2>err.actual &&
 
-	test_i18ngrep "see protocol.version in" err &&
-	test_i18ngrep "server options require protocol version 2 or later" err
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered
 '
 
 test_expect_success 'upload-pack respects config using protocol v2' '
@@ -481,9 +498,16 @@ test_expect_success 'do not advertise filter if not configured to do so' '
 test_expect_success 'partial clone warns if filter is not advertised' '
 	rm -rf client &&
 	git -C server config uploadpack.allowfilter 0 &&
+
+	cat >err.expect <<-\EOF &&
+	Cloning into '"'"'client'"'"'...
+	warning: filtering not recognized by server, ignoring
+	EOF
 	git -c protocol.version=2 \
-		clone --filter=blob:none "file://$(pwd)/server" client 2>err &&
-	test_i18ngrep "filtering not recognized by server, ignoring" err
+		clone --filter=blob:none "file://$(pwd)/server" client >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'even with handcrafted request, filter does not work if not advertised' '
@@ -499,13 +523,19 @@ test_expect_success 'even with handcrafted request, filter does not work if not 
 	0000
 	EOF
 
+	cat >err.expect <<-\EOF &&
+	fatal: unexpected line: '"'"'filter blob:none'"'"'
+	EOF
 	test_must_fail test-tool -C server serve-v2 --stateless-rpc \
-		<in >/dev/null 2>err &&
-	grep "unexpected line: .filter blob:none." err &&
+		<in >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual &&
 
 	# Exercise to ensure that if advertised, filter works
 	git -C server config uploadpack.allowfilter 1 &&
-	test-tool -C server serve-v2 --stateless-rpc <in >/dev/null
+	test-tool -C server serve-v2 --stateless-rpc <in >out 2>err &&
+	test_must_be_empty err
 '
 
 test_expect_success 'default refspec is used to filter ref when fetchcing' '
@@ -707,12 +737,18 @@ test_expect_success 'file:// --negotiate-only with protocol v0' '
 
 	setup_negotiate_only "$SERVER" "$URI" &&
 
+	cat >err.expect <<-\EOF &&
+	warning: --negotiate-only requires protocol v2
+	EOF
 	test_must_fail git -c protocol.version=0 -C client fetch \
 		--no-tags \
 		--negotiate-only \
 		--negotiation-tip=$(git -C client rev-parse HEAD) \
-		origin 2>err &&
-	test_i18ngrep "negotiate-only requires protocol v2" err
+		origin >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
+	test_cmp err.expect err.filtered
 '
 
 # Test protocol v2 with 'http://' transport
@@ -750,15 +786,21 @@ test_expect_success 'clone repository with http:// using protocol v2 with incomp
 	git init "$HTTPD_DOCUMENT_ROOT_PATH/incomplete_length" &&
 	test_commit -C "$HTTPD_DOCUMENT_ROOT_PATH/incomplete_length" file &&
 
+	cat >err.expect <<-\EOF &&
+	Cloning into '"'"'incomplete_length_child'"'"'...
+	error: 2 bytes of length header were received
+	fatal: expected response end packet after ref listing
+	EOF
 	test_must_fail env GIT_TRACE_PACKET="$(pwd)/log" GIT_TRACE_CURL="$(pwd)/log" git -c protocol.version=2 \
-		clone "$HTTPD_URL/smart/incomplete_length" incomplete_length_child 2>err &&
+		clone "$HTTPD_URL/smart/incomplete_length" incomplete_length_child >out 2>err.actual &&
 
 	# Client requested to use protocol v2
 	grep "Git-Protocol: version=2" log &&
 	# Server responded using protocol v2
 	grep "git< version 2" log &&
-	# Client reported appropriate failure
-	test_i18ngrep "bytes of length header were received" err
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'clone repository with http:// using protocol v2 with incomplete pktline body' '
@@ -956,9 +998,14 @@ test_expect_success 'when server sends "ready", expect DELIM' '
 	printf "\$ready = 1 if /ready/; \$ready && s/0001/0000/" \
 		>"$HTTPD_ROOT_PATH/one-time-perl" &&
 
+	cat >err.expect <<-\EOF &&
+	fatal: expected packfile to be sent after '"'"'ready'"'"'
+	EOF
 	test_must_fail git -C http_child -c protocol.version=2 \
-		fetch "$HTTPD_URL/one_time_perl/http_parent" 2> err &&
-	test_i18ngrep "expected packfile to be sent after .ready." err
+		fetch "$HTTPD_URL/one_time_perl/http_parent" >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'when server does not send "ready", expect FLUSH' '
@@ -1088,15 +1135,23 @@ test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
 	# expected length.
 	git -C "$P" hash-object other-blob >objh &&
 	git -C "$P" pack-objects "$HTTPD_DOCUMENT_ROOT_PATH/mypack" <objh >packh &&
+	pack_uri="$HTTPD_URL/dumb/mypack-$(cat packh).pack" &&
+	exp_hash="$(cat objh)" &&
 	git -C "$P" config --add \
 		"uploadpack.blobpackfileuri" \
-		"$(cat objh) $(cat objh) $HTTPD_URL/dumb/mypack-$(cat packh).pack" &&
+		"$exp_hash $exp_hash $pack_uri" &&
 
+	cat >err.expect <<-EOF &&
+	Cloning into '"'"'http_child'"'"'...
+	fatal: fetch-pack: pack downloaded from $pack_uri does not match expected hash $exp_hash
+	EOF
 	test_must_fail env GIT_TEST_SIDEBAND_ALL=1 \
 		git -c protocol.version=2 \
 		-c fetch.uriprotocols=http,https \
-		clone "$HTTPD_URL/smart/http_parent" http_child 2>err &&
-	test_i18ngrep "pack downloaded from.*does not match expected hash" err
+		clone "$HTTPD_URL/smart/http_parent" http_child >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'packfile-uri with transfer.fsckobjects' '
@@ -1147,10 +1202,19 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails on bad object'
 	configure_exclusion "$P" my-blob >h &&
 
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
+
+	cat >err.expect <<-EOF &&
+	Cloning into '"'"'http_child'"'"'...
+	error: object $BOGUS: missingEmail: invalid author/committer line - missing email
+	fatal: fsck error in packed object
+	fatal: fetch-pack: invalid index-pack output
+	EOF
 	test_must_fail git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
-		clone "$HTTPD_URL/smart/http_parent" http_child 2>error &&
-	test_i18ngrep "invalid author/committer line - missing email" error
+		clone "$HTTPD_URL/smart/http_parent" http_child >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'packfile-uri with transfer.fsckobjects succeeds when .gitmodules is separate from tree' '
@@ -1215,13 +1279,19 @@ test_expect_success 'http:// --negotiate-only' '
 
 	setup_negotiate_only "$SERVER" "$URI" &&
 
+	sort >expect <<-EOF &&
+	$(git -C client rev-parse one)
+	$(git -C "$SERVER" rev-parse two)
+	EOF
 	git -c protocol.version=2 -C client fetch \
 		--no-tags \
 		--negotiate-only \
 		--negotiation-tip=$(git -C client rev-parse HEAD) \
-		origin >out &&
-	COMMON=$(git -C "$SERVER" rev-parse two) &&
-	grep "$COMMON" out
+		origin >actual 2>err &&
+	sort actual >actual.sorted &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual.sorted
 '
 
 test_expect_success 'http:// --negotiate-only without wait-for-done support' '
@@ -1233,12 +1303,17 @@ test_expect_success 'http:// --negotiate-only without wait-for-done support' '
 	echo "s/ wait-for-done/ xxxx-xxx-xxxx/" \
 		>"$HTTPD_ROOT_PATH/one-time-perl" &&
 
+	cat >err.expect <<-\EOF &&
+	warning: server does not support wait-for-done
+	EOF
 	test_must_fail git -c protocol.version=2 -C client fetch \
 		--no-tags \
 		--negotiate-only \
 		--negotiation-tip=$(git -C client rev-parse HEAD) \
-		origin 2>err &&
-	test_i18ngrep "server does not support wait-for-done" err
+		origin >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'http:// --negotiate-only with protocol v0' '
@@ -1247,12 +1322,17 @@ test_expect_success 'http:// --negotiate-only with protocol v0' '
 
 	setup_negotiate_only "$SERVER" "$URI" &&
 
+	cat >err.expect <<-EOF &&
+	warning: --negotiate-only requires protocol v2
+	EOF
 	test_must_fail git -c protocol.version=0 -C client fetch \
 		--no-tags \
 		--negotiate-only \
 		--negotiation-tip=$(git -C client rev-parse HEAD) \
-		origin 2>err &&
-	test_i18ngrep "negotiate-only requires protocol v2" err
+		origin >out 2>err.actual &&
+
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual
 '
 
 # DO NOT add non-httpd-specific tests here, because the last part of this
