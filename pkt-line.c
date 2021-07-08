@@ -408,7 +408,7 @@ enum packet_read_status packet_read_with_status(int fd, char **src_buffer,
 	buffer[len] = 0;
 	packet_trace(buffer, len, 0);
 
-	if ((options & PACKET_READ_DIE_ON_ERR_PACKET) &&
+	if (!(options & PACKET_READ_GENTLE_ON_ERR_PACKET) &&
 	    starts_with(buffer, "ERR "))
 		die(_("remote error: %s"), buffer + 4);
 

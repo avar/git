@@ -238,8 +238,7 @@ static struct ref *parse_git_refs(struct discovery *heads, int for_push)
 
 	packet_reader_init(&reader, -1, heads->buf, heads->len,
 			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_GENTLE_ON_EOF |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_GENTLE_ON_EOF);
 
 	heads->version = discover_version(&reader);
 	switch (heads->version) {
@@ -402,8 +401,7 @@ static void check_smart_http(struct discovery *d, const char *service,
 		return;
 
 	packet_reader_init(&reader, -1, d->buf, d->len,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 	if (packet_reader_read(&reader) != PACKET_READ_NORMAL)
 		die(_("invalid server response; expected service, got flush packet"));
 
