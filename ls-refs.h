@@ -3,7 +3,8 @@
 
 struct repository;
 struct packet_reader;
-int ls_refs(struct repository *r, struct packet_reader *request);
+int ls_refs(struct repository *r, const char *command,
+	    struct packet_reader *request);
 int ls_refs_startup_config(const char *var, const char *value, void *data);
 int ls_refs_advertise(struct repository *r, struct strbuf *value);
 

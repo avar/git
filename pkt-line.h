@@ -226,6 +226,12 @@ extern char packet_buffer[LARGE_PACKET_MAX];
 struct packet_writer {
 	int dest_fd;
 	unsigned use_sideband : 1;
+
+	/*
+	 *The command name for v2. "fetch", "ls-refs", "object-info"
+	 * etc. Used in error reporting
+	 */
+	const char *command_name;
 };
 
 #define PACKET_WRITER_INIT { \
