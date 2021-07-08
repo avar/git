@@ -54,8 +54,7 @@ static int run_remote_archiver(int argc, const char **argv,
 	packet_flush(fd[1]);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 
 	if (packet_reader_read(&reader) != PACKET_READ_NORMAL)
 		die(_("git archive: expected ACK/NAK, got a flush packet"));
