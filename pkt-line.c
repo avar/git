@@ -692,3 +692,31 @@ void NORETURN packet_client_error_expected_oid(struct packet_writer *writer,
 	else
 		packet_client_error(writer, msg_nocmd, name, got);
 }
+
+void NORETURN packet_client_error_parse(struct packet_writer *writer,
+					const char *command,
+					const char *function,
+					const char *got)
+{
+	const char *name = writer->command_name;
+
+	/*
+	 * TRANSLATORS: The first argument is the protocol-level
+	 * command, e.g. "fetch" or "object-info".
+	 *
+	 * The second is the sub-command, e.g. "deepen-not" or
+	 * "deepen-since" in the case of "fetch".
+	 *
+	 * The third is a name of a C function we tried to parse the
+	 * data with, e.g. "expand_ref()" or "parse_timestamp()" for
+	 * "deepen-not" and "deepen-since", respectively.
+	 *
+	 * The fourth is whatever data we got in the request that
+	 * wasn't valid, i.e. the proximate cause of our error.
+	 *
+	 */
+	static const char *msg = N_("%s: protocol error, "
+				    "expected to parse '%s' line with '%s', "
+				    "got bad data '%s'");
+	packet_client_error(writer, msg, name, command, function, got);
+}
