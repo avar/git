@@ -658,6 +658,7 @@ test_expect_success 'ensure that multiple fetches in same process from a shallow
 '
 
 test_expect_success 'deepen-relative' '
+	test_when_finished "rm -rf server client" &&
 	rm -rf server client trace &&
 
 	test_create_repo server &&
@@ -686,18 +687,25 @@ test_expect_success 'deepen-relative' '
 	test_cmp expected actual
 '
 
+setup_negotiate_only_server () {
+	test_when_finished "rm -rf \"$1\"" &&
+	git init "$1" &&
+	test_commit -C "$1" one &&
+	test_commit -C "$1" two
+}
+
+setup_negotiate_only_client () {
+	test_when_finished "rm -rf client" &&
+	git clone "$1" client &&
+	test_commit -C client three
+}
+
 setup_negotiate_only () {
 	SERVER="$1"
 	URI="$2"
 
-	rm -rf "$SERVER" client
-
-	git init "$SERVER"
-	test_commit -C "$SERVER" one
-	test_commit -C "$SERVER" two
-
-	git clone "$URI" client
-	test_commit -C client three
+	setup_negotiate_only_server "$SERVER" &&
+	setup_negotiate_only_client "$URI"
 }
 
 test_expect_success 'usage: --negotiate-only without --negotiation-tip' '
@@ -1295,6 +1303,10 @@ test_expect_success 'http:// --negotiate-only' '
 '
 
 test_expect_success 'http:// --negotiate-only without wait-for-done support' '
+	OTHER_SERVER="$HTTPD_DOCUMENT_ROOT_PATH/server" &&
+
+	setup_negotiate_only_server "$OTHER_SERVER" &&
+
 	SERVER="server" &&
 	URI="$HTTPD_URL/one_time_perl/server" &&
 
