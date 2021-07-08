@@ -487,7 +487,7 @@ static int got_oid(struct upload_pack_data *data,
 		   const char *hex, struct object_id *oid)
 {
 	if (get_oid_hex(hex, oid))
-		die("git upload-pack: expected SHA1 object, got '%s'", hex);
+		packet_client_error_expected_oid(&data->writer, "have", hex);
 	if (!has_object_file_with_flags(oid,
 					OBJECT_INFO_QUICK | OBJECT_INFO_SKIP_FETCH_OBJECT))
 		return -1;
@@ -913,14 +913,16 @@ static int send_shallow_list(struct upload_pack_data *data)
 	return ret;
 }
 
-static int process_shallow(const char *line, struct object_array *shallows)
+static int process_shallow(struct packet_writer *writer,
+			   const char *line, struct object_array *shallows)
 {
 	const char *arg;
 	if (skip_prefix(line, "shallow ", &arg)) {
 		struct object_id oid;
 		struct object *object;
 		if (get_oid_hex(arg, &oid))
-			die("invalid shallow line: %s", line);
+			packet_client_error_expected_oid(writer, "shallow",
+							 arg);
 		object = parse_object(the_repository, &oid);
 		if (!object)
 			return 1;
@@ -1042,7 +1044,7 @@ static void receive_needs(struct upload_pack_data *data,
 		if (packet_reader_read(reader) != PACKET_READ_NORMAL)
 			break;
 
-		if (process_shallow(reader->line, &data->shallows))
+		if (process_shallow(&data->writer, reader->line, &data->shallows))
 			continue;
 		if (process_deepen(reader->line, &data->depth))
 			continue;
@@ -1064,8 +1066,8 @@ static void receive_needs(struct upload_pack_data *data,
 
 		if (!skip_prefix(reader->line, "want ", &arg) ||
 		    parse_oid_hex(arg, &oid_buf, &features))
-			die("git upload-pack: protocol error, "
-			    "expected to get object ID, not '%s'", reader->line);
+			packet_client_error_expected_oid(&data->writer, "want",
+							 arg);
 
 		if (parse_feature_request(features, "deepen-relative"))
 			data->deepen_relative = 1;
@@ -1398,8 +1400,7 @@ static int parse_want(struct packet_writer *writer, const char *line,
 		struct object *o;
 
 		if (get_oid_hex(arg, &oid))
-			die("git upload-pack: protocol error, "
-			    "expected to get oid, not '%s'", line);
+			packet_client_error_expected_oid(writer, "want", arg);
 
 		o = parse_object(the_repository, &oid);
 		if (!o)
@@ -1448,14 +1449,15 @@ static int parse_want_ref(struct packet_writer *writer, const char *line,
 	return 0;
 }
 
-static int parse_have(const char *line, struct oid_array *haves)
+static int parse_have(struct packet_writer *writer,
+		      const char *line, struct oid_array *haves)
 {
 	const char *arg;
 	if (skip_prefix(line, "have ", &arg)) {
 		struct object_id oid;
 
 		if (get_oid_hex(arg, &oid))
-			die("git upload-pack: expected SHA1 object, got '%s'", arg);
+			packet_client_error_expected_oid(writer, "have", arg);
 		oid_array_append(haves, &oid);
 		return 1;
 	}
@@ -1478,7 +1480,7 @@ static void process_args(struct packet_reader *request,
 				   &data->want_obj))
 			continue;
 		/* process have line */
-		if (parse_have(arg, &data->haves))
+		if (parse_have(&data->writer, arg, &data->haves))
 			continue;
 
 		/* process args like thin-pack */
@@ -1508,7 +1510,7 @@ static void process_args(struct packet_reader *request,
 		}
 
 		/* Shallow related arguments */
-		if (process_shallow(arg, &data->shallows))
+		if (process_shallow(&data->writer, arg, &data->shallows))
 			continue;
 		if (process_deepen(arg, &data->depth))
 			continue;
