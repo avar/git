@@ -13,6 +13,9 @@ struct requested_info {
 	unsigned size : 1;
 };
 
+/* Command name, for error reporting */
+static const char *command_name = "object-info";
+
 /*
  * Parses oids from the given line and collects them in the given
  * oid_str_list. Returns 1 if parsing was successful and 0 otherwise.
@@ -52,10 +55,8 @@ static void send_info(struct repository *r, struct packet_writer *writer,
 		unsigned long object_size;
 
 		if (get_oid_hex(oid_str, &oid) < 0)
-			packet_client_error(
-				writer,
-				"object-info: protocol error, expected to get oid, not '%s'",
-				oid_str);
+			packet_client_error_expected_oid(writer, command_name,
+							 NULL, oid_str);
 
 		strbuf_addstr(&send_buffer, oid_str);
 
