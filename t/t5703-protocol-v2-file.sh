@@ -37,7 +37,6 @@ test_expect_success 'ls-remote handling a bad client using file:// protocol v2' 
 	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	cat >err.expect <<-\EOF &&
-	fatal: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	test_must_fail env \
@@ -46,14 +45,10 @@ test_expect_success 'ls-remote handling a bad client using file:// protocol v2' 
 		git -c protocol.version=2 \
 		ls-remote "file://$(pwd)/file_parent" main >out 2>err.actual &&
 
-	grep "unexpected argument.*test-bad-client" err.actual &&
 	test_must_be_empty out &&
+	test_cmp err.expect err.actual &&
 	grep ERR log >log.actual &&
 	test_cmp log.expect log.actual
-'
-
-test_expect_failure 'ls-remote ERR and die() is racy under file:// protocol v2' '
-	test_cmp err.expect err.actual
 '
 
 test_expect_success 'ref advertisement is filtered with ls-remote using protocol v2' '
@@ -198,7 +193,6 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 
 	cat >err.expect <<-\EOF &&
 	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
-	fatal: fetch: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
@@ -207,14 +201,10 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 		fetch >out 2>err.actual &&
 
 	test_must_be_empty out &&
-	grep "unexpected argument.*test-bad-client" err.actual &&
+	test_cmp err.expect err.actual &&
 
 	grep "fetch> test-bad-client$" log >sent-bad-request &&
 	test_file_not_empty sent-bad-request
-'
-
-test_expect_failure 'fetch ERR and die() is racy under file:// protocol v2' '
-	test_cmp err.expect err.actual
 '
 
 test_expect_success 'server-options are sent when cloning' '

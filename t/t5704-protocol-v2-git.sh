@@ -58,16 +58,13 @@ test_expect_success 'ls-remote handling a bad client using protocol v2' '
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
 		git -c protocol.version=2 \
-		ls-remote "$GIT_DAEMON_URL/parent" main >out.actual 2>err.actual &&
+		ls-remote "$GIT_DAEMON_URL/parent" main >out 2>err.actual &&
 
-	test_must_be_empty out.actual &&
-	grep "unexpected argument.*test-bad-client" err.actual &&
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual &&
 	grep "ERR ls-refs: unexpected argument.*test-bad-client" log
 '
 
-test_expect_failure  'ls-remote ERR and die() is racy under file:// protocol v2' '
-	test_cmp err.expect err.actual
-'
 
 test_expect_success 'clone with git:// using protocol v2' '
 	test_when_finished "rm -f log" &&
