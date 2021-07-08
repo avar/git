@@ -1383,8 +1383,7 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 
 	if (!advertise_refs) {
 		packet_reader_init(&reader, 0, NULL, 0,
-				   PACKET_READ_CHOMP_NEWLINE |
-				   PACKET_READ_DIE_ON_ERR_PACKET);
+				   PACKET_READ_CHOMP_NEWLINE);
 
 		receive_needs(&data, &reader);
 
