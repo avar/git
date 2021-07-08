@@ -656,3 +656,39 @@ void NORETURN packet_client_error(struct packet_writer *writer,
 	packet_writer_error(writer, "%s", err.buf);
 	die("%s", err_i18n.buf);
 }
+
+void NORETURN packet_client_error_expected_oid(struct packet_writer *writer,
+					       const char *command,
+					       const char *got)
+{
+	const char *name = writer->command_name;
+
+	/*
+	 * TRANSLATORS: The first argument is the protocol-level
+	 * command, e.g. "fetch" or "object-info".
+	 *
+	 * The second is the sub-command, e.g. "have" or "want" in the
+	 * case of "fetch".
+	 *
+	 * The third is whatever data we got in the request that
+	 * wasn't a valid OID, i.e. the proximate cause of our error.
+	 */
+	static const char *msg = N_("%s: protocol error, "
+				    "expected to get object ID on '%s' line, "
+				    "not '%s'");
+
+	/*
+	 * TRANSLATORS: This is like the `fmt_command` message above,
+	 * except without the second argument. I.e. it's for request
+	 * lines that are only an OID, without a sub-command.
+	 */
+	static const char *msg_nocmd = N_("%s: protocol error, "
+					  "expected to get object ID, "
+					  "not '%s'");
+
+
+	if (command)
+		packet_client_error(writer, msg, name, command, got);
+	else
+		packet_client_error(writer, msg_nocmd, name, got);
+}
