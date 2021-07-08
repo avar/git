@@ -654,7 +654,7 @@ void NORETURN packet_client_error(struct packet_writer *writer,
 	va_end(args);
 
 	packet_writer_error(writer, "%s", err.buf);
-	die("%s", err_i18n.buf);
+	exit(128);
 }
 
 void NORETURN packet_client_error_expected_oid(struct packet_writer *writer,
