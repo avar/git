@@ -985,21 +985,6 @@ static int process_deepen_not(const char *line, struct string_list *deepen_not, 
 	return 0;
 }
 
-NORETURN __attribute__((format(printf,2,3)))
-static void send_err_and_die(struct upload_pack_data *data,
-			     const char *fmt, ...)
-{
-	struct strbuf buf = STRBUF_INIT;
-	va_list ap;
-
-	va_start(ap, fmt);
-	strbuf_vaddf(&buf, fmt, ap);
-	va_end(ap);
-
-	packet_writer_error(&data->writer, "%s", buf.buf);
-	die("%s", buf.buf);
-}
-
 static void check_one_filter(struct upload_pack_data *data,
 			     struct list_objects_filter_options *opts)
 {
@@ -1014,14 +999,15 @@ static void check_one_filter(struct upload_pack_data *data,
 		allowed = data->allow_filter_fallback;
 
 	if (!allowed)
-		send_err_and_die(data, "filter '%s' not supported", key);
+		packet_client_error(&data->writer, "filter '%s' not supported",
+				    key);
 
 	if (opts->choice == LOFC_TREE_DEPTH &&
 	    opts->tree_exclude_depth > data->tree_filter_max_depth)
-		send_err_and_die(data,
-				 "tree filter allows max depth %lu, but got %lu",
-				 data->tree_filter_max_depth,
-				 opts->tree_exclude_depth);
+		packet_client_error(&data->writer,
+				    "tree filter allows max depth %lu, but got %lu",
+				    data->tree_filter_max_depth,
+				    opts->tree_exclude_depth);
 }
 
 static void check_filter_recurse(struct upload_pack_data *data,
