@@ -943,21 +943,24 @@ static int process_shallow(struct packet_writer *writer,
 	return 0;
 }
 
-static int process_deepen(const char *line, int *depth)
+static int process_deepen(struct packet_writer *writer, const char *line,
+			  int *depth)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen ", &arg)) {
 		char *end = NULL;
 		*depth = (int)strtol(arg, &end, 0);
 		if (!end || *end || *depth <= 0)
-			die("Invalid deepen: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen", "strtol()", arg);
 		return 1;
 	}
 
 	return 0;
 }
 
-static int process_deepen_since(const char *line, timestamp_t *deepen_since, int *deepen_rev_list)
+static int process_deepen_since(struct packet_writer *writer, const char *line,
+				timestamp_t *deepen_since, int *deepen_rev_list)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen-since ", &arg)) {
@@ -966,21 +969,27 @@ static int process_deepen_since(const char *line, timestamp_t *deepen_since, int
 		if (!end || *end || !deepen_since ||
 		    /* revisions.c's max_age -1 is special */
 		    *deepen_since == -1)
-			die("Invalid deepen-since: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen-since",
+						  "parse_timestamp()", arg);
 		*deepen_rev_list = 1;
 		return 1;
 	}
 	return 0;
 }
 
-static int process_deepen_not(const char *line, struct string_list *deepen_not, int *deepen_rev_list)
+static int process_deepen_not(struct packet_writer *writer, const char *line,
+			      struct string_list *deepen_not,
+			      int *deepen_rev_list)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen-not ", &arg)) {
 		char *ref = NULL;
 		struct object_id oid;
 		if (expand_ref(the_repository, arg, strlen(arg), &oid, &ref) != 1)
-			die("git upload-pack: ambiguous deepen-not: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen-not", "expand_ref()",
+						  arg);
 		string_list_append(deepen_not, ref);
 		free(ref);
 		*deepen_rev_list = 1;
@@ -1051,11 +1060,15 @@ static void receive_needs(struct upload_pack_data *data,
 
 		if (process_shallow(data->writer, reader->line, &data->shallows))
 			continue;
-		if (process_deepen(reader->line, &data->depth))
+		if (process_deepen(data->writer, reader->line, &data->depth))
 			continue;
-		if (process_deepen_since(reader->line, &data->deepen_since, &data->deepen_rev_list))
+		if (process_deepen_since(data->writer, reader->line,
+					 &data->deepen_since,
+					 &data->deepen_rev_list))
 			continue;
-		if (process_deepen_not(reader->line, &data->deepen_not, &data->deepen_rev_list))
+		if (process_deepen_not(data->writer, reader->line,
+				       &data->deepen_not,
+				       &data->deepen_rev_list))
 			continue;
 
 		if (skip_prefix(reader->line, "filter ", &arg)) {
@@ -1518,12 +1531,13 @@ static void process_args(struct packet_reader *request,
 		/* Shallow related arguments */
 		if (process_shallow(data->writer, arg, &data->shallows))
 			continue;
-		if (process_deepen(arg, &data->depth))
+		if (process_deepen(data->writer, arg, &data->depth))
 			continue;
-		if (process_deepen_since(arg, &data->deepen_since,
+		if (process_deepen_since(data->writer, arg,
+					 &data->deepen_since,
 					 &data->deepen_rev_list))
 			continue;
-		if (process_deepen_not(arg, &data->deepen_not,
+		if (process_deepen_not(data->writer, arg, &data->deepen_not,
 				       &data->deepen_rev_list))
 			continue;
 		if (!strcmp(arg, "deepen-relative")) {
