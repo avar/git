@@ -583,7 +583,8 @@ static int get_common_commits(struct upload_pack_data *data,
 			packet_write_fmt(1, "NAK\n");
 			return -1;
 		}
-		die("git upload-pack: expected SHA1 list, got '%s'", reader->line);
+		packet_client_error_expected_oid(data->writer, command_name,
+						 "have", reader->line);
 	}
 }
 
