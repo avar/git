@@ -25,9 +25,15 @@ test_expect_success "proc-receive: bad protocol (unknown version, $PROTOCOL)" '
 	EOF
 	test_cmp expect actual-report &&
 
-	# Check error message from "receive-pack", but ignore unstable fatal error
-	# message ("remote: fatal: the remote end hung up unexpectedly") which
-	# is different from the remote HTTP server with different locale settings.
+	# We should not get any "remote: fatal: " messages, such as
+	# the flaky "remote: fatal: the remote end hung up unexpectedly"
+	# error. We get any "real" error via an ERR packet from
+	# packet_client_error(). We should get a "unable to write
+	# flush packet though".
+	grep "^remote: fatal: " actual >remote-fatal &&
+	test_line_count = 1 remote-fatal &&
+	grep "^remote: fatal: unable to write flush packet: " remote-fatal &&
+
 	grep "^remote: error:" <actual >actual-error &&
 	format_and_save_expect <<-EOF &&
 	> remote: error: proc-receive version "2" is not supported        Z

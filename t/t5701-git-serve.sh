@@ -111,14 +111,10 @@ test_expect_success 'fetch with unknown features' '
 	ERR fetch: unexpected argument: '"'"'we-do-not'"'"'
 	EOF
 
-	cat >expect.err <<-EOF &&
-	fatal: fetch: unexpected argument: '"'"'we-do-not'"'"'
-	EOF
-
-	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>actual.err &&
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
 	test-tool pkt-line unpack <out >actual &&
 	test_cmp expect actual &&
-	test_cmp expect.err actual.err
+	test_must_be_empty err
 '
 
 # Test the basics of ls-refs
@@ -300,14 +296,10 @@ test_expect_success 'object-info with unknown arguments' '
 	ERR object-info: unexpected argument: '"'"'we-do-not'"'"'
 	EOF
 
-	cat >expect.err <<-EOF &&
-	fatal: object-info: unexpected argument: '"'"'we-do-not'"'"'
-	EOF
-
-	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>actual.err &&
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
 	test-tool pkt-line unpack <out >actual &&
-	test_cmp expect actual &&
-	test_cmp expect.err actual.err
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_done
