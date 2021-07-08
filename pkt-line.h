@@ -254,4 +254,7 @@ void packet_client_error(struct packet_writer *writer, const char *fmt, ...);
 void packet_client_error_expected_oid(struct packet_writer *writer,
 				      const char *command, const char *got);
 
+void packet_client_error_parse(struct packet_writer *writer,
+			       const char *command, const char *function,
+			       const char *got);
 #endif
