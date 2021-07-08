@@ -1056,7 +1056,8 @@ static void receive_needs(struct upload_pack_data *data,
 
 		if (skip_prefix(reader->line, "filter ", &arg)) {
 			if (!data->filter_capability_requested)
-				die("git upload-pack: filtering capability not negotiated");
+				packet_client_error(&data->writer,
+						    N_("filtering capability not negotiated"));
 			if (data->filter_options.choice)
 				packet_client_error(&data->writer,
 						    N_("multiple filter-specs cannot be combined"));
