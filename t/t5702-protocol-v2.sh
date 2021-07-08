@@ -409,6 +409,7 @@ test_expect_success 'warn if using server-option with clone with legacy protocol
 '
 
 test_expect_success 'upload-pack respects config using protocol v2' '
+	test_when_finished "rm -rf server client" &&
 	git init server &&
 	write_script server/.git/hook <<-\EOF &&
 		touch hookout
@@ -423,7 +424,6 @@ test_expect_success 'upload-pack respects config using protocol v2' '
 '
 
 test_expect_success 'setup filter tests' '
-	rm -rf server client &&
 	git init server &&
 
 	# 1 commit to create a file, and 1 commit to modify it
@@ -436,6 +436,7 @@ test_expect_success 'setup filter tests' '
 '
 
 test_expect_success 'partial clone' '
+	test_when_finished "rm -rf trace client" &&
 	GIT_TRACE_PACKET="$(pwd)/trace" git -c protocol.version=2 \
 		clone --filter=blob:none "file://$(pwd)/server" client &&
 	grep "version 2" trace &&
@@ -449,19 +450,18 @@ test_expect_success 'partial clone' '
 	git -C client fsck
 '
 
-test_expect_success 'dynamically fetch missing object' '
-	rm "$(pwd)/trace" &&
+test_expect_success 'dynamically fetch missing object, does not list refs' '
+	test_when_finished "rm -rf trace client" &&
+	git -c protocol.version=2 \
+		clone --filter=blob:none "file://$(pwd)/server" client &&
 	GIT_TRACE_PACKET="$(pwd)/trace" git -C client -c protocol.version=2 \
 		cat-file -p $(git -C server rev-parse message1:a.txt) &&
-	grep "version 2" trace
-'
-
-test_expect_success 'when dynamically fetching missing object, do not list refs' '
+	grep "version 2" trace &&
 	! grep "git> command=ls-refs" trace
 '
 
 test_expect_success 'partial fetch' '
-	rm -rf client "$(pwd)/trace" &&
+	test_when_finished "rm -rf trace client" &&
 	git init client &&
 	SERVER="file://$(pwd)/server" &&
 
@@ -479,9 +479,9 @@ test_expect_success 'partial fetch' '
 '
 
 test_expect_success 'do not advertise filter if not configured to do so' '
+	test_when_finished "rm -rf trace" &&
 	SERVER="file://$(pwd)/server" &&
 
-	rm "$(pwd)/trace" &&
 	git -C server config uploadpack.allowfilter 1 &&
 	GIT_TRACE_PACKET="$(pwd)/trace" git -c protocol.version=2 \
 		ls-remote "$SERVER" &&
@@ -496,7 +496,7 @@ test_expect_success 'do not advertise filter if not configured to do so' '
 '
 
 test_expect_success 'partial clone warns if filter is not advertised' '
-	rm -rf client &&
+	test_when_finished "rm -rf client" &&
 	git -C server config uploadpack.allowfilter 0 &&
 
 	cat >err.expect <<-\EOF &&
@@ -553,7 +553,7 @@ test_expect_success 'default refspec is used to filter ref when fetchcing' '
 '
 
 test_expect_success 'fetch supports various ways of have lines' '
-	rm -rf server client trace &&
+	test_when_finished "rm -rf server client trace" &&
 	git init server &&
 	test_commit -C server dwim &&
 	TREE=$(git -C server rev-parse HEAD^{tree}) &&
@@ -600,9 +600,9 @@ test_expect_success 'fetch supports various ways of have lines' '
 '
 
 test_expect_success 'fetch supports include-tag and tag following' '
-	rm -rf server client trace &&
-	git init server &&
+	test_when_finished "rm -rf server client trace" &&
 
+	git init server &&
 	test_commit -C server to_fetch &&
 	git -C server tag -a annotated_tag -m message &&
 
@@ -618,7 +618,7 @@ test_expect_success 'fetch supports include-tag and tag following' '
 '
 
 test_expect_success 'upload-pack respects client shallows' '
-	rm -rf server client trace &&
+	test_when_finished "rm -rf server client trace" &&
 
 	git init server &&
 	test_commit -C server base &&
@@ -640,7 +640,7 @@ test_expect_success 'upload-pack respects client shallows' '
 '
 
 test_expect_success 'ensure that multiple fetches in same process from a shallow repo works' '
-	rm -rf server client trace &&
+	test_when_finished "rm -rf server client trace" &&
 
 	test_create_repo server &&
 	test_commit -C server one &&
@@ -658,8 +658,7 @@ test_expect_success 'ensure that multiple fetches in same process from a shallow
 '
 
 test_expect_success 'deepen-relative' '
-	test_when_finished "rm -rf server client" &&
-	rm -rf server client trace &&
+	test_when_finished "rm -rf server client trace" &&
 
 	test_create_repo server &&
 	test_commit -C server one &&
@@ -1255,6 +1254,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodul
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
 	rm -rf "$P" http_child err &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -1282,6 +1282,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodul
 '
 
 test_expect_success 'http:// --negotiate-only' '
+	rm -rf server client &&
 	SERVER="$HTTPD_DOCUMENT_ROOT_PATH/server" &&
 	URI="$HTTPD_URL/smart/server" &&
 
