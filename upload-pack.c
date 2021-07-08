@@ -1338,6 +1338,7 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 	struct upload_pack_data data;
 
 	upload_pack_data_init(&data);
+	data.writer.command_name = "upload-pack";
 
 	if (!v1_have_startup_config++)
 		git_config(upload_pack_startup_config, NULL);
@@ -1663,7 +1664,8 @@ enum fetch_state {
 	FETCH_DONE,
 };
 
-int upload_pack_v2(struct repository *r, struct packet_reader *request)
+int upload_pack_v2(struct repository *r, const char *name,
+		   struct packet_reader *request)
 {
 	enum fetch_state state = FETCH_PROCESS_ARGS;
 	struct upload_pack_data data;
@@ -1671,6 +1673,7 @@ int upload_pack_v2(struct repository *r, struct packet_reader *request)
 	clear_object_flags(ALL_FLAGS);
 
 	upload_pack_data_init(&data);
+	data.writer.command_name = name;
 	data.use_sideband = LARGE_PACKET_MAX;
 
 	git_config(upload_pack_config, &data);
