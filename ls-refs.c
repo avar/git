@@ -153,7 +153,8 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 	}
 
 	if (request->status != PACKET_READ_FLUSH)
-		die(_("expected flush after ls-refs arguments"));
+		packet_client_error(&data.writer,
+				    N_("expected flush after ls-refs arguments"));
 
 	send_possibly_unborn_head(&data);
 	if (!data.prefixes.nr)
