@@ -66,16 +66,12 @@ test_expect_success 'upload-pack fails due to bad want (no object)' '
 	ERR upload-pack: not our ref $(test_oid deadbeef)
 	EOF
 
-	cat >expect.err <<-EOF &&
-	fatal: upload-pack: not our ref $(test_oid deadbeef)
-	EOF
-
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
 		$(($hexsz + 29)) $(test_oid deadbeef) >input &&
-	test_must_fail git upload-pack . <input >output 2>output.err &&
+	test_must_fail git upload-pack . <input >output 2>err &&
 	test-tool pkt-line unpack <output >actual &&
-	test_cmp expect actual &&
-	test_cmp expect.err output.err
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'upload-pack fails due to bad want (not tip)' '
@@ -88,16 +84,12 @@ test_expect_success 'upload-pack fails due to bad want (not tip)' '
 	ERR upload-pack: not our ref $oid
 	EOF
 
-	cat >expect.err <<-EOF &&
-	fatal: upload-pack: not our ref $oid
-	EOF
-
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
 		$(($hexsz + 29)) "$oid" >input &&
-	test_must_fail git upload-pack . <input >output 2>output.err &&
+	test_must_fail git upload-pack . <input >output 2>err &&
 	test-tool pkt-line unpack <output >actual &&
-	test_cmp expect actual &&
-	test_cmp expect.err output.err
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'upload-pack fails due to error in pack-objects enumeration' '

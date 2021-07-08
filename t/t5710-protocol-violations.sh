@@ -15,12 +15,24 @@ test_expect_success 'extra delim packet in v2 ls-refs args' '
 	0001
 	EOF
 
-	cat >err.expect <<-\EOF &&
-	fatal: ls-refs: expected flush after arguments
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR ls-refs: expected flush after arguments
 	EOF
+
 	test_must_fail env GIT_PROTOCOL=version=2 \
-		git upload-pack . <input 2>err.actual &&
-	test_cmp err.expect err.actual
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
 '
 
 test_expect_success 'extra delim packet in v2 fetch args' '
@@ -32,12 +44,24 @@ test_expect_success 'extra delim packet in v2 fetch args' '
 	0001
 	EOF
 
-	cat >err.expect <<-\EOF &&
-	fatal: fetch: expected flush after arguments
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR fetch: expected flush after arguments
 	EOF
+
 	test_must_fail env GIT_PROTOCOL=version=2 \
-		git upload-pack . <input 2>err.actual &&
-	test_cmp err.expect err.actual
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
 '
 
 test_expect_success 'extra delim packet in v2 object-info args' '
@@ -49,12 +73,27 @@ test_expect_success 'extra delim packet in v2 object-info args' '
 	0001
 	EOF
 
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR object-info: expected flush after arguments
+	EOF
+
 	cat >err.expect <<-\EOF &&
 	fatal: object-info: expected flush after arguments
 	EOF
 	test_must_fail env GIT_PROTOCOL=version=2 \
-		git upload-pack . <input 2>err.actual &&
-	test_cmp err.expect err.actual
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
 '
 
 test_done
