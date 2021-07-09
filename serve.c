@@ -50,7 +50,7 @@ static int session_id_advertise(struct repository *r, struct strbuf *value)
 }
 
 typedef int (*advertise_fn_t)(struct repository *r, struct strbuf *value);
-typedef int (*command_fn_t)(struct repository *r, struct strvec *keys,
+typedef int (*command_fn_t)(struct repository *r,
 			    struct packet_reader *request);
 
 struct protocol_capability {
@@ -89,8 +89,7 @@ struct protocol_capability {
 
 	/*
 	 * Function called when a client requests the capability as a command.
-	 * The function will be provided the capabilities requested via 'keys'
-	 * as well as a struct packet_reader 'request' which the command should
+	 * Will be provided a struct packet_reader 'request' which it should
 	 * use to read the command specific part of the request.  Every command
 	 * MUST read until a flush packet is seen before sending a response.
 	 *
@@ -160,7 +159,7 @@ static int call_command(struct protocol_capability *command,
 
 	read_startup_config(command);
 
-	return command->command(r, keys, request);
+	return command->command(r, request);
 }
 
 void protocol_v2_advertise_capabilities(void)
