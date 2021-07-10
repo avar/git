@@ -51,11 +51,15 @@ static int ref_match(const struct strvec *prefixes, const char *refname)
 }
 
 struct ls_refs_data {
+	struct packet_writer writer;
 	unsigned peel;
 	unsigned symrefs;
 	struct strvec prefixes;
 	unsigned unborn : 1;
 };
+#define LS_REFS_DATA_INIT { \
+	.writer = PACKET_WRITER_INIT, \
+}
 
 static int send_ref(const char *refname, const struct object_id *oid,
 		    int flag, void *cb_data)
@@ -94,7 +98,7 @@ static int send_ref(const char *refname, const struct object_id *oid,
 	}
 
 	strbuf_addch(&refline, '\n');
-	packet_write(1, refline.buf, refline.len);
+	packet_writer_write_len(&data->writer, refline.buf, refline.len);
 
 	strbuf_release(&refline);
 	return 0;
@@ -129,9 +133,8 @@ static int ls_refs_config(const char *var, const char *value, void *data)
 
 int ls_refs(struct repository *r, struct packet_reader *request)
 {
-	struct ls_refs_data data;
+	struct ls_refs_data data = LS_REFS_DATA_INIT;
 
-	memset(&data, 0, sizeof(data));
 	strvec_init(&data.prefixes);
 	git_config(ls_refs_config, NULL);
 
@@ -157,7 +160,7 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 		strvec_push(&data.prefixes, "");
 	for_each_fullref_in_prefixes(get_git_namespace(), data.prefixes.v,
 				     send_ref, &data, 0);
-	packet_flush(1);
+	packet_writer_flush(&data.writer);
 	strvec_clear(&data.prefixes);
 	return 0;
 }
