@@ -263,6 +263,7 @@ static inline void strbuf_insertstr(struct strbuf *sb, size_t pos,
 void strbuf_vinsertf(struct strbuf *sb, size_t pos, const char *fmt,
 		     va_list ap);
 
+__attribute__((format (printf, 3, 4)))
 void strbuf_insertf(struct strbuf *sb, size_t pos, const char *fmt, ...);
 
 /**
@@ -425,6 +426,7 @@ void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap);
  * `suppress_tz_name`, when set, expands %Z internally to the empty
  * string rather than passing it to `strftime`.
  */
+__attribute__((format (strftime, 2, 0)))
 void strbuf_addftime(struct strbuf *sb, const char *fmt,
 		    const struct tm *tm, int tz_offset,
 		    int suppress_tz_name);
