@@ -131,7 +131,8 @@ static int ls_refs_config(const char *var, const char *value, void *data)
 	return parse_hide_refs_config(var, value, "uploadpack");
 }
 
-int ls_refs(struct repository *r, struct packet_reader *request)
+int ls_refs(struct repository *r, const char *name,
+	    struct packet_reader *request)
 {
 	struct ls_refs_data data = LS_REFS_DATA_INIT;
 
@@ -150,10 +151,17 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 			strvec_push(&data.prefixes, out);
 		else if (!strcmp("unborn", arg))
 			data.unborn = allow_unborn;
+		else
+			packet_client_error(&data.writer,
+					    N_("%s: unexpected argument: '%s'"),
+					    name,
+					    request->line);
 	}
 
 	if (request->status != PACKET_READ_FLUSH)
-		die(_("expected flush after ls-refs arguments"));
+		packet_client_error(&data.writer,
+				    N_("%s: expected flush after arguments"),
+				    name);
 
 	send_possibly_unborn_head(&data);
 	if (!data.prefixes.nr)

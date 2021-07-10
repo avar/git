@@ -32,18 +32,23 @@ test_expect_success 'list refs with file:// using protocol v2' '
 test_expect_success 'ls-remote handling a bad client using file:// protocol v2' '
 	test_when_finished "rm -f log" &&
 
-	cat >expect <<-EOF &&
-	$(git -C file_parent rev-parse refs/heads/main)$(printf "\t")refs/heads/main
+	cat >log.expect <<-\EOF &&
+	packet:  upload-pack> ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
-	env \
+	cat >err.expect <<-\EOF &&
+	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	EOF
+	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
 		git -c protocol.version=2 \
-		ls-remote "file://$(pwd)/file_parent" main >actual 2>err &&
+		ls-remote "file://$(pwd)/file_parent" main >out 2>err.actual &&
 
-	test_must_be_empty err &&
-	test_cmp expect actual &&
-	grep "git> test-bad-client$" log
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual &&
+	grep ERR log >log.actual &&
+	test_cmp log.expect log.actual
 '
 
 test_expect_success 'ref advertisement is filtered with ls-remote using protocol v2' '
@@ -187,7 +192,7 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 	test_commit -C file_parent five &&
 
 	cat >err.expect <<-\EOF &&
-	fatal: unexpected line: '"'"'test-bad-client'"'"'
+	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
@@ -196,8 +201,7 @@ test_expect_success 'fetch handling a bad client using file:// protocol v2' '
 		fetch >out 2>err.actual &&
 
 	test_must_be_empty out &&
-	grep -v "^fatal: the remote end hung up unexpectedly$" err.actual >err.filtered &&
-	test_cmp err.expect err.filtered &&
+	test_cmp err.expect err.actual &&
 
 	grep "fetch> test-bad-client$" log >sent-bad-request &&
 	test_file_not_empty sent-bad-request
