@@ -33,6 +33,13 @@ static int object_format_advertise(struct repository *r,
 	return 1;
 }
 
+static int session_id_startup_config(const char *var, const char *value, void *data)
+{
+	if (!strcmp(var, "transfer.advertisesid"))
+		advertise_sid = git_config_bool(var, value);
+	return 0;
+}
+
 static int session_id_advertise(struct repository *r, struct strbuf *value)
 {
 	if (!advertise_sid)
@@ -41,6 +48,10 @@ static int session_id_advertise(struct repository *r, struct strbuf *value)
 		strbuf_addstr(value, trace2_session_id());
 	return 1;
 }
+
+typedef int (*advertise_fn_t)(struct repository *r, struct strbuf *value);
+typedef int (*command_fn_t)(struct repository *r,
+			    struct packet_reader *request);
 
 struct protocol_capability {
 	/*
@@ -51,47 +62,119 @@ struct protocol_capability {
 	const char *name;
 
 	/*
+	 * A git_config() callback that'll be called only once for the
+	 * lifetime of the process, possibly over many different
+	 * requests. Used for reading config that's expected to be
+	 * static.
+	 *
+	 * The "command" or "advertise" callbacks themselves are
+	 * expected to read config that needs to be more current than
+	 * that, or which is dependent on request data.
+	 */
+	int (*startup_config)(const char *var, const char *value, void *data);
+
+	/*
+	 * A boolean to check if we've called our "startup_config"
+	 * callback.
+	 */
+	int have_startup_config;
+
+	/*
 	 * Function queried to see if a capability should be advertised.
 	 * Optionally a value can be specified by adding it to 'value'.
 	 * If a value is added to 'value', the server will advertise this
 	 * capability as "<name>=<value>" instead of "<name>".
 	 */
-	int (*advertise)(struct repository *r, struct strbuf *value);
+	advertise_fn_t advertise;
 
 	/*
 	 * Function called when a client requests the capability as a command.
-	 * The function will be provided the capabilities requested via 'keys'
-	 * as well as a struct packet_reader 'request' which the command should
+	 * Will be provided a struct packet_reader 'request' which it should
 	 * use to read the command specific part of the request.  Every command
 	 * MUST read until a flush packet is seen before sending a response.
 	 *
 	 * This field should be NULL for capabilities which are not commands.
 	 */
-	int (*command)(struct repository *r,
-		       struct strvec *keys,
-		       struct packet_reader *request);
+	command_fn_t command;
 };
 
 static struct protocol_capability capabilities[] = {
-	{ "agent", agent_advertise, NULL },
-	{ "ls-refs", ls_refs_advertise, ls_refs },
-	{ "fetch", upload_pack_advertise, upload_pack_v2 },
-	{ "server-option", always_advertise, NULL },
-	{ "object-format", object_format_advertise, NULL },
-	{ "session-id", session_id_advertise, NULL },
-	{ "object-info", always_advertise, cap_object_info },
+	{
+		.name = "agent",
+		.advertise = agent_advertise,
+	},
+	{
+		.name = "ls-refs",
+		.startup_config = ls_refs_startup_config,
+		.advertise = ls_refs_advertise,
+		.command = ls_refs,
+	},
+	{
+		.name = "fetch",
+		.startup_config = serve_upload_pack_startup_config,
+		.advertise = upload_pack_advertise,
+		.command = upload_pack_v2,
+	},
+	{
+		.name = "server-option",
+		.advertise = always_advertise,
+	},
+	{
+		.name = "object-format",
+		.advertise = object_format_advertise,
+	},
+	{
+		.name = "session-id",
+		.startup_config = session_id_startup_config,
+		.advertise = session_id_advertise,
+	},
+	{
+		.name = "object-info",
+		.advertise = always_advertise,
+		.command = cap_object_info,
+	},
 };
 
-static void advertise_capabilities(void)
+static void read_startup_config(struct protocol_capability *command)
+{
+	if (!command->startup_config)
+		return;
+	if (command->have_startup_config++)
+		return;
+	git_config(command->startup_config, NULL);
+}
+
+static int call_advertise(struct protocol_capability *command,
+			  struct repository *r, struct strbuf *value)
+{
+	read_startup_config(command);
+
+	return command->advertise(r, value);
+}
+
+static int call_command(struct protocol_capability *command,
+			struct repository *r, struct strvec *keys,
+			struct packet_reader *request)
+{
+
+	read_startup_config(command);
+
+	return command->command(r, request);
+}
+
+void protocol_v2_advertise_capabilities(void)
 {
 	struct strbuf capability = STRBUF_INIT;
 	struct strbuf value = STRBUF_INIT;
 	int i;
 
+	/* serve by default supports v2 */
+	packet_write_fmt(1, "version 2\n");
+
 	for (i = 0; i < ARRAY_SIZE(capabilities); i++) {
 		struct protocol_capability *c = &capabilities[i];
 
-		if (c->advertise(the_repository, &value)) {
+		if (call_advertise(c, the_repository, &value)) {
 			strbuf_addstr(&capability, c->name);
 
 			if (value.len) {
@@ -131,9 +214,9 @@ static struct protocol_capability *get_capability(const char *key)
 
 static int is_valid_capability(const char *key)
 {
-	const struct protocol_capability *c = get_capability(key);
+	struct protocol_capability *c = get_capability(key);
 
-	return c && c->advertise(the_repository, NULL);
+	return c && call_advertise(c, the_repository, NULL);
 }
 
 static int is_command(const char *key, struct protocol_capability **command)
@@ -146,7 +229,7 @@ static int is_command(const char *key, struct protocol_capability **command)
 		if (*command)
 			die("command '%s' requested after already requesting command '%s'",
 			    out, (*command)->name);
-		if (!cmd || !cmd->advertise(the_repository, NULL) || !cmd->command)
+		if (!cmd || !call_advertise(cmd, the_repository, NULL) || !cmd->command)
 			die("invalid command '%s'", out);
 
 		*command = cmd;
@@ -156,8 +239,8 @@ static int is_command(const char *key, struct protocol_capability **command)
 	return 0;
 }
 
-int has_capability(const struct strvec *keys, const char *capability,
-		   const char **value)
+static int has_capability(const struct strvec *keys, const char *capability,
+			  const char **value)
 {
 	int i;
 	for (i = 0; i < keys->nr; i++) {
@@ -270,35 +353,22 @@ static int process_request(void)
 	if (has_capability(&keys, "session-id", &client_sid))
 		trace2_data_string("transfer", NULL, "client-sid", client_sid);
 
-	command->command(the_repository, &keys, &reader);
+	call_command(command, the_repository, &keys, &reader);
 
 	strvec_clear(&keys);
 	return 0;
 }
 
-/* Main serve loop for protocol version 2 */
-void serve(struct serve_options *options)
+void protocol_v2_serve_loop(int stateless_rpc)
 {
-	git_config_get_bool("transfer.advertisesid", &advertise_sid);
-
-	if (options->advertise_capabilities || !options->stateless_rpc) {
-		/* serve by default supports v2 */
-		packet_write_fmt(1, "version 2\n");
-
-		advertise_capabilities();
-		/*
-		 * If only the list of capabilities was requested exit
-		 * immediately after advertising capabilities
-		 */
-		if (options->advertise_capabilities)
-			return;
-	}
+	if (!stateless_rpc)
+		protocol_v2_advertise_capabilities();
 
 	/*
 	 * If stateless-rpc was requested then exit after
 	 * a single request/response exchange
 	 */
-	if (options->stateless_rpc) {
+	if (stateless_rpc) {
 		process_request();
 	} else {
 		for (;;)
