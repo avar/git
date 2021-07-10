@@ -788,12 +788,14 @@ FILE *git_fopen(const char*, const char*);
 #undef snprintf
 #endif
 #define snprintf git_snprintf
+__attribute__((format (printf, 3, 4)))
 int git_snprintf(char *str, size_t maxsize,
 		 const char *format, ...);
 #ifdef vsnprintf
 #undef vsnprintf
 #endif
 #define vsnprintf git_vsnprintf
+__attribute__((format (printf, 3, 0)))
 int git_vsnprintf(char *str, size_t maxsize,
 		  const char *format, va_list ap);
 #endif

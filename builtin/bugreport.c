@@ -99,7 +99,7 @@ int cmd_bugreport(int argc, const char **argv, const char *prefix)
 	time_t now = time(NULL);
 	struct tm tm;
 	char *option_output = NULL;
-	char *option_suffix = "%Y-%m-%d-%H%M";
+	char *option_suffix = NULL;
 	const char *user_relative_path = NULL;
 	char *prefixed_filename;
 
@@ -121,7 +121,14 @@ int cmd_bugreport(int argc, const char **argv, const char *prefix)
 	strbuf_complete(&report_path, '/');
 
 	strbuf_addstr(&report_path, "git-bugreport-");
-	strbuf_addftime(&report_path, option_suffix, localtime_r(&now, &tm), 0, 0);
+	/*
+	 * This is an if/else for the benefit of the compile-time
+	 * strftime() format checking we have for strbuf_addftime().
+	 */
+	if (option_suffix)
+		strbuf_addftime(&report_path, option_suffix, localtime_r(&now, &tm), 0, 0);
+	else
+		strbuf_addftime(&report_path, "%Y-%m-%d-%H%M", localtime_r(&now, &tm), 0, 0);
 	strbuf_addstr(&report_path, ".txt");
 
 	switch (safe_create_leading_directories(report_path.buf)) {
