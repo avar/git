@@ -1,19 +1,5 @@
-gitformat-commit-graph(5)
-=========================
-
-NAME
-----
-gitformat-commit-graph - Git commit graph format
-
-
-SYNOPSIS
---------
-[verse]
-$GIT_DIR/objects/info/commit-graph
-$GIT_DIR/objects/info/commit-graph
-
-DESCRIPTION
------------
+Git commit graph format
+=======================
 
 The Git commit graph stores a list of commit OIDs and some associated
 metadata, including:
@@ -76,7 +62,7 @@ CHUNK LOOKUP:
       ID appears at most once.
 
   The CHUNK LOOKUP matches the table of contents from
-  the chunk-based file format, see linkgit:gitformat-chunk[5]
+  link:technical/chunk-format.html[the chunk-based file format].
 
   The remaining data in the body is described one chunk at a time, and
   these chunks may be given in any order. Chunks are required unless
@@ -170,7 +156,3 @@ CHUNK DATA:
 TRAILER:
 
 	H-byte HASH-checksum of all of the above.
-
-GIT
----
-Part of the linkgit:git[1] suite
