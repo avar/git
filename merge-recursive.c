@@ -454,7 +454,8 @@ static void unpack_trees_finish(struct merge_options *opt)
 
 static int save_files_dirs(const struct object_id *oid,
 			   struct strbuf *base, const char *path,
-			   unsigned int mode, void *context)
+			   enum object_type object_type, unsigned int mode,
+			   void *context)
 {
 	struct path_hashmap_entry *entry;
 	int baselen = base->len;
@@ -467,7 +468,9 @@ static int save_files_dirs(const struct object_id *oid,
 	hashmap_add(&opt->priv->current_file_dir_set, &entry->e);
 
 	strbuf_setlen(base, baselen);
-	return (S_ISDIR(mode) ? READ_TREE_RECURSIVE : 0);
+	if (object_type != OBJ_TREE)
+		return 0;
+	return READ_TREE_RECURSIVE;
 }
 
 static void get_files_dirs(struct merge_options *opt, struct tree *tree)
@@ -485,7 +488,7 @@ static int get_tree_entry_if_blob(struct repository *r,
 {
 	int ret;
 
-	ret = get_tree_entry(r, tree, path, &dfs->oid, &dfs->mode);
+	ret = get_tree_entry_mode(r, tree, path, &dfs->oid, &dfs->mode);
 	if (S_ISDIR(dfs->mode)) {
 		oidcpy(&dfs->oid, null_oid());
 		dfs->mode = 0;
@@ -557,12 +560,12 @@ static int string_list_df_name_compare(const char *one, const char *two)
 	 *
 	 * To achieve this, we sort with df_name_compare and provide
 	 * the mode S_IFDIR so that D/F conflicts will sort correctly.
-	 * We use the mode S_IFDIR for everything else for simplicity,
+	 * We say we have a directory for everything else for simplicity,
 	 * since in other cases any changes in their order due to
 	 * sorting cause no problems for us.
 	 */
-	int cmp = df_name_compare(one, onelen, S_IFDIR,
-				  two, twolen, S_IFDIR);
+	int cmp = df_name_compare(one, onelen, 1, two, twolen, 1);
+
 	/*
 	 * Now that 'foo' and 'foo/bar' compare equal, we have to make sure
 	 * that 'foo' comes before 'foo/bar'.
@@ -1904,11 +1907,9 @@ static int tree_has_path(struct repository *r, struct tree *tree,
 			 const char *path)
 {
 	struct object_id hashy;
-	unsigned short mode_o;
-
-	return !get_tree_entry(r,
-			       &tree->object.oid, path,
-			       &hashy, &mode_o);
+	return !get_tree_entry_path(r,
+				    &tree->object.oid, path,
+				    &hashy);
 }
 
 /*
@@ -2560,11 +2561,11 @@ static void apply_directory_rename_modifications(struct merge_options *opt,
 	 * the various handle_rename_*() functions update the index
 	 * explicitly rather than relying on unpack_trees() to have done it.
 	 */
-	get_tree_entry(opt->repo,
-		       &tree->object.oid,
-		       pair->two->path,
-		       &re->dst_entry->stages[stage].oid,
-		       &re->dst_entry->stages[stage].mode);
+	get_tree_entry_mode(opt->repo,
+			    &tree->object.oid,
+			    pair->two->path,
+			    &re->dst_entry->stages[stage].oid,
+			    &re->dst_entry->stages[stage].mode);
 
 	/*
 	 * Record the original change status (or 'type' of change).  If it
