@@ -427,10 +427,11 @@ static int read_one_entry_opt(struct index_state *istate,
 			      const struct object_id *oid,
 			      struct strbuf *base,
 			      const char *pathname,
-			      unsigned mode, int opt)
+			      unsigned raw_mode, int opt)
 {
 	int len;
 	struct cache_entry *ce;
+	unsigned mode = canon_mode(raw_mode);
 
 	if (S_ISDIR(mode))
 		return READ_TREE_RECURSIVE;
@@ -449,12 +450,12 @@ static int read_one_entry_opt(struct index_state *istate,
 
 static int read_one_entry(const struct object_id *oid, struct strbuf *base,
 			  const char *pathname,
-			  enum object_type object_type, unsigned mode,
+			  enum object_type object_type, unsigned raw_mode,
 			  void *context)
 {
 	struct index_state *istate = context;
 	return read_one_entry_opt(istate, oid, base, pathname,
-				  mode,
+				  raw_mode,
 				  ADD_CACHE_OK_TO_ADD|ADD_CACHE_SKIP_DFCHECK);
 }
 
@@ -464,12 +465,12 @@ static int read_one_entry(const struct object_id *oid, struct strbuf *base,
  */
 static int read_one_entry_quick(const struct object_id *oid, struct strbuf *base,
 				const char *pathname,
-				enum object_type object_type, unsigned mode,
+				enum object_type object_type, unsigned raw_mode,
 				void *context)
 {
 	struct index_state *istate = context;
 	return read_one_entry_opt(istate, oid, base, pathname,
-				  mode, ADD_CACHE_JUST_APPEND);
+				  raw_mode, ADD_CACHE_JUST_APPEND);
 }
 
 /*
