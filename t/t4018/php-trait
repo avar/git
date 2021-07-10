@@ -1,3 +1,4 @@
+t4018 header: trait RIGHT
 trait RIGHT
 {
     public function foo($ChangeMe)
