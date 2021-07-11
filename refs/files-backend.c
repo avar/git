@@ -280,10 +280,11 @@ static void loose_fill_ref_dir(struct ref_store *ref_store,
 					 create_dir_entry(dir->cache, refname.buf,
 							  refname.len, 1));
 		} else {
-			if (!refs_resolve_ref_unsafe(&refs->base,
-						     refname.buf,
-						     RESOLVE_REF_READING,
-						     &oid, &flag)) {
+			int ignore_errno;
+			if (!refs_resolve_ref_unsafe_with_errno(&refs->base,
+								refname.buf,
+								RESOLVE_REF_READING,
+								&oid, &flag, &ignore_errno)) {
 				oidclr(&oid);
 				flag |= REF_ISBROKEN;
 			} else if (is_null_oid(&oid)) {
@@ -1328,9 +1329,9 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 		goto out;
 	}
 
-	if (!refs_resolve_ref_unsafe(&refs->base, oldrefname,
-				     RESOLVE_REF_READING | RESOLVE_REF_NO_RECURSE,
-				&orig_oid, &flag)) {
+	if (!refs_resolve_ref_unsafe_with_errno(&refs->base, oldrefname,
+						RESOLVE_REF_READING | RESOLVE_REF_NO_RECURSE,
+						&orig_oid, &flag, &ignore_errno)) {
 		ret = error("refname %s not found", oldrefname);
 		goto out;
 	}
@@ -1743,10 +1744,13 @@ static int commit_ref_update(struct files_ref_store *refs,
 		 */
 		int head_flag;
 		const char *head_ref;
+		int ignore_errno;
 
-		head_ref = refs_resolve_ref_unsafe(&refs->base, "HEAD",
-						   RESOLVE_REF_READING,
-						   NULL, &head_flag);
+		head_ref = refs_resolve_ref_unsafe_with_errno(&refs->base,
+							      "HEAD",
+							      RESOLVE_REF_READING,
+							      NULL, &head_flag,
+							      &ignore_errno);
 		if (head_ref && (head_flag & REF_ISSYMREF) &&
 		    !strcmp(head_ref, lock->ref_name)) {
 			struct strbuf log_err = STRBUF_INIT;

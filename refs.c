@@ -267,6 +267,21 @@ int ref_resolves_to_object(const char *refname,
 	return 1;
 }
 
+static const char *refs_resolve_ref_unsafe(struct ref_store *refs,
+					   const char *refname,
+					   int resolve_flags,
+					   struct object_id *oid, int *flags)
+{
+	int failure_errno = 0;
+	const char *refn;
+	refn = refs_resolve_ref_unsafe_with_errno(refs, refname, resolve_flags,
+						  oid, flags, &failure_errno);
+	if (!refn)
+		/* For unmigrated legacy callers */
+		errno = failure_errno;
+	return refn;
+}
+
 char *refs_resolve_refdup(struct ref_store *refs,
 			  const char *refname, int resolve_flags,
 			  struct object_id *oid, int *flags)
@@ -1778,20 +1793,6 @@ const char *refs_resolve_ref_unsafe_with_errno(struct ref_store *refs,
 
 	*failure_errno = ELOOP;
 	return NULL;
-}
-
-const char *refs_resolve_ref_unsafe(struct ref_store *refs, const char *refname,
-				    int resolve_flags, struct object_id *oid,
-				    int *flags)
-{
-	int failure_errno = 0;
-	const char *refn;
-	refn = refs_resolve_ref_unsafe_with_errno(refs, refname, resolve_flags,
-						  oid, flags, &failure_errno);
-	if (!refn)
-		/* For unmigrated legacy callers */
-		errno = failure_errno;
-	return refn;
 }
 
 /* backend functions */
