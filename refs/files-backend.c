@@ -880,9 +880,7 @@ static int verify_lock(struct ref_store *ref_store, struct ref_lock *lock,
 			       mustexist ? RESOLVE_REF_READING : 0,
 			       &lock->old_oid, NULL)) {
 		if (old_oid) {
-			int save_errno = errno;
 			strbuf_addf(err, "can't verify ref '%s'", lock->ref_name);
-			errno = save_errno;
 			return -1;
 		} else {
 			oidclr(&lock->old_oid);
@@ -894,7 +892,6 @@ static int verify_lock(struct ref_store *ref_store, struct ref_lock *lock,
 			    lock->ref_name,
 			    oid_to_hex(&lock->old_oid),
 			    oid_to_hex(old_oid));
-		errno = EBUSY;
 		return -1;
 	}
 	return 0;
