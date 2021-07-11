@@ -73,10 +73,11 @@ static void send_info(struct repository *r, struct packet_writer *writer,
 	strbuf_release(&send_buffer);
 }
 
-int cap_object_info(struct repository *r, struct packet_reader *request)
+int cap_object_info(struct repository *r,
+		    struct packet_reader *request,
+		    struct packet_writer *writer)
 {
 	struct requested_info info;
-	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct string_list oid_str_list = STRING_LIST_INIT_DUP;
 
 	while (packet_reader_read(request) == PACKET_READ_NORMAL) {
@@ -88,20 +89,20 @@ int cap_object_info(struct repository *r, struct packet_reader *request)
 		if (parse_oid(request->line, &oid_str_list))
 			continue;
 
-		packet_client_error(&writer,
+		packet_client_error(writer,
 				    N_("object-info: unexpected argument: '%s'"),
 				    request->line);
 	}
 
 	if (request->status != PACKET_READ_FLUSH)
-		packet_client_error(&writer,
+		packet_client_error(writer,
 				    N_("object-info: expected flush after arguments"));
 
-	send_info(r, &writer, &oid_str_list, &info);
+	send_info(r, writer, &oid_str_list, &info);
 
 	string_list_clear(&oid_str_list, 1);
 
-	packet_writer_flush(&writer);
+	packet_writer_flush(writer);
 
 	return 0;
 }
