@@ -1563,7 +1563,7 @@ enum object_type oid_object_info(struct repository *r,
 
 static void *read_object(struct repository *r,
 			 const struct object_id *oid, enum object_type *type,
-			 unsigned long *size)
+			 unsigned long *size, unsigned int oi_flags)
 {
 	struct object_info oi = OBJECT_INFO_INIT;
 	void *content;
@@ -1571,7 +1571,7 @@ static void *read_object(struct repository *r,
 	oi.sizep = size;
 	oi.contentp = &content;
 
-	if (oid_object_info_extended(r, oid, &oi, 0) < 0)
+	if (oid_object_info_extended(r, oid, &oi, oi_flags) < 0)
 		return NULL;
 	return content;
 }
@@ -1604,17 +1604,17 @@ void *read_object_file_extended(struct repository *r,
 				const struct object_id *oid,
 				enum object_type *type,
 				unsigned long *size,
-				int lookup_replace)
+				unsigned int oi_flags)
 {
 	void *data;
 	const struct packed_git *p;
 	const char *path;
 	struct stat st;
-	const struct object_id *repl = lookup_replace ?
+	const struct object_id *repl = (oi_flags & OBJECT_INFO_LOOKUP_REPLACE) ?
 		lookup_replace_object(r, oid) : oid;
 
 	errno = 0;
-	data = read_object(r, repl, type, size);
+	data = read_object(r, repl, type, size, oi_flags);
 	if (data)
 		return data;
 
@@ -1964,7 +1964,7 @@ int force_object_loose(const struct object_id *oid, time_t mtime)
 
 	if (has_loose_object(oid))
 		return 0;
-	buf = read_object(the_repository, oid, &type, &len);
+	buf = read_object(the_repository, oid, &type, &len, 0);
 	if (!buf)
 		return error(_("cannot read object for %s"), oid_to_hex(oid));
 	hdrlen = xsnprintf(hdr, sizeof(hdr), "%s %"PRIuMAX , type_name(type), (uintmax_t)len) + 1;
