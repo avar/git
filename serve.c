@@ -50,7 +50,7 @@ static int session_id_advertise(struct repository *r, struct strbuf *value)
 }
 
 typedef int (*advertise_fn_t)(struct repository *r, struct strbuf *value);
-typedef int (*command_fn_t)(struct repository *r,
+typedef int (*command_fn_t)(struct repository *r, const char *name,
 			    struct packet_reader *request);
 
 struct protocol_capability {
@@ -159,7 +159,7 @@ static int call_command(struct protocol_capability *command,
 
 	read_startup_config(command);
 
-	return command->command(r, request);
+	return command->command(r, command->name, request);
 }
 
 void protocol_v2_advertise_capabilities(void)
@@ -290,8 +290,7 @@ static int process_request(void)
 
 	packet_reader_init(&reader, 0, NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_GENTLE_ON_EOF |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_GENTLE_ON_EOF);
 
 	/*
 	 * Check to see if the client closed their end before sending another

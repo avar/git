@@ -257,13 +257,6 @@ static void transform_to_combine_type(
 	string_list_clear(&filter_options->sub[0].filter_spec, /*free_util=*/0);
 }
 
-void list_objects_filter_die_if_populated(
-	struct list_objects_filter_options *filter_options)
-{
-	if (filter_options->choice)
-		die(_("multiple filter-specs cannot be combined"));
-}
-
 void parse_list_objects_filter(
 	struct list_objects_filter_options *filter_options,
 	const char *arg)

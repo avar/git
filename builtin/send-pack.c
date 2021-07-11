@@ -275,8 +275,7 @@ int cmd_send_pack(int argc, const char **argv, const char *prefix)
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_GENTLE_ON_EOF |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_GENTLE_ON_EOF);
 
 	switch (discover_version(&reader)) {
 	case protocol_v2:
