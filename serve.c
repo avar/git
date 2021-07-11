@@ -85,6 +85,12 @@ struct protocol_capability {
 	 * Optionally a value can be specified by adding it to 'value'.
 	 * If a value is added to 'value', the server will advertise this
 	 * capability as "<name>=<value>" instead of "<name>".
+	 *
+	 * When called with a NULL value we're past the advertisement
+	 * itself, and are checking during a request whether we
+	 * support this command. This can be checked and used used to
+	 * e.g. emit a die("we support this, but don't have it
+	 * enabled!") error.
 	 */
 	advertise_fn_t advertise;
 
