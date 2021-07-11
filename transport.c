@@ -237,7 +237,8 @@ static int set_git_option(struct git_transport_options *opts,
 		opts->from_promisor = !!value;
 		return 0;
 	} else if (!strcmp(name, TRANS_OPT_LIST_OBJECTS_FILTER)) {
-		list_objects_filter_die_if_populated(&opts->filter_options);
+		if (opts->filter_options.choice)
+			die(_("multiple filter-specs cannot be combined"));
 		parse_list_objects_filter(&opts->filter_options, value);
 		return 0;
 	} else if (!strcmp(name, TRANS_OPT_REJECT_SHALLOW)) {
@@ -300,8 +301,7 @@ static struct ref *handshake(struct transport *transport, int for_push,
 
 	packet_reader_init(&reader, data->fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_GENTLE_ON_EOF |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_GENTLE_ON_EOF);
 
 	data->version = discover_version(&reader);
 	switch (data->version) {
