@@ -28,11 +28,13 @@ static void add_head_info(struct worktree *wt)
 {
 	int flags;
 	const char *target;
+	int ignore_errno;
 
-	target = refs_resolve_ref_unsafe(get_worktree_ref_store(wt),
-					 "HEAD",
-					 0,
-					 &wt->head_oid, &flags);
+	target = refs_resolve_ref_unsafe_with_errno(get_worktree_ref_store(wt),
+						    "HEAD",
+						    0,
+						    &wt->head_oid, &flags,
+						    &ignore_errno);
 	if (!target)
 		return;
 
@@ -417,6 +419,7 @@ const struct worktree *find_shared_symref(const char *symref,
 		const char *symref_target;
 		struct ref_store *refs;
 		int flags;
+		int ignore_errno;
 
 		if (wt->is_bare)
 			continue;
@@ -433,8 +436,11 @@ const struct worktree *find_shared_symref(const char *symref,
 		}
 
 		refs = get_worktree_ref_store(wt);
-		symref_target = refs_resolve_ref_unsafe(refs, symref, 0,
-							NULL, &flags);
+		symref_target = refs_resolve_ref_unsafe_with_errno(refs,
+								   symref,
+								   0, NULL,
+								   &flags,
+								   &ignore_errno);
 		if ((flags & REF_ISSYMREF) &&
 		    symref_target && !strcmp(symref_target, target)) {
 			existing = wt;
