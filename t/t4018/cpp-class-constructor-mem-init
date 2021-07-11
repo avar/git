@@ -1,3 +1,4 @@
+t4018 header: Item::Item(int RIGHT) :
 Item::Item(int RIGHT) :
 	member(0)
 {
