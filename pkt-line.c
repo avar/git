@@ -408,7 +408,7 @@ enum packet_read_status packet_read_with_status(int fd, char **src_buffer,
 	buffer[len] = 0;
 	packet_trace(buffer, len, 0);
 
-	if ((options & PACKET_READ_DIE_ON_ERR_PACKET) &&
+	if (!(options & PACKET_READ_GENTLE_ON_ERR_PACKET) &&
 	    starts_with(buffer, "ERR "))
 		die(_("remote error: %s"), buffer + 4);
 
@@ -624,4 +624,99 @@ void packet_writer_delim(struct packet_writer *writer)
 void packet_writer_flush(struct packet_writer *writer)
 {
 	packet_flush(writer->dest_fd);
+}
+
+void NORETURN packet_client_error(struct packet_writer *writer,
+				  const char *fmt, ...)
+{
+	struct strbuf err = STRBUF_INIT;
+	struct strbuf err_i18n = STRBUF_INIT;
+	va_list args;
+	va_list args_cp;
+
+	/*
+	 * Here we use _(fmt) because we're emitting things locally
+	 * via die(). Our API users have hopefully marked their
+	 * formats with N_() already, ...
+	 */
+	va_copy(args_cp, args);
+	va_start(args_cp, fmt);
+	strbuf_vaddf(&err_i18n, _(fmt), args_cp);
+	va_end(args_cp);
+
+	/*
+	 * ...but here we *MUST NOT* change "fmt" to "_(fmt)", since
+	 * we're writing errors over the wire. Those must (currently)
+	 * be in LANG=C.
+	 */
+	va_start(args, fmt);
+	strbuf_vaddf(&err, fmt, args);
+	va_end(args);
+
+	packet_writer_error(writer, "%s", err.buf);
+	exit(128);
+}
+
+void NORETURN packet_client_error_expected_oid(struct packet_writer *writer,
+					       const char *command,
+					       const char *got)
+{
+	const char *name = writer->command_name;
+
+	/*
+	 * TRANSLATORS: The first argument is the protocol-level
+	 * command, e.g. "fetch" or "object-info".
+	 *
+	 * The second is the sub-command, e.g. "have" or "want" in the
+	 * case of "fetch".
+	 *
+	 * The third is whatever data we got in the request that
+	 * wasn't a valid OID, i.e. the proximate cause of our error.
+	 */
+	static const char *msg = N_("%s: protocol error, "
+				    "expected to get object ID on '%s' line, "
+				    "not '%s'");
+
+	/*
+	 * TRANSLATORS: This is like the `fmt_command` message above,
+	 * except without the second argument. I.e. it's for request
+	 * lines that are only an OID, without a sub-command.
+	 */
+	static const char *msg_nocmd = N_("%s: protocol error, "
+					  "expected to get object ID, "
+					  "not '%s'");
+
+
+	if (command)
+		packet_client_error(writer, msg, name, command, got);
+	else
+		packet_client_error(writer, msg_nocmd, name, got);
+}
+
+void NORETURN packet_client_error_parse(struct packet_writer *writer,
+					const char *command,
+					const char *function,
+					const char *got)
+{
+	const char *name = writer->command_name;
+
+	/*
+	 * TRANSLATORS: The first argument is the protocol-level
+	 * command, e.g. "fetch" or "object-info".
+	 *
+	 * The second is the sub-command, e.g. "deepen-not" or
+	 * "deepen-since" in the case of "fetch".
+	 *
+	 * The third is a name of a C function we tried to parse the
+	 * data with, e.g. "expand_ref()" or "parse_timestamp()" for
+	 * "deepen-not" and "deepen-since", respectively.
+	 *
+	 * The fourth is whatever data we got in the request that
+	 * wasn't valid, i.e. the proximate cause of our error.
+	 *
+	 */
+	static const char *msg = N_("%s: protocol error, "
+				    "expected to parse '%s' line with '%s', "
+				    "got bad data '%s'");
+	packet_client_error(writer, msg, name, command, function, got);
 }

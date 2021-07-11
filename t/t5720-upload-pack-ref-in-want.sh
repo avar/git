@@ -86,8 +86,14 @@ test_expect_success 'invalid want-ref line' '
 	0000
 	EOF
 
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>out <in &&
-	grep "unknown ref" out
+	cat >expect <<-EOF &&
+	ERR unknown ref refs/heads/non-existent
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'basic want-ref' '

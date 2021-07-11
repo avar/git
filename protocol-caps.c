@@ -51,13 +51,9 @@ static void send_info(struct repository *r, struct packet_writer *writer,
 		struct object_id oid;
 		unsigned long object_size;
 
-		if (get_oid_hex(oid_str, &oid) < 0) {
-			packet_writer_error(
-				writer,
-				"object-info: protocol error, expected to get oid, not '%s'",
-				oid_str);
-			continue;
-		}
+		if (get_oid_hex(oid_str, &oid) < 0)
+			packet_client_error_expected_oid(writer, NULL,
+							 oid_str);
 
 		strbuf_addstr(&send_buffer, oid_str);
 
@@ -74,11 +70,13 @@ static void send_info(struct repository *r, struct packet_writer *writer,
 	}
 }
 
-int cap_object_info(struct repository *r, struct packet_reader *request)
+int cap_object_info(struct repository *r, const char *name,
+		    struct packet_reader *request)
 {
 	struct requested_info info;
 	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct string_list oid_str_list = STRING_LIST_INIT_DUP;
+	writer.command_name = name;
 
 	while (packet_reader_read(request) == PACKET_READ_NORMAL) {
 		if (!strcmp("size", request->line)) {
@@ -89,16 +87,16 @@ int cap_object_info(struct repository *r, struct packet_reader *request)
 		if (parse_oid(request->line, &oid_str_list))
 			continue;
 
-		packet_writer_error(&writer,
-				    "object-info: unexpected line: '%s'",
+		packet_client_error(&writer,
+				    N_("%s: unexpected argument: '%s'"),
+				    name,
 				    request->line);
 	}
 
-	if (request->status != PACKET_READ_FLUSH) {
-		packet_writer_error(
-			&writer, "object-info: expected flush after arguments");
-		die(_("object-info: expected flush after arguments"));
-	}
+	if (request->status != PACKET_READ_FLUSH)
+		packet_client_error(&writer,
+				    N_("%s: expected flush after arguments"),
+				    name);
 
 	send_info(r, &writer, &oid_str_list, &info);
 

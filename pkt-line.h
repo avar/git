@@ -66,8 +66,9 @@ int write_packetized_from_buf_no_flush(const char *src_in, size_t len, int fd_ou
  * If options contains PACKET_READ_CHOMP_NEWLINE, a trailing newline (if
  * present) is removed from the buffer before returning.
  *
- * If options contains PACKET_READ_DIE_ON_ERR_PACKET, it dies when it sees an
- * ERR packet.
+ * If options contains PACKET_READ_GENTLE_ON_ERR_PACKET, we will not
+ * die when we encounter an ERR packet, but instead return a status of
+ * PACKET_READ_NORMAL.
  *
  * If options contains PACKET_READ_GENTLE_ON_READ_ERROR, we will not die
  * on read errors, but instead return -1.  However, we may still die on an
@@ -75,7 +76,7 @@ int write_packetized_from_buf_no_flush(const char *src_in, size_t len, int fd_ou
  */
 #define PACKET_READ_GENTLE_ON_EOF        (1u<<0)
 #define PACKET_READ_CHOMP_NEWLINE        (1u<<1)
-#define PACKET_READ_DIE_ON_ERR_PACKET    (1u<<2)
+#define PACKET_READ_GENTLE_ON_ERR_PACKET (1u<<2)
 #define PACKET_READ_GENTLE_ON_READ_ERROR (1u<<3)
 int packet_read(int fd, char **src_buffer, size_t *src_len, char
 		*buffer, unsigned size, int options);
@@ -225,6 +226,12 @@ extern char packet_buffer[LARGE_PACKET_MAX];
 struct packet_writer {
 	int dest_fd;
 	unsigned use_sideband : 1;
+
+	/*
+	 *The command name for v2. "fetch", "ls-refs", "object-info"
+	 * etc. Used in error reporting
+	 */
+	const char *command_name;
 };
 
 #define PACKET_WRITER_INIT { \
@@ -241,4 +248,13 @@ void packet_writer_error(struct packet_writer *writer, const char *fmt, ...);
 void packet_writer_delim(struct packet_writer *writer);
 void packet_writer_flush(struct packet_writer *writer);
 
+/* Client error handling */
+__attribute__((format (printf, 2, 3)))
+void packet_client_error(struct packet_writer *writer, const char *fmt, ...);
+void packet_client_error_expected_oid(struct packet_writer *writer,
+				      const char *command, const char *got);
+
+void packet_client_error_parse(struct packet_writer *writer,
+			       const char *command, const char *function,
+			       const char *got);
 #endif
