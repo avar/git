@@ -294,18 +294,15 @@ struct ref_filter {
 	void *cb_data;
 };
 
-int refs_read_ref_full(struct ref_store *refs, const char *refname,
-		       int resolve_flags, struct object_id *oid, int *flags)
-{
-	if (refs_resolve_ref_unsafe(refs, refname, resolve_flags, oid, flags))
-		return 0;
-	return -1;
-}
-
 int read_ref_full(const char *refname, int resolve_flags, struct object_id *oid, int *flags)
 {
-	return refs_read_ref_full(get_main_ref_store(the_repository), refname,
-				  resolve_flags, oid, flags);
+	int ignore_errno;
+	struct ref_store *refs = get_main_ref_store(the_repository);
+
+	if (refs_resolve_ref_unsafe_with_errno(refs, refname, resolve_flags,
+					       oid, flags, &ignore_errno))
+		return 0;
+	return -1;
 }
 
 int read_ref(const char *refname, struct object_id *oid)
@@ -1398,9 +1395,10 @@ int refs_head_ref(struct ref_store *refs, each_ref_fn fn, void *cb_data)
 {
 	struct object_id oid;
 	int flag;
-
-	if (!refs_read_ref_full(refs, "HEAD", RESOLVE_REF_READING,
-				&oid, &flag))
+	int ignore_errno;
+	
+	if (refs_resolve_ref_unsafe_with_errno(refs, "HEAD", RESOLVE_REF_READING,
+					       &oid, &flag, &ignore_errno))
 		return fn("HEAD", &oid, flag, cb_data);
 
 	return 0;
