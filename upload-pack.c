@@ -1663,7 +1663,9 @@ enum fetch_state {
 	FETCH_DONE,
 };
 
-int upload_pack_v2(struct repository *r, struct packet_reader *request)
+int upload_pack_v2(struct repository *r,
+		   struct packet_reader *request,
+		   struct packet_writer *writer)
 {
 	enum fetch_state state = FETCH_PROCESS_ARGS;
 	struct upload_pack_data data;
