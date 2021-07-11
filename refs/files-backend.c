@@ -874,11 +874,12 @@ static int verify_lock(struct ref_store *ref_store, struct ref_lock *lock,
 		       const struct object_id *old_oid, int mustexist,
 		       struct strbuf *err)
 {
+	int ignore_errno;
 	assert(err);
 
-	if (refs_read_ref_full(ref_store, lock->ref_name,
-			       mustexist ? RESOLVE_REF_READING : 0,
-			       &lock->old_oid, NULL)) {
+	if (!refs_resolve_ref_unsafe_with_errno(ref_store, lock->ref_name,
+						mustexist ? RESOLVE_REF_READING : 0,
+						&lock->old_oid, NULL, &ignore_errno)) {
 		if (old_oid) {
 			strbuf_addf(err, "can't verify ref '%s'", lock->ref_name);
 			return -1;
