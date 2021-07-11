@@ -248,11 +248,11 @@ int mingw_core_config(const char *var, const char *value, void *cb)
 	}
 
 	if (!strcmp(var, "core.restrictinheritedhandles")) {
-		if (value && !strcasecmp(value, "auto"))
+		int tristate = git_config_tristate(var, value);
+		if (tristate == 2)
 			core_restrict_inherited_handles = -1;
 		else
-			core_restrict_inherited_handles =
-				git_config_bool(var, value);
+			core_restrict_inherited_handles = tristate;
 		return 0;
 	}
 
