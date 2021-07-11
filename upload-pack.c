@@ -101,7 +101,7 @@ struct upload_pack_data {
 	struct list_objects_filter_options filter_options;
 	struct string_list allowed_filters;
 
-	struct packet_writer writer;
+	struct packet_writer *writer;
 
 	unsigned stateless_rpc : 1;				/* v0 only */
 	unsigned no_done : 1;					/* v0 only */
@@ -120,7 +120,8 @@ struct upload_pack_data {
 	unsigned done : 1;					/* v2 only */
 };
 
-static void upload_pack_data_init(struct upload_pack_data *data)
+static void upload_pack_data_init(struct upload_pack_data *data,
+				  struct packet_writer *writer)
 {
 	struct string_list symref = STRING_LIST_INIT_DUP;
 	struct string_list wanted_refs = STRING_LIST_INIT_DUP;
@@ -132,7 +133,6 @@ static void upload_pack_data_init(struct upload_pack_data *data)
 	struct string_list uri_protocols = STRING_LIST_INIT_DUP;
 	struct object_array extra_edge_obj = OBJECT_ARRAY_INIT;
 	struct string_list allowed_filters = STRING_LIST_INIT_DUP;
-	struct packet_writer writer = PACKET_WRITER_INIT;
 
 	memset(data, 0, sizeof(*data));
 	data->symref = symref;
@@ -759,7 +759,7 @@ error:
 	for (i = 0; i < data->want_obj.nr; i++) {
 		struct object *o = data->want_obj.objects[i].item;
 		if (!is_our_ref(o))
-			packet_client_error(&data->writer,
+			packet_client_error(data->writer,
 					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&o->oid));
 	}
@@ -771,7 +771,7 @@ static void send_shallow(struct upload_pack_data *data,
 	while (result) {
 		struct object *object = &result->item->object;
 		if (!(object->flags & (CLIENT_SHALLOW|NOT_SHALLOW))) {
-			packet_writer_write(&data->writer, "shallow %s",
+			packet_writer_write(data->writer, "shallow %s",
 					    oid_to_hex(&object->oid));
 			register_shallow(the_repository, &object->oid);
 			data->shallow_nr++;
@@ -788,7 +788,7 @@ static void send_unshallow(struct upload_pack_data *data)
 		struct object *object = data->shallows.objects[i].item;
 		if (object->flags & NOT_SHALLOW) {
 			struct commit_list *parents;
-			packet_writer_write(&data->writer, "unshallow %s",
+			packet_writer_write(data->writer, "unshallow %s",
 					    oid_to_hex(&object->oid));
 			object->flags &= ~CLIENT_SHALLOW;
 			/*
@@ -996,12 +996,12 @@ static void check_one_filter(struct upload_pack_data *data,
 		allowed = data->allow_filter_fallback;
 
 	if (!allowed)
-		packet_client_error(&data->writer, "filter '%s' not supported",
+		packet_client_error(data->writer, "filter '%s' not supported",
 				    key);
 
 	if (opts->choice == LOFC_TREE_DEPTH &&
 	    opts->tree_exclude_depth > data->tree_filter_max_depth)
-		packet_client_error(&data->writer,
+		packet_client_error(data->writer,
 				    "tree filter allows max depth %lu, but got %lu",
 				    data->tree_filter_max_depth,
 				    opts->tree_exclude_depth);
@@ -1055,7 +1055,7 @@ static void receive_needs(struct upload_pack_data *data,
 			if (!data->filter_capability_requested)
 				die("git upload-pack: filtering capability not negotiated");
 			if (data->filter_options.choice)
-				packet_client_error(&data->writer,
+				packet_client_error(data->writer,
 						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, arg);
 			die_if_using_banned_filter(data);
@@ -1100,7 +1100,7 @@ static void receive_needs(struct upload_pack_data *data,
 
 		o = parse_object(the_repository, &oid_buf);
 		if (!o)
-			packet_client_error(&data->writer,
+			packet_client_error(data->writer,
 					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&oid_buf));
 		if (!(o->flags & WANTED)) {
@@ -1335,9 +1335,10 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 		 const int timeout)
 {
 	struct packet_reader reader;
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct upload_pack_data data;
 
-	upload_pack_data_init(&data);
+	upload_pack_data_init(&data, &writer);
 
 	if (!v1_have_startup_config++)
 		git_config(upload_pack_startup_config, NULL);
@@ -1470,10 +1471,10 @@ static void process_args(struct packet_reader *request,
 		const char *p;
 
 		/* process want */
-		if (parse_want(&data->writer, arg, &data->want_obj))
+		if (parse_want(data->writer, arg, &data->want_obj))
 			continue;
 		if (config_v2_allow_ref_in_want &&
-		    parse_want_ref(&data->writer, arg, &data->wanted_refs,
+		    parse_want_ref(data->writer, arg, &data->wanted_refs,
 				   &data->want_obj))
 			continue;
 		/* process have line */
@@ -1524,7 +1525,7 @@ static void process_args(struct packet_reader *request,
 
 		if (data->allow_filter && skip_prefix(arg, "filter ", &p)) {
 			if (data->filter_options.choice)
-				packet_client_error(&data->writer,
+				packet_client_error(data->writer,
 						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, p);
 			die_if_using_banned_filter(data);
@@ -1534,7 +1535,7 @@ static void process_args(struct packet_reader *request,
 		if ((git_env_bool("GIT_TEST_SIDEBAND_ALL", 0) ||
 		     config_v2_allow_sideband_all) &&
 		    !strcmp(arg, "sideband-all")) {
-			data->writer.use_sideband = 1;
+			data->writer->use_sideband = 1;
 			continue;
 		}
 
@@ -1543,16 +1544,16 @@ static void process_args(struct packet_reader *request,
 			continue;
 		}
 
-		packet_client_error(&data->writer,
+		packet_client_error(data->writer,
 				    N_("fetch: unexpected argument: '%s'"),
 				    arg);
 	}
 
-	if (data->uri_protocols.nr && !data->writer.use_sideband)
+	if (data->uri_protocols.nr && !data->writer->use_sideband)
 		string_list_clear(&data->uri_protocols, 0);
 
 	if (request->status != PACKET_READ_FLUSH)
-		packet_client_error(&data->writer,
+		packet_client_error(data->writer,
 				    N_("fetch: expected flush after arguments"));
 }
 
@@ -1580,20 +1581,20 @@ static int send_acks(struct upload_pack_data *data, struct oid_array *acks)
 {
 	int i;
 
-	packet_writer_write(&data->writer, "acknowledgments\n");
+	packet_writer_write(data->writer, "acknowledgments\n");
 
 	/* Send Acks */
 	if (!acks->nr)
-		packet_writer_write(&data->writer, "NAK\n");
+		packet_writer_write(data->writer, "NAK\n");
 
 	for (i = 0; i < acks->nr; i++) {
-		packet_writer_write(&data->writer, "ACK %s\n",
+		packet_writer_write(data->writer, "ACK %s\n",
 				    oid_to_hex(&acks->oid[i]));
 	}
 
 	if (!data->wait_for_done && ok_to_give_up(data)) {
 		/* Send Ready */
-		packet_writer_write(&data->writer, "ready\n");
+		packet_writer_write(data->writer, "ready\n");
 		return 1;
 	}
 
@@ -1609,11 +1610,11 @@ static int process_haves_and_send_acks(struct upload_pack_data *data)
 	if (data->done) {
 		ret = 1;
 	} else if (send_acks(data, &common)) {
-		packet_writer_delim(&data->writer);
+		packet_writer_delim(data->writer);
 		ret = 1;
 	} else {
 		/* Add Flush */
-		packet_writer_flush(&data->writer);
+		packet_writer_flush(data->writer);
 		ret = 0;
 	}
 
@@ -1629,15 +1630,15 @@ static void send_wanted_ref_info(struct upload_pack_data *data)
 	if (!data->wanted_refs.nr)
 		return;
 
-	packet_writer_write(&data->writer, "wanted-refs\n");
+	packet_writer_write(data->writer, "wanted-refs\n");
 
 	for_each_string_list_item(item, &data->wanted_refs) {
-		packet_writer_write(&data->writer, "%s %s\n",
+		packet_writer_write(data->writer, "%s %s\n",
 				    oid_to_hex(item->util),
 				    item->string);
 	}
 
-	packet_writer_delim(&data->writer);
+	packet_writer_delim(data->writer);
 }
 
 static void send_shallow_info(struct upload_pack_data *data)
@@ -1647,7 +1648,7 @@ static void send_shallow_info(struct upload_pack_data *data)
 	    !is_repository_shallow(the_repository))
 		return;
 
-	packet_writer_write(&data->writer, "shallow-info\n");
+	packet_writer_write(data->writer, "shallow-info\n");
 
 	if (!send_shallow_list(data) &&
 	    is_repository_shallow(the_repository))
@@ -1672,7 +1673,7 @@ int upload_pack_v2(struct repository *r,
 
 	clear_object_flags(ALL_FLAGS);
 
-	upload_pack_data_init(&data);
+	upload_pack_data_init(&data, writer);
 	data.use_sideband = LARGE_PACKET_MAX;
 
 	git_config(upload_pack_config, &data);
@@ -1717,7 +1718,7 @@ int upload_pack_v2(struct repository *r,
 			if (data.uri_protocols.nr) {
 				create_pack_file(&data, &data.uri_protocols);
 			} else {
-				packet_writer_write(&data.writer, "packfile\n");
+				packet_writer_write(writer, "packfile\n");
 				create_pack_file(&data, NULL);
 			}
 			state = FETCH_DONE;
