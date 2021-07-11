@@ -51,7 +51,8 @@ static int session_id_advertise(struct repository *r, struct strbuf *value)
 
 typedef int (*advertise_fn_t)(struct repository *r, struct strbuf *value);
 typedef int (*command_fn_t)(struct repository *r,
-			    struct packet_reader *request);
+			    struct packet_reader *request,
+			    struct packet_writer *writer);
 
 struct protocol_capability {
 	/*
@@ -156,10 +157,10 @@ static int call_command(struct protocol_capability *command,
 			struct repository *r, struct strvec *keys,
 			struct packet_reader *request)
 {
-
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	read_startup_config(command);
 
-	return command->command(r, request);
+	return command->command(r, request, &writer);
 }
 
 void protocol_v2_advertise_capabilities(void)
