@@ -329,7 +329,10 @@ int read_ref(const char *refname, struct object_id *oid)
 
 int refs_ref_exists(struct ref_store *refs, const char *refname)
 {
-	return !!refs_resolve_ref_unsafe(refs, refname, RESOLVE_REF_READING, NULL, NULL);
+	int ignore_errno;
+	return !!refs_resolve_ref_unsafe_with_errno(refs, refname,
+						    RESOLVE_REF_READING, NULL,
+						    NULL, &ignore_errno);
 }
 
 int ref_exists(const char *refname)
