@@ -283,7 +283,6 @@ static NORETURN void BUG_vfl(const char *file, int line, const char *fmt, va_lis
 	abort();
 }
 
-#ifdef HAVE_VARIADIC_MACROS
 NORETURN void BUG_fl(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
@@ -291,15 +290,6 @@ NORETURN void BUG_fl(const char *file, int line, const char *fmt, ...)
 	BUG_vfl(file, line, fmt, ap);
 	va_end(ap);
 }
-#else
-NORETURN void BUG(const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	BUG_vfl(NULL, 0, fmt, ap);
-	va_end(ap);
-}
-#endif
 
 #ifdef SUPPRESS_ANNOTATED_LEAKS
 void unleak_memory(const void *ptr, size_t len)
