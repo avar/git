@@ -600,11 +600,12 @@ static int show_tag_object(const struct object_id *oid, struct rev_info *rev)
 }
 
 static int show_tree_object(const struct object_id *oid,
-		struct strbuf *base,
-		const char *pathname, unsigned mode, void *context)
+			    struct strbuf *base, const char *pathname,
+			    enum object_type object_type, unsigned mode,
+			    void *context)
 {
 	FILE *file = context;
-	fprintf(file, "%s%s\n", pathname, S_ISDIR(mode) ? "/" : "");
+	fprintf(file, "%s%s\n", pathname, object_type == OBJ_TREE ? "/" : "");
 	return 0;
 }
 
