@@ -590,12 +590,6 @@ enum packet_read_status packet_reader_peek(struct packet_reader *reader)
 	return reader->status;
 }
 
-void packet_writer_init(struct packet_writer *writer, int dest_fd)
-{
-	writer->dest_fd = dest_fd;
-	writer->use_sideband = 0;
-}
-
 void packet_writer_write(struct packet_writer *writer, const char *fmt, ...)
 {
 	va_list args;
@@ -604,6 +598,12 @@ void packet_writer_write(struct packet_writer *writer, const char *fmt, ...)
 	packet_write_fmt_1(writer->dest_fd, 0,
 			   writer->use_sideband ? "\001" : "", fmt, args);
 	va_end(args);
+}
+
+void packet_writer_write_len(struct packet_writer *writer, const char *buf,
+			     size_t size)
+{
+	packet_writer_write(writer, "%*s", (int)size, buf);
 }
 
 void packet_writer_error(struct packet_writer *writer, const char *fmt, ...)
