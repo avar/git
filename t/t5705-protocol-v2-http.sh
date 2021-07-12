@@ -194,7 +194,7 @@ test_expect_success 'ls-remote handling a bad client using http:// protocol v2' 
 
 	cat >log.expect <<-\EOF &&
 	packet:  upload-pack> ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
-	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	packet:    ls-remote< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 
 	cat >err.expect <<-\EOF &&
