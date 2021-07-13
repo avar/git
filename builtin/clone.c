@@ -27,6 +27,7 @@
 #include "iterator.h"
 #include "sigchain.h"
 #include "branch.h"
+#include "connect.h"
 #include "remote.h"
 #include "run-command.h"
 #include "connected.h"
@@ -1291,6 +1292,9 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 			    "refs/tags/");
 
 	refs = transport_get_remote_refs(transport, &transport_ls_refs_options);
+	if (server_supports_v2("bundle-uri", 0) &&
+	    transport_get_remote_bundle_uri(transport) < 0)
+		die(_("error when trying to get remote bundle-uri list"));
 
 	if (refs) {
 		int hash_algo = hash_algo_by_ptr(transport_get_hash_algo(transport));
