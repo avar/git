@@ -1050,12 +1050,16 @@ test_expect_success SYMLINKS 'symlink to nonexistent configuration' '
 	test_must_fail git config --file=linktolinktonada --list
 '
 
-test_expect_success 'check split_cmdline return' "
-	git config alias.split-cmdline-fix 'echo \"' &&
-	test_must_fail git split-cmdline-fix &&
+test_expect_success 'setup check split_cmdline return' "
 	echo foo > foo &&
 	git add foo &&
-	git commit -m 'initial commit' &&
+	git commit -m 'initial commit'
+"
+
+test_expect_success !SANITIZE_LEAK 'check split_cmdline return' "
+	git config alias.split-cmdline-fix 'echo \"' &&
+	test_must_fail git split-cmdline-fix &&
+
 	git config branch.main.mergeoptions 'echo \"' &&
 	test_must_fail git merge main
 "
@@ -1101,7 +1105,7 @@ test_expect_success 'key sanity-checking' '
 	git config foo."ba =z".bar false
 '
 
-test_expect_success 'git -c works with aliases of builtins' '
+test_expect_success !SANITIZE_LEAK 'git -c works with aliases of builtins' '
 	git config alias.checkconfig "-c foo.check=bar config foo.check" &&
 	echo bar >expect &&
 	git checkconfig >actual &&
@@ -1397,7 +1401,7 @@ test_expect_success 'git --config-env with missing value' '
 	grep "invalid config format: config" error
 '
 
-test_expect_success 'git --config-env fails with invalid parameters' '
+test_expect_success !SANITIZE_LEAK 'git --config-env fails with invalid parameters' '
 	test_must_fail git --config-env=foo.flag config --bool foo.flag 2>error &&
 	test_i18ngrep "invalid config format: foo.flag" error &&
 	test_must_fail git --config-env=foo.flag= config --bool foo.flag 2>error &&
