@@ -243,7 +243,7 @@ test_expect_success 'unexpected lines are not allowed in fetch request' '
 
 # Test the basics of object-info
 #
-test_expect_success 'basics of object-info' '
+test_expect_success !SANITIZE_LEAK 'basics of object-info' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=object-info
 	object-format=$(test_oid algo)
