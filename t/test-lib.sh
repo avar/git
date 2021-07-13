@@ -1370,6 +1370,7 @@ maybe_skip_all_sanitize_leak () {
 	add_sanitize_leak_true 't000*'
 	add_sanitize_leak_true 't001*'
 	add_sanitize_leak_true 't006*'
+	add_sanitize_leak_true 't13*config*'
 
 	# Blacklist patterns (overrides whitelist)
 	add_sanitize_leak_false 't000[469]*'
