@@ -79,6 +79,12 @@ test_expect_success 'check-mailmap bogus contact --stdin' '
 	test_must_fail git check-mailmap --stdin bogus </dev/null
 '
 
+if test_have_prereq SANITIZE_LEAK
+then
+	skip_all='skipping the rest of mailmap tests under SANITIZE_LEAK'
+	test_done
+fi
+
 test_expect_success 'No mailmap' '
 	cat >expect <<-EOF &&
 	$GIT_AUTHOR_NAME (1):
