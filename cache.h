@@ -308,7 +308,6 @@ static inline unsigned int canon_mode(unsigned int mode)
 
 struct split_index;
 struct untracked_cache;
-struct progress;
 struct pattern_list;
 
 struct index_state {

@@ -46,20 +46,19 @@ int cmd__progress(int argc, const char **argv)
 	if (argc)
 		usage_with_options(usage, options);
 
-	progress_testing = 1;
 	while (strbuf_getline(&line, stdin) != EOF) {
 		char *end;
 
 		if (!strcmp(line.buf, "start")) {
-			progress = start_progress(default_title, 0);
+			progress = start_progress_testing(default_title, 0);
 		} else if (skip_prefix(line.buf, "start ", (const char **) &end)) {
 			uint64_t total = strtoull(end, &end, 10);
 			if (*end == '\0') {
-				progress = start_progress(default_title, total);
+				progress = start_progress_testing(default_title, total);
 			} else if (*end == ' ') {
 				free(detached_title);
 				detached_title = strbuf_detach(&line, NULL);
-				progress = start_progress(end + 1, total);
+				progress = start_progress_testing(end + 1, total);
 			} else {
 				die("invalid input: '%s'\n", line.buf);
 			}
@@ -78,11 +77,11 @@ int cmd__progress(int argc, const char **argv)
 			test_ms = strtoull(end + 1, &end, 10);
 			if (*end != '\0')
 				die("invalid input: '%s'\n", line.buf);
-			progress_test_ns = test_ms * 1000 * 1000;
+			progress->test_getnanotime = test_ms * 1000 * 1000;
 			display_throughput(progress, byte_count);
 		} else if (!strcmp(line.buf, "update") ||
 			   !strcmp(line.buf, "signal")) {
-			progress_test_force_update();
+			test_progress_force_update();
 		} else if (!strcmp(line.buf, "stop")) {
 			stop_progress(&progress);
 		} else {
