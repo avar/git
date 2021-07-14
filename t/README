@@ -448,6 +448,22 @@ GIT_TEST_CHECKOUT_WORKERS=<n> overrides the 'checkout.workers' setting
 to <n> and 'checkout.thresholdForParallelism' to 0, forcing the
 execution of the parallel-checkout code.
 
+GIT_TEST_SANITIZE_LEAK=<boolean> will force the tests to run when git
+is compiled with SANITIZE=leak (we pick it up via
+../GIT-BUILD-OPTIONS).
+
+By default all tests are skipped when compiled with SANITIZE=leak, and
+individual test scripts opt themselves in to leak testing by setting
+GIT_TEST_SANITIZE_LEAK=true before sourcing test-lib.sh. Within those
+tests use the SANITIZE_LEAK prerequisite to skip individiual tests
+(i.e. test_expect_success !SANITIZE_LEAK [...]).
+
+So the GIT_TEST_SANITIZE_LEAK setting is different in behavior from
+both other GIT_TEST_*=[true|false] settings, but more useful given how
+SANITIZE=leak works & the state of the test suite. Manually setting
+GIT_TEST_SANITIZE_LEAK=true is only useful during development when
+finding and fixing memory leaks.
+
 Naming Tests
 ------------
 
