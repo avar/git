@@ -288,8 +288,7 @@ static int find_common(struct fetch_negotiator *negotiator,
 		die(_("--stateless-rpc requires multi_ack_detailed"));
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 
 	mark_tips(negotiator, args->negotiation_tips);
 	for_each_cached_alternate(negotiator, insert_one_alternate_object);
@@ -1564,8 +1563,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	fetch_negotiator_init(r, negotiator);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 	if (git_env_bool("GIT_TEST_SIDEBAND_ALL", 1) &&
 	    server_supports_feature("fetch", "sideband-all", 0)) {
 		reader.use_sideband = 1;
@@ -2017,8 +2015,7 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 	mark_tips(&negotiator, negotiation_tips);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 
 	oid_array_for_each((struct oid_array *) negotiation_tips,
 			   add_to_object_array,
