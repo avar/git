@@ -1,3 +1,4 @@
+t4018 header: impl<'a, T: AsRef<[u8]>>  std::RIGHT for Git<'a> {
 impl<'a, T: AsRef<[u8]>>  std::RIGHT for Git<'a> {
 
     pub fn ChangeMe(&self) -> () {

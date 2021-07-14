@@ -1,4 +1,5 @@
-(defmethod {print point} RIGHT
+t4018 header: (defmethod {print point}
+(defmethod {print point}
   (lambda (self)
     (with ((point x y) self)
       (printf "{ChangeMe x:~a y:~a}~n" x y))))
