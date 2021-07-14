@@ -872,11 +872,12 @@ static int git_format_config(const char *var, const char *value, void *cb)
 		return 0;
 	}
 	if (!strcmp(var, "format.numbered")) {
-		if (value && !strcasecmp(value, "auto")) {
+		int tristate = git_config_tristate(var, value);
+		if (tristate == 2) {
 			auto_number = 1;
 			return 0;
 		}
-		numbered = git_config_bool(var, value);
+		numbered = tristate;
 		auto_number = auto_number && numbered;
 		return 0;
 	}
@@ -908,11 +909,11 @@ static int git_format_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "format.signaturefile"))
 		return git_config_pathname(&signature_file, var, value);
 	if (!strcmp(var, "format.coverletter")) {
-		if (value && !strcasecmp(value, "auto")) {
+		int tristate = git_config_tristate(var, value);
+		if (tristate == 2)
 			config_cover_letter = COVER_AUTO;
-			return 0;
-		}
-		config_cover_letter = git_config_bool(var, value) ? COVER_ON : COVER_OFF;
+		else
+			config_cover_letter = tristate ? COVER_ON : COVER_OFF;
 		return 0;
 	}
 	if (!strcmp(var, "format.outputdirectory"))
