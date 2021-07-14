@@ -556,3 +556,82 @@ and associated requested information, each separated by a single space.
 	attr = "size"
 
 	obj-info = obj-id SP obj-size
+
+bundle-uri
+~~~~~~~~~~
+
+If the 'bundle-uri' feature is advertised, the server supports the
+`bundle-uri' command.
+
+The 'bundle-uri' command is intended to be issued before `fetch` to
+get URIs to bundle files (see linkgit:git-bundle[1]) to "seed" and
+inform the subsequent `fetch` command. The client CAN issue
+`bundle-uri` before or after `ls-refs`, or possibly choose to skip
+`ls-refs` and/or a subsequent `fetch` entirely.
+
+Additional features not supported in the base command will be advertised
+as the value of the command in the capability advertisement in the form
+of a space separated list of features: "<command>=<feature 1> <feature 2>"
+
+The client MAY provide reference tips found in the bundle(s) to be
+downloaded out-of-bounds as `have` lines in the `fetch` request. They
+MAY also ignore the bundle(s) entirely (e.g. if they can't be
+downloaded) or some combination of the two.
+
+The intent of the feature is optimize for server resource consumption
+in the common case by changing the common case of fetching a very
+large PACK during linkgit:git-clone[1] into a smaller incremental
+fetch.
+
+It also allows servers to achieve better caching in combination with
+an `uploadpack.packObjectsHook` (see linkgit:git-config[1]).
+
+By having new clones or fetches be a more predictable and common
+negotiation against the tips of recently produces *.bundle file(s).
+Servers might even pre-generate the results of such negotiations for
+the `uploadpack.packObjectsHook` as new pushes come in.
+
+I.e. the server would anticipate that fresh clones will download a
+known bundle, followed by catching up to the current state of the
+repository using ref tips found in that bundle (or bundles).
+
+A `bundle-uri` currently takes no arguments, but may in the future
+depend on advertised list of command features (see above).
+
+The response is a list of URIs the server would like the client to
+fetch out-of-bounds before proceeding with the `fetch` request.
+
+	output = bundle-uri-line
+		 bundle-uri-line* flush-pkt
+
+	bundle-uri-line = PKT-LINE(bundle-uri)
+			  *(SP bundle-feature-key *(=bundle-feature-val))
+			  LF
+
+	bundle-uri = A URI such as a https://, ssh:// etc. URI
+
+	bundle-feature-key = Any printable ASCII characters except SP or "="
+	bundle-feature-val = Any printable ASCII characters except SP or "="
+
+No `bundle-feature-key`=`bundle-feature-value` fields are currently
+defined.
+
+They are intended for future expansions which older clients can safely
+ignore or gracefully degrade on. For example, and none of this is
+implemented yet:
+
+ * Add a "hash=<val>" or "size=<bytes>" advertise the expected hash or
+   size of the bundle file.
+
+ * Advertise that one or more bundle files are the same (to e.g. have
+   clients round-robin or otherwise choose one of N possible files).
+
+ * A "tip=<OID>" shortcut. A client who'd have the advertised <OID>
+   would know there was no need to download the relevant bundle(s),
+   they've got that OID already (for multi-tips the client would need
+   to fetch the bundle, or do e.g. HTTP range requests to get its
+   header).
+
+For now clients MUST ignore any keys and/or key-values that they don't
+recognize, and if they do recognize them they CAN ignore them if they
+choose.
