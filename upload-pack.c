@@ -28,6 +28,9 @@
 #include "commit-reach.h"
 #include "shallow.h"
 
+/* Command name, for error reporting */
+static const char *command_name = "upload-pack";
+
 /* Remember to update object flag allocation in object.h */
 #define THEY_HAVE	(1u << 11)
 #define OUR_REF		(1u << 12)
@@ -101,7 +104,7 @@ struct upload_pack_data {
 	struct list_objects_filter_options filter_options;
 	struct string_list allowed_filters;
 
-	struct packet_writer writer;
+	struct packet_writer *writer;
 
 	unsigned stateless_rpc : 1;				/* v0 only */
 	unsigned no_done : 1;					/* v0 only */
@@ -120,7 +123,8 @@ struct upload_pack_data {
 	unsigned done : 1;					/* v2 only */
 };
 
-static void upload_pack_data_init(struct upload_pack_data *data)
+static void upload_pack_data_init(struct upload_pack_data *data,
+				  struct packet_writer *writer)
 {
 	struct string_list symref = STRING_LIST_INIT_DUP;
 	struct string_list wanted_refs = STRING_LIST_INIT_DUP;
@@ -132,7 +136,6 @@ static void upload_pack_data_init(struct upload_pack_data *data)
 	struct string_list uri_protocols = STRING_LIST_INIT_DUP;
 	struct object_array extra_edge_obj = OBJECT_ARRAY_INIT;
 	struct string_list allowed_filters = STRING_LIST_INIT_DUP;
-	struct packet_writer writer = PACKET_WRITER_INIT;
 
 	memset(data, 0, sizeof(*data));
 	data->symref = symref;
@@ -487,7 +490,8 @@ static int got_oid(struct upload_pack_data *data,
 		   const char *hex, struct object_id *oid)
 {
 	if (get_oid_hex(hex, oid))
-		die("git upload-pack: expected SHA1 object, got '%s'", hex);
+		packet_client_error_expected_oid(data->writer, command_name,
+						 "have", hex);
 	if (!has_object_file_with_flags(oid,
 					OBJECT_INFO_QUICK | OBJECT_INFO_SKIP_FETCH_OBJECT))
 		return -1;
@@ -579,7 +583,8 @@ static int get_common_commits(struct upload_pack_data *data,
 			packet_write_fmt(1, "NAK\n");
 			return -1;
 		}
-		die("git upload-pack: expected SHA1 list, got '%s'", reader->line);
+		packet_client_error_expected_oid(data->writer, command_name,
+						 "have", reader->line);
 	}
 }
 
@@ -758,13 +763,10 @@ error:
 	/* Pick one of them (we know there at least is one) */
 	for (i = 0; i < data->want_obj.nr; i++) {
 		struct object *o = data->want_obj.objects[i].item;
-		if (!is_our_ref(o)) {
-			packet_writer_error(&data->writer,
-					    "upload-pack: not our ref %s",
+		if (!is_our_ref(o))
+			packet_client_error(data->writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&o->oid));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&o->oid));
-		}
 	}
 }
 
@@ -774,7 +776,7 @@ static void send_shallow(struct upload_pack_data *data,
 	while (result) {
 		struct object *object = &result->item->object;
 		if (!(object->flags & (CLIENT_SHALLOW|NOT_SHALLOW))) {
-			packet_writer_write(&data->writer, "shallow %s",
+			packet_writer_write(data->writer, "shallow %s",
 					    oid_to_hex(&object->oid));
 			register_shallow(the_repository, &object->oid);
 			data->shallow_nr++;
@@ -791,7 +793,7 @@ static void send_unshallow(struct upload_pack_data *data)
 		struct object *object = data->shallows.objects[i].item;
 		if (object->flags & NOT_SHALLOW) {
 			struct commit_list *parents;
-			packet_writer_write(&data->writer, "unshallow %s",
+			packet_writer_write(data->writer, "unshallow %s",
 					    oid_to_hex(&object->oid));
 			object->flags &= ~CLIENT_SHALLOW;
 			/*
@@ -916,14 +918,16 @@ static int send_shallow_list(struct upload_pack_data *data)
 	return ret;
 }
 
-static int process_shallow(const char *line, struct object_array *shallows)
+static int process_shallow(struct packet_writer *writer,
+			   const char *line, struct object_array *shallows)
 {
 	const char *arg;
 	if (skip_prefix(line, "shallow ", &arg)) {
 		struct object_id oid;
 		struct object *object;
 		if (get_oid_hex(arg, &oid))
-			die("invalid shallow line: %s", line);
+			packet_client_error_expected_oid(writer, command_name,
+							 "shallow", arg);
 		object = parse_object(the_repository, &oid);
 		if (!object)
 			return 1;
@@ -939,21 +943,24 @@ static int process_shallow(const char *line, struct object_array *shallows)
 	return 0;
 }
 
-static int process_deepen(const char *line, int *depth)
+static int process_deepen(struct packet_writer *writer, const char *line,
+			  int *depth)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen ", &arg)) {
 		char *end = NULL;
 		*depth = (int)strtol(arg, &end, 0);
 		if (!end || *end || *depth <= 0)
-			die("Invalid deepen: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen", "strtol()", arg);
 		return 1;
 	}
 
 	return 0;
 }
 
-static int process_deepen_since(const char *line, timestamp_t *deepen_since, int *deepen_rev_list)
+static int process_deepen_since(struct packet_writer *writer, const char *line,
+				timestamp_t *deepen_since, int *deepen_rev_list)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen-since ", &arg)) {
@@ -962,42 +969,33 @@ static int process_deepen_since(const char *line, timestamp_t *deepen_since, int
 		if (!end || *end || !deepen_since ||
 		    /* revisions.c's max_age -1 is special */
 		    *deepen_since == -1)
-			die("Invalid deepen-since: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen-since",
+						  "parse_timestamp()", arg);
 		*deepen_rev_list = 1;
 		return 1;
 	}
 	return 0;
 }
 
-static int process_deepen_not(const char *line, struct string_list *deepen_not, int *deepen_rev_list)
+static int process_deepen_not(struct packet_writer *writer, const char *line,
+			      struct string_list *deepen_not,
+			      int *deepen_rev_list)
 {
 	const char *arg;
 	if (skip_prefix(line, "deepen-not ", &arg)) {
 		char *ref = NULL;
 		struct object_id oid;
 		if (expand_ref(the_repository, arg, strlen(arg), &oid, &ref) != 1)
-			die("git upload-pack: ambiguous deepen-not: %s", line);
+			packet_client_error_parse(writer, command_name,
+						  "deepen-not", "expand_ref()",
+						  arg);
 		string_list_append(deepen_not, ref);
 		free(ref);
 		*deepen_rev_list = 1;
 		return 1;
 	}
 	return 0;
-}
-
-NORETURN __attribute__((format(printf,2,3)))
-static void send_err_and_die(struct upload_pack_data *data,
-			     const char *fmt, ...)
-{
-	struct strbuf buf = STRBUF_INIT;
-	va_list ap;
-
-	va_start(ap, fmt);
-	strbuf_vaddf(&buf, fmt, ap);
-	va_end(ap);
-
-	packet_writer_error(&data->writer, "%s", buf.buf);
-	die("%s", buf.buf);
 }
 
 static void check_one_filter(struct upload_pack_data *data,
@@ -1014,14 +1012,15 @@ static void check_one_filter(struct upload_pack_data *data,
 		allowed = data->allow_filter_fallback;
 
 	if (!allowed)
-		send_err_and_die(data, "filter '%s' not supported", key);
+		packet_client_error(data->writer, "filter '%s' not supported",
+				    key);
 
 	if (opts->choice == LOFC_TREE_DEPTH &&
 	    opts->tree_exclude_depth > data->tree_filter_max_depth)
-		send_err_and_die(data,
-				 "tree filter allows max depth %lu, but got %lu",
-				 data->tree_filter_max_depth,
-				 opts->tree_exclude_depth);
+		packet_client_error(data->writer,
+				    "tree filter allows max depth %lu, but got %lu",
+				    data->tree_filter_max_depth,
+				    opts->tree_exclude_depth);
 }
 
 static void check_filter_recurse(struct upload_pack_data *data,
@@ -1059,19 +1058,26 @@ static void receive_needs(struct upload_pack_data *data,
 		if (packet_reader_read(reader) != PACKET_READ_NORMAL)
 			break;
 
-		if (process_shallow(reader->line, &data->shallows))
+		if (process_shallow(data->writer, reader->line, &data->shallows))
 			continue;
-		if (process_deepen(reader->line, &data->depth))
+		if (process_deepen(data->writer, reader->line, &data->depth))
 			continue;
-		if (process_deepen_since(reader->line, &data->deepen_since, &data->deepen_rev_list))
+		if (process_deepen_since(data->writer, reader->line,
+					 &data->deepen_since,
+					 &data->deepen_rev_list))
 			continue;
-		if (process_deepen_not(reader->line, &data->deepen_not, &data->deepen_rev_list))
+		if (process_deepen_not(data->writer, reader->line,
+				       &data->deepen_not,
+				       &data->deepen_rev_list))
 			continue;
 
 		if (skip_prefix(reader->line, "filter ", &arg)) {
 			if (!data->filter_capability_requested)
-				die("git upload-pack: filtering capability not negotiated");
-			list_objects_filter_die_if_populated(&data->filter_options);
+				packet_client_error(data->writer,
+						    N_("filtering capability not negotiated"));
+			if (data->filter_options.choice)
+				packet_client_error(data->writer,
+						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, arg);
 			die_if_using_banned_filter(data);
 			continue;
@@ -1079,8 +1085,8 @@ static void receive_needs(struct upload_pack_data *data,
 
 		if (!skip_prefix(reader->line, "want ", &arg) ||
 		    parse_oid_hex(arg, &oid_buf, &features))
-			die("git upload-pack: protocol error, "
-			    "expected to get object ID, not '%s'", reader->line);
+			packet_client_error_expected_oid(data->writer, command_name,
+							 "want", reader->line);
 
 		if (parse_feature_request(features, "deepen-relative"))
 			data->deepen_relative = 1;
@@ -1114,13 +1120,10 @@ static void receive_needs(struct upload_pack_data *data,
 		}
 
 		o = parse_object(the_repository, &oid_buf);
-		if (!o) {
-			packet_writer_error(&data->writer,
-					    "upload-pack: not our ref %s",
+		if (!o)
+			packet_client_error(data->writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&oid_buf));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&oid_buf));
-		}
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
 			if (!((config_allow_uor & ALLOW_ANY_SHA1) == ALLOW_ANY_SHA1
@@ -1353,9 +1356,10 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 		 const int timeout)
 {
 	struct packet_reader reader;
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct upload_pack_data data;
 
-	upload_pack_data_init(&data);
+	upload_pack_data_init(&data, &writer);
 
 	if (!v1_have_startup_config++)
 		git_config(upload_pack_startup_config, NULL);
@@ -1383,8 +1387,7 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 
 	if (!advertise_refs) {
 		packet_reader_init(&reader, 0, NULL, 0,
-				   PACKET_READ_CHOMP_NEWLINE |
-				   PACKET_READ_DIE_ON_ERR_PACKET);
+				   PACKET_READ_CHOMP_NEWLINE);
 
 		receive_needs(&data, &reader);
 
@@ -1416,17 +1419,14 @@ static int parse_want(struct packet_writer *writer, const char *line,
 		struct object *o;
 
 		if (get_oid_hex(arg, &oid))
-			die("git upload-pack: protocol error, "
-			    "expected to get oid, not '%s'", line);
+			packet_client_error_expected_oid(writer, command_name,
+							 "want", arg);
 
 		o = parse_object(the_repository, &oid);
-		if (!o) {
-			packet_writer_error(writer,
-					    "upload-pack: not our ref %s",
+		if (!o)
+			packet_client_error(writer,
+					    N_("upload-pack: not our ref %s"),
 					    oid_to_hex(&oid));
-			die("git upload-pack: not our ref %s",
-			    oid_to_hex(&oid));
-		}
 
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
@@ -1449,10 +1449,8 @@ static int parse_want_ref(struct packet_writer *writer, const char *line,
 		struct string_list_item *item;
 		struct object *o;
 
-		if (read_ref(arg, &oid)) {
-			packet_writer_error(writer, "unknown ref %s", arg);
-			die("unknown ref %s", arg);
-		}
+		if (read_ref(arg, &oid))
+			packet_client_error(writer, N_("unknown ref %s"), arg);
 
 		item = string_list_append(wanted_refs, arg);
 		item->util = oiddup(&oid);
@@ -1469,14 +1467,16 @@ static int parse_want_ref(struct packet_writer *writer, const char *line,
 	return 0;
 }
 
-static int parse_have(const char *line, struct oid_array *haves)
+static int parse_have(struct packet_writer *writer,
+		      const char *line, struct oid_array *haves)
 {
 	const char *arg;
 	if (skip_prefix(line, "have ", &arg)) {
 		struct object_id oid;
 
 		if (get_oid_hex(arg, &oid))
-			die("git upload-pack: expected SHA1 object, got '%s'", arg);
+			packet_client_error_expected_oid(writer, command_name,
+							 "have", arg);
 		oid_array_append(haves, &oid);
 		return 1;
 	}
@@ -1492,14 +1492,14 @@ static void process_args(struct packet_reader *request,
 		const char *p;
 
 		/* process want */
-		if (parse_want(&data->writer, arg, &data->want_obj))
+		if (parse_want(data->writer, arg, &data->want_obj))
 			continue;
 		if (config_v2_allow_ref_in_want &&
-		    parse_want_ref(&data->writer, arg, &data->wanted_refs,
+		    parse_want_ref(data->writer, arg, &data->wanted_refs,
 				   &data->want_obj))
 			continue;
 		/* process have line */
-		if (parse_have(arg, &data->haves))
+		if (parse_have(data->writer, arg, &data->haves))
 			continue;
 
 		/* process args like thin-pack */
@@ -1529,14 +1529,15 @@ static void process_args(struct packet_reader *request,
 		}
 
 		/* Shallow related arguments */
-		if (process_shallow(arg, &data->shallows))
+		if (process_shallow(data->writer, arg, &data->shallows))
 			continue;
-		if (process_deepen(arg, &data->depth))
+		if (process_deepen(data->writer, arg, &data->depth))
 			continue;
-		if (process_deepen_since(arg, &data->deepen_since,
+		if (process_deepen_since(data->writer, arg,
+					 &data->deepen_since,
 					 &data->deepen_rev_list))
 			continue;
-		if (process_deepen_not(arg, &data->deepen_not,
+		if (process_deepen_not(data->writer, arg, &data->deepen_not,
 				       &data->deepen_rev_list))
 			continue;
 		if (!strcmp(arg, "deepen-relative")) {
@@ -1545,7 +1546,9 @@ static void process_args(struct packet_reader *request,
 		}
 
 		if (data->allow_filter && skip_prefix(arg, "filter ", &p)) {
-			list_objects_filter_die_if_populated(&data->filter_options);
+			if (data->filter_options.choice)
+				packet_client_error(data->writer,
+						    N_("multiple filter-specs cannot be combined"));
 			parse_list_objects_filter(&data->filter_options, p);
 			die_if_using_banned_filter(data);
 			continue;
@@ -1554,7 +1557,7 @@ static void process_args(struct packet_reader *request,
 		if ((git_env_bool("GIT_TEST_SIDEBAND_ALL", 0) ||
 		     config_v2_allow_sideband_all) &&
 		    !strcmp(arg, "sideband-all")) {
-			data->writer.use_sideband = 1;
+			data->writer->use_sideband = 1;
 			continue;
 		}
 
@@ -1563,15 +1566,17 @@ static void process_args(struct packet_reader *request,
 			continue;
 		}
 
-		/* ignore unknown lines maybe? */
-		die("unexpected line: '%s'", arg);
+		packet_client_error(data->writer,
+				    N_("fetch: unexpected argument: '%s'"),
+				    arg);
 	}
 
-	if (data->uri_protocols.nr && !data->writer.use_sideband)
+	if (data->uri_protocols.nr && !data->writer->use_sideband)
 		string_list_clear(&data->uri_protocols, 0);
 
 	if (request->status != PACKET_READ_FLUSH)
-		die(_("expected flush after fetch arguments"));
+		packet_client_error(data->writer,
+				    N_("fetch: expected flush after arguments"));
 }
 
 static int process_haves(struct upload_pack_data *data, struct oid_array *common)
@@ -1598,20 +1603,20 @@ static int send_acks(struct upload_pack_data *data, struct oid_array *acks)
 {
 	int i;
 
-	packet_writer_write(&data->writer, "acknowledgments\n");
+	packet_writer_write(data->writer, "acknowledgments\n");
 
 	/* Send Acks */
 	if (!acks->nr)
-		packet_writer_write(&data->writer, "NAK\n");
+		packet_writer_write(data->writer, "NAK\n");
 
 	for (i = 0; i < acks->nr; i++) {
-		packet_writer_write(&data->writer, "ACK %s\n",
+		packet_writer_write(data->writer, "ACK %s\n",
 				    oid_to_hex(&acks->oid[i]));
 	}
 
 	if (!data->wait_for_done && ok_to_give_up(data)) {
 		/* Send Ready */
-		packet_writer_write(&data->writer, "ready\n");
+		packet_writer_write(data->writer, "ready\n");
 		return 1;
 	}
 
@@ -1627,11 +1632,11 @@ static int process_haves_and_send_acks(struct upload_pack_data *data)
 	if (data->done) {
 		ret = 1;
 	} else if (send_acks(data, &common)) {
-		packet_writer_delim(&data->writer);
+		packet_writer_delim(data->writer);
 		ret = 1;
 	} else {
 		/* Add Flush */
-		packet_writer_flush(&data->writer);
+		packet_writer_flush(data->writer);
 		ret = 0;
 	}
 
@@ -1647,15 +1652,15 @@ static void send_wanted_ref_info(struct upload_pack_data *data)
 	if (!data->wanted_refs.nr)
 		return;
 
-	packet_writer_write(&data->writer, "wanted-refs\n");
+	packet_writer_write(data->writer, "wanted-refs\n");
 
 	for_each_string_list_item(item, &data->wanted_refs) {
-		packet_writer_write(&data->writer, "%s %s\n",
+		packet_writer_write(data->writer, "%s %s\n",
 				    oid_to_hex(item->util),
 				    item->string);
 	}
 
-	packet_writer_delim(&data->writer);
+	packet_writer_delim(data->writer);
 }
 
 static void send_shallow_info(struct upload_pack_data *data)
@@ -1665,7 +1670,7 @@ static void send_shallow_info(struct upload_pack_data *data)
 	    !is_repository_shallow(the_repository))
 		return;
 
-	packet_writer_write(&data->writer, "shallow-info\n");
+	packet_writer_write(data->writer, "shallow-info\n");
 
 	if (!send_shallow_list(data) &&
 	    is_repository_shallow(the_repository))
@@ -1681,14 +1686,16 @@ enum fetch_state {
 	FETCH_DONE,
 };
 
-int upload_pack_v2(struct repository *r, struct packet_reader *request)
+int upload_pack_v2(struct repository *r,
+		   struct packet_reader *request,
+		   struct packet_writer *writer)
 {
 	enum fetch_state state = FETCH_PROCESS_ARGS;
 	struct upload_pack_data data;
 
 	clear_object_flags(ALL_FLAGS);
 
-	upload_pack_data_init(&data);
+	upload_pack_data_init(&data, writer);
 	data.use_sideband = LARGE_PACKET_MAX;
 
 	git_config(upload_pack_config, &data);
@@ -1733,7 +1740,7 @@ int upload_pack_v2(struct repository *r, struct packet_reader *request)
 			if (data.uri_protocols.nr) {
 				create_pack_file(&data, &data.uri_protocols);
 			} else {
-				packet_writer_write(&data.writer, "packfile\n");
+				packet_writer_write(writer, "packfile\n");
 				create_pack_file(&data, NULL);
 			}
 			state = FETCH_DONE;
