@@ -454,7 +454,7 @@ static void unpack_trees_finish(struct merge_options *opt)
 
 static int save_files_dirs(const struct object_id *oid,
 			   struct strbuf *base, const char *path,
-			   enum object_type object_type, unsigned int mode,
+			   enum object_type object_type, unsigned int raw_mode,
 			   void *context)
 {
 	struct path_hashmap_entry *entry;
