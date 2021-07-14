@@ -72,6 +72,17 @@ struct strbuf {
 extern char strbuf_slopbuf[];
 #define STRBUF_INIT  { .alloc = 0, .len = 0, .buf = strbuf_slopbuf }
 
+/**
+ * Various functions take a `size_t hint` to give a hint about the
+ * file size, to avoid reallocs. This is the default hint size when
+ * `0` is given. 
+ *
+ * The strbuf_hint() convenience macro is used internally in the
+ * API. DO NOT USE any expression with side-effect for 'size'.
+ */
+#define STRBUF_HINT_SIZE 8192
+#define strbuf_hint(size) ((size) ? (size) : STRBUF_HINT_SIZE)
+
 /*
  * Predeclare this here, since cache.h includes this file before it defines the
  * struct.
@@ -432,13 +443,14 @@ void strbuf_addftime(struct strbuf *sb, const char *fmt,
 
 /**
  * Read a given size of data from a FILE* pointer to the buffer.
+ * if the size is 0 the default hint is used.
  *
  * NOTE: The buffer is rewound if the read fails. If -1 is returned,
  * `errno` must be consulted, like you would do for `read(3)`.
  * `strbuf_read()`, `strbuf_read_file()` and `strbuf_getline_*()`
  * family of functions have the same behaviour as well.
  */
-size_t strbuf_fread(struct strbuf *sb, size_t size, FILE *file);
+size_t strbuf_fread(struct strbuf *sb, size_t hint, FILE *file);
 
 /**
  * Read the contents of a given file descriptor. The third argument can be

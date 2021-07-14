@@ -335,7 +335,7 @@ static int update_one(struct cache_tree *it,
 	/*
 	 * Then write out the tree object for this level.
 	 */
-	strbuf_init(&buffer, 8192);
+	strbuf_init(&buffer, STRBUF_HINT_SIZE);
 
 	i = 0;
 	while (i < entries) {
