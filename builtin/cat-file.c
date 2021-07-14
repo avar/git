@@ -66,7 +66,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 			int unknown_type)
 {
 	struct object_id oid;
-	enum object_type type;
+	enum object_type type, exp_type_id;
 	char *buf;
 	unsigned long size;
 	struct object_context obj_context;
@@ -154,7 +154,10 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 		break;
 
 	case 0:
-		if (type_from_string(exp_type) == OBJ_BLOB) {
+		exp_type_id = type_from_string_gently(exp_type, strlen(exp_type));
+		if (exp_type_id < 0)
+			die(_("invalid object type \"%s\""), exp_type);
+		if (exp_type_id == OBJ_BLOB) {
 			struct object_id blob_oid;
 			if (oid_object_info(the_repository, &oid, NULL) == OBJ_TAG) {
 				char *buffer = read_object_file(&oid, &type,
@@ -177,7 +180,7 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 			 */
 		}
 		buf = read_object_with_reference(the_repository,
-						 &oid, exp_type, &size, NULL);
+						 &oid, exp_type_id, &size, NULL);
 		break;
 
 	default:

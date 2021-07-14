@@ -335,8 +335,7 @@ static char *grab_blob(struct repository *r,
 		free_filespec(df);
 	} else {
 		blob = read_object_file(oid, &type, size);
-		if (type != OBJ_BLOB)
-			die("object '%s' is not a blob!", oid_to_hex(oid));
+		oid_is_type_or_die(oid, OBJ_BLOB, &type);
 	}
 	return blob;
 }
