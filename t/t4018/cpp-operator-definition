@@ -1,3 +1,4 @@
+t4018 header: Value operator+(Value LEFT, Value RIGHT)
 Value operator+(Value LEFT, Value RIGHT)
 {
 	ChangeMe;
