@@ -297,6 +297,12 @@ jobs:
           - jobname: linux-gcc-default
             cc: gcc
             pool: ubuntu-latest
+          - jobname: linux-clang-sanitize-leak
+            cc: clang
+            pool: ubuntu-latest
+          - jobname: linux-gcc-sanitize-leak
+            cc: clang
+            pool: ubuntu-latest
     env:
       CC: ${{matrix.vector.cc}}
       jobname: ${{matrix.vector.jobname}}

@@ -138,8 +138,10 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 		return config_error_nonbool("include.path");
 
 	expanded = expand_user_path(path, 0);
-	if (!expanded)
-		return error(_("could not expand include path '%s'"), path);
+	if (!expanded) {
+		ret = error(_("could not expand include path '%s'"), path);
+		goto cleanup;
+	}
 	path = expanded;
 
 	/*
@@ -149,8 +151,10 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 	if (!is_absolute_path(path)) {
 		char *slash;
 
-		if (!cf || !cf->path)
-			return error(_("relative config includes must come from files"));
+		if (!cf || !cf->path) {
+			ret = error(_("relative config includes must come from files"));
+			goto cleanup;
+		}
 
 		slash = find_last_dir_sep(cf->path);
 		if (slash)
@@ -168,6 +172,7 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 		ret = git_config_from_file(git_config_include, path, inc);
 		inc->depth--;
 	}
+cleanup:
 	strbuf_release(&buf);
 	free(expanded);
 	return ret;
@@ -1331,8 +1336,10 @@ static int git_default_core_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "core.attributesfile"))
 		return git_config_pathname(&git_attributes_file, var, value);
 
-	if (!strcmp(var, "core.hookspath"))
+	if (!strcmp(var, "core.hookspath")) {
+		UNLEAK(git_hooks_path);
 		return git_config_pathname(&git_hooks_path, var, value);
+	}
 
 	if (!strcmp(var, "core.bare")) {
 		is_bare_repository_cfg = git_config_bool(var, value);
