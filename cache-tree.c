@@ -747,7 +747,7 @@ static void prime_cache_tree_rec(struct repository *r,
 	init_tree_desc(&desc, tree->buffer, tree->size);
 	cnt = 0;
 	while (tree_entry(&desc, &entry)) {
-		if (!S_ISDIR(entry.mode))
+		if (entry.object_type != OBJ_TREE)
 			cnt++;
 		else {
 			struct cache_tree_sub *sub;

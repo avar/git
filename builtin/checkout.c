@@ -123,13 +123,15 @@ static int post_checkout_hook(struct commit *old_commit, struct commit *new_comm
 }
 
 static int update_some(const struct object_id *oid, struct strbuf *base,
-		const char *pathname, unsigned mode, void *context)
+		       const char *pathname,
+		       enum object_type object_type, unsigned mode,
+		       void *context)
 {
 	int len;
 	struct cache_entry *ce;
 	int pos;
 
-	if (S_ISDIR(mode))
+	if (object_type == OBJ_TREE)
 		return READ_TREE_RECURSIVE;
 
 	len = base->len + strlen(pathname);
