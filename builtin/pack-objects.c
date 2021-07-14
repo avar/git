@@ -1689,7 +1689,7 @@ static void add_pbase_object(struct tree_desc *tree,
 	int cmp;
 
 	while (tree_entry(tree,&entry)) {
-		if (S_ISGITLINK(entry.mode))
+		if (entry.object_type == OBJ_COMMIT)
 			continue;
 		cmp = tree_entry_len(&entry) != cmplen ? 1 :
 		      memcmp(name, entry.path, cmplen);
@@ -1699,11 +1699,11 @@ static void add_pbase_object(struct tree_desc *tree,
 			return;
 		if (name[cmplen] != '/') {
 			add_object_entry(&entry.oid,
-					 object_type(entry.mode),
+					 entry.object_type,
 					 fullname, 1);
 			return;
 		}
-		if (S_ISDIR(entry.mode)) {
+		if (entry.object_type == OBJ_TREE) {
 			struct tree_desc sub;
 			struct pbase_tree_cache *tree;
 			const char *down = name+cmplen+1;
