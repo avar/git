@@ -23,7 +23,7 @@ test_expect_success 'list refs with file:// using protocol v2' '
 		ls-remote --symref "file://$(pwd)/file_parent" >actual &&
 
 	# Server responded using protocol v2
-	grep "git< version 2" log &&
+	grep "ls-remote< version 2" log &&
 
 	git ls-remote --symref "file://$(pwd)/file_parent" >expect &&
 	test_cmp expect actual
@@ -34,7 +34,7 @@ test_expect_success 'ls-remote handling a bad client using file:// protocol v2' 
 
 	cat >log.expect <<-\EOF &&
 	packet:  upload-pack> ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
-	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	packet:    ls-remote< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	cat >err.expect <<-\EOF &&
 	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
