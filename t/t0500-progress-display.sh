@@ -362,4 +362,15 @@ test_expect_success 'progress generates traces: stop without start' '
 	! grep region_leave.*progress trace-stop.event
 '
 
+test_expect_success 'BUG: start two concurrent progress bars' '
+	cat >in <<-\EOF &&
+	start 0 one
+	start 0 two
+	EOF
+
+	test_must_fail test-tool progress \
+		<in 2>stderr &&
+	grep -E "^BUG: .*: should have no global_progress in set_progress_signal\(\)$" stderr
+'
+
 test_done
