@@ -265,9 +265,7 @@ EOF
 
 	tag=$(git hash-object -t tag -w --stdin <wrong-tag) &&
 	pack1=$(echo $tag $sha | git pack-objects tag-test) &&
-	echo remove tag object &&
-	thirtyeight=${tag#??} &&
-	rm -f .git/objects/${tag%$thirtyeight}/$thirtyeight &&
+	test_rm_loose_oid "$tag" &&
 	git index-pack --strict tag-test-${pack1}.pack 2>err &&
 	grep "^warning:.* expected .tagger. line" err
 '
