@@ -1353,6 +1353,41 @@ then
 	exit 1
 fi
 
+# SANITIZE=leak test mode
+sanitize_leak_true=
+add_sanitize_leak_true () {
+	sanitize_leak_true="$sanitize_leak_true$1 "
+}
+
+sanitize_leak_false=
+add_sanitize_leak_false () {
+	sanitize_leak_false="$sanitize_leak_false$1 "
+}
+
+sanitize_leak_opt_in_msg="opt-in with GIT_TEST_SANITIZE_LEAK=true"
+maybe_skip_all_sanitize_leak () {
+	# Whitelist patterns
+	add_sanitize_leak_true 't000*'
+	add_sanitize_leak_true 't001*'
+	add_sanitize_leak_true 't006*'
+	add_sanitize_leak_true 't13*config*'
+
+	# Blacklist patterns (overrides whitelist)
+	add_sanitize_leak_false 't000[469]*'
+	add_sanitize_leak_false 't001[2459]*'
+	add_sanitize_leak_false 't006[0248]*'
+
+	if match_pattern_list "$1" "$sanitize_leak_false"
+	then
+		skip_all="test $this_test on SANITIZE=leak blacklist, $sanitize_leak_opt_in_msg"
+		test_done
+	elif match_pattern_list "$1" "$sanitize_leak_true"
+	then
+		return 0
+	fi
+	return 1
+}
+
 # Are we running this test at all?
 remove_trash=
 this_test=${0##*/}
@@ -1362,6 +1397,31 @@ then
 	say_color info >&3 "skipping test $this_test altogether"
 	skip_all="skip all tests in $this_test"
 	test_done
+fi
+
+# Aggressively skip non-whitelisted tests when compiled with
+# SANITIZE=leak
+if test -n "$SANITIZE_LEAK"
+then
+	if test -z "$GIT_TEST_SANITIZE_LEAK" &&
+		maybe_skip_all_sanitize_leak "$TEST_NAME"
+	then
+		say_color info >&3 "test $this_test on SANITIZE=leak whitelist"
+		GIT_TEST_SANITIZE_LEAK=true
+	fi
+
+	# We need to see it in "git env--helper" (via
+	# test_bool_env)
+	export GIT_TEST_SANITIZE_LEAK
+
+	if ! test_bool_env GIT_TEST_SANITIZE_LEAK false
+	then
+		skip_all="skip all tests in $this_test under SANITIZE=leak, $sanitize_leak_opt_in_msg"
+		test_done
+	fi
+elif test_bool_env GIT_TEST_SANITIZE_LEAK false
+then
+	error "GIT_TEST_SANITIZE_LEAK=true has no effect except when compiled with SANITIZE=leak"
 fi
 
 # Last-minute variable setup
@@ -1516,6 +1576,7 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 test -n "$USE_LIBPCRE2" && test_set_prereq PCRE
 test -n "$USE_LIBPCRE2" && test_set_prereq LIBPCRE2
 test -z "$NO_GETTEXT" && test_set_prereq GETTEXT
+test -n "$SANITIZE_LEAK" && test_set_prereq SANITIZE_LEAK
 
 if test -z "$GIT_TEST_CHECK_CACHE_TREE"
 then
