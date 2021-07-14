@@ -12,7 +12,7 @@ esac
 
 make
 case "$jobname" in
-linux-gcc)
+linux-gcc*)
 	export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 	make test
 	export GIT_TEST_SPLIT_INDEX=yes
@@ -29,7 +29,7 @@ linux-gcc)
 	export GIT_TEST_CHECKOUT_WORKERS=2
 	make test
 	;;
-linux-clang)
+linux-clang*)
 	export GIT_TEST_DEFAULT_HASH=sha1
 	make test
 	export GIT_TEST_DEFAULT_HASH=sha256
