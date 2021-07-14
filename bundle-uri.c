@@ -57,3 +57,83 @@ int bundle_uri_command(struct repository *r,
 
 	return 0;
 }
+
+/**
+ * General API for {transport,connect}.c etc.
+ */
+int bundle_uri_parse_line(struct string_list *bundle_uri, const char *line)
+{
+	int i;
+	struct string_list uri = STRING_LIST_INIT_DUP;
+	struct string_list_item *item = NULL;
+	int err = 0;
+
+	/*
+	 * Right now we don't understand anything beyond the first SP,
+	 * but let's be tolerant and ignore any future unknown
+	 * fields. See the "MUST" note about "bundle-feature-key" in
+	 * technical/protocol-v2.txt
+	 */
+	if (string_list_split(&uri, line, ' ', -1) < 1)
+		return error(_("bundle-uri line not in SP-delimited format: %s"), line);
+
+	for (i = 0; i < uri.nr; i++) {
+		struct string_list kv = STRING_LIST_INIT_DUP;
+		struct string_list_item *kv_item = NULL;
+		const char *arg = uri.items[i].string;
+		int fields;
+
+		/*
+		 * The "string" for each list item is the parsed URI
+		 * at the start of the line
+		 */
+		if (i == 0) {
+			item = string_list_append(bundle_uri, arg);
+			continue;
+		}
+
+		/*
+		 * Anything else on the line is keys or key-value
+		 * pairs separated by "=".
+		 *
+		 * Let's parse the format, even if we don't understand
+		 * any of the keys or values yet.
+		 */
+		assert(item);
+		arg = uri.items[i].string;
+		if (i == 1) {
+			item->util = xcalloc(1, sizeof(struct string_list));
+			string_list_init(item->util, 1);
+		}
+
+		fields = string_list_split(&kv, arg, '=', 2);
+		if (fields < 1 || fields > 2) {
+			err = error("expected `k` or `k=v` in column %d of bundle-uri line '%s', got '%s'",
+				     i, line, arg);
+			string_list_clear(&kv, 0);
+			continue;
+		}
+		
+		kv_item = string_list_append(item->util, kv.items[0].string);
+		if (kv.nr == 2)
+			kv_item->util = xstrdup(kv.items[1].string);
+
+		string_list_clear(&kv, 0);
+	}
+	string_list_clear(&uri, 0);
+	return err;
+}
+
+static void bundle_uri_string_list_clear_cb(void *util, const char *string)
+{
+	struct string_list *fields = util;
+	if (!fields)
+		return;
+	string_list_clear(fields, 1);
+	free(fields);
+}
+
+void bundle_uri_string_list_clear(struct string_list *bundle_uri)
+{
+	string_list_clear_func(bundle_uri, bundle_uri_string_list_clear_cb);
+}
