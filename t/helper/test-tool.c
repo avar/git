@@ -8,11 +8,6 @@ static const char * const test_tool_usage[] = {
 	NULL
 };
 
-struct test_cmd {
-	const char *name;
-	int (*fn)(int argc, const char **argv);
-};
-
 static struct test_cmd cmds[] = {
 	{ "advise", cmd__advise_if_enabled },
 	{ "bitmap", cmd__bitmap },
