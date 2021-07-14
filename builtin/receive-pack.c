@@ -426,9 +426,6 @@ static int proc_receive_ref_matches(struct command *cmd)
 	return 0;
 }
 
-static void rp_error(const char *err, ...) __attribute__((format (printf, 1, 2)));
-static void rp_warning(const char *err, ...) __attribute__((format (printf, 1, 2)));
-
 static void report_message(const char *prefix, const char *err, va_list params)
 {
 	int sz;
@@ -446,6 +443,7 @@ static void report_message(const char *prefix, const char *err, va_list params)
 		xwrite(2, msg, sz);
 }
 
+__attribute__((format (printf, 1, 2)))
 static void rp_warning(const char *err, ...)
 {
 	va_list params;
@@ -454,6 +452,7 @@ static void rp_warning(const char *err, ...)
 	va_end(params);
 }
 
+__attribute__((format (printf, 1, 2)))
 static void rp_error(const char *err, ...)
 {
 	va_list params;
