@@ -675,8 +675,7 @@ int send_pack(struct send_pack_args *args,
 	}
 
 	packet_reader_init(&reader, in, NULL, 0,
-			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_CHOMP_NEWLINE);
 
 	if (need_pack_data && cmds_sent) {
 		if (pack_objects(out, remote_refs, extra_have, &commons, args) < 0) {
