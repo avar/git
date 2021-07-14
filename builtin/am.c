@@ -778,7 +778,7 @@ static int stgit_patch_to_mail(FILE *out, FILE *in, int keep_cr)
 	}
 
 	strbuf_reset(&sb);
-	while (strbuf_fread(&sb, 8192, in) > 0) {
+	while (strbuf_fread(&sb, 0, in) > 0) {
 		fwrite(sb.buf, 1, sb.len, out);
 		strbuf_reset(&sb);
 	}
@@ -895,7 +895,7 @@ static int hg_patch_to_mail(FILE *out, FILE *in, int keep_cr)
 	}
 
 	strbuf_reset(&sb);
-	while (strbuf_fread(&sb, 8192, in) > 0) {
+	while (strbuf_fread(&sb, 0, in) > 0) {
 		fwrite(sb.buf, 1, sb.len, out);
 		strbuf_reset(&sb);
 	}
