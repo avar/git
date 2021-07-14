@@ -1,3 +1,4 @@
+t4018 header: function y = RIGHT()
 function y = RIGHT()
 x = 5;
 y = ChangeMe + x;

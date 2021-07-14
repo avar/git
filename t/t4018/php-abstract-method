@@ -1,3 +1,4 @@
+t4018 header: abstract public function RIGHT(): ?string
 abstract class Klass
 {
     abstract public function RIGHT(): ?string
