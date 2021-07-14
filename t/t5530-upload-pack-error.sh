@@ -7,10 +7,8 @@ test_description='errors in upload-pack'
 D=$(pwd)
 
 corrupt_repo () {
-	object_sha1=$(git rev-parse "$1") &&
-	ob=$(expr "$object_sha1" : "\(..\)") &&
-	ject=$(expr "$object_sha1" : "..\(..*\)") &&
-	rm -f ".git/objects/$ob/$ject"
+	oid=$(git rev-parse "$1") &&
+	test_rm_loose_oid "$oid"
 }
 
 test_expect_success 'setup and corrupt repository' '
