@@ -1261,6 +1261,8 @@ static int send_fetch_request(struct fetch_negotiator *negotiator, int fd_out,
 
 	write_fetch_command_and_capabilities(&req_buf, args->server_options);
 
+	if (git_env_bool("GIT_TEST_PROTOCOL_BAD_FETCH", 0))
+		packet_buf_write(&req_buf, "test-bad-client");
 	if (args->use_thin_pack)
 		packet_buf_write(&req_buf, "thin-pack");
 	if (args->no_progress)
