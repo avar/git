@@ -232,7 +232,7 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 			 * tp[i] is valid, if present and if tp[i]==tp[imin] -
 			 * otherwise, we should ignore it.
 			 */
-			int tpi_valid = tp && !(tp[i].entry.mode & S_IFXMIN_NEQ);
+			int tpi_valid = tp && !(tp[i].entry.raw_mode & S_IFXMIN_NEQ);
 
 			const struct object_id *oid_i;
 			unsigned mode_i;
@@ -245,7 +245,7 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 
 			if (tpi_valid) {
 				oid_i = &tp[i].entry.oid;
-				mode_i = tp[i].entry.mode;
+				mode_i = tp[i].entry.raw_mode;
 			}
 			else {
 				oid_i = null_oid();
@@ -283,7 +283,7 @@ static struct combine_diff_path *emit_path(struct combine_diff_path *p,
 		FAST_ARRAY_ALLOC(parents_oid, nparent);
 		for (i = 0; i < nparent; ++i) {
 			/* same rule as in emitthis */
-			int tpi_valid = tp && !(tp[i].entry.mode & S_IFXMIN_NEQ);
+			int tpi_valid = tp && !(tp[i].entry.raw_mode & S_IFXMIN_NEQ);
 
 			parents_oid[i] = tpi_valid ? &tp[i].entry.oid : NULL;
 		}
@@ -404,7 +404,7 @@ static inline void update_tp_entries(struct tree_desc *tp, int nparent)
 {
 	int i;
 	for (i = 0; i < nparent; ++i)
-		if (!(tp[i].entry.mode & S_IFXMIN_NEQ))
+		if (!(tp[i].entry.raw_mode & S_IFXMIN_NEQ))
 			update_tree_entry(&tp[i]);
 }
 
@@ -465,10 +465,10 @@ static struct combine_diff_path *ll_diff_tree_paths(
 		 * mark entries whether they =p[imin] along the way
 		 */
 		imin = 0;
-		tp[0].entry.mode &= ~S_IFXMIN_NEQ;
+		tp[0].entry.raw_mode &= ~S_IFXMIN_NEQ;
 
 		for (i = 1; i < nparent; ++i) {
-			unsigned int mode = tp[i].entry.mode;
+			unsigned int mode = tp[i].entry.raw_mode;
 			cmp = tree_entry_pathcmp(&tp[i], &tp[imin]);
 			if (cmp < 0) {
 				imin = i;
@@ -480,12 +480,12 @@ static struct combine_diff_path *ll_diff_tree_paths(
 			else {
 				mode |= S_IFXMIN_NEQ;
 			}
-			tp[i].entry.mode = mode;
+			tp[i].entry.raw_mode = mode;
 		}
 
 		/* fixup markings for entries before imin */
 		for (i = 0; i < imin; ++i)
-			tp[i].entry.mode |= S_IFXMIN_NEQ;	/* pi > p[imin] */
+			tp[i].entry.raw_mode |= S_IFXMIN_NEQ;	/* pi > p[imin] */
 
 
 
@@ -497,14 +497,14 @@ static struct combine_diff_path *ll_diff_tree_paths(
 			/* are either pi > p[imin] or diff(t,pi) != ø ? */
 			if (!opt->flags.find_copies_harder) {
 				for (i = 0; i < nparent; ++i) {
-					unsigned int mode = tp[i].entry.mode;
+					unsigned int mode = tp[i].entry.raw_mode;
 					/* p[i] > p[imin] */
 					if (mode & S_IFXMIN_NEQ)
 						continue;
 
 					/* diff(t,pi) != ø */
 					if (!oideq(&t.entry.oid, &tp[i].entry.oid) ||
-					    (t.entry.mode != mode))
+					    (t.entry.raw_mode != mode))
 						continue;
 
 					goto skip_emit_t_tp;
@@ -536,7 +536,7 @@ static struct combine_diff_path *ll_diff_tree_paths(
 			/* ∀i pi=p[imin] -> D += "-p[imin]" */
 			if (!opt->flags.find_copies_harder) {
 				for (i = 0; i < nparent; ++i)
-					if (tp[i].entry.mode & S_IFXMIN_NEQ)
+					if (tp[i].entry.raw_mode & S_IFXMIN_NEQ)
 						goto skip_emit_tp;
 			}
 
