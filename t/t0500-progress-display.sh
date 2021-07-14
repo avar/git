@@ -2,6 +2,7 @@
 
 test_description='progress display'
 
+GIT_TEST_SANITIZE_LEAK=true
 . ./test-lib.sh
 
 show_cr () {
@@ -283,7 +284,7 @@ test_expect_success 'cover up after throughput shortens a lot' '
 	test_cmp expect out
 '
 
-test_expect_success 'progress generates traces' '
+test_expect_success !SANITIZE_LEAK 'progress generates traces' '
 	cat >in <<-\EOF &&
 	throughput 102400 1000
 	update
