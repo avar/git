@@ -60,7 +60,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodul
 	cat >err.expect <<-EOF &&
 	Cloning into '"'"'http_child'"'"'...
 	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
-	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	fatal: fsck failed
 	EOF
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
@@ -101,10 +100,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules multiple
 	cat >err.expect <<-EOF &&
 	Cloning into '"'"'http_clone'"'"'...
 	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
-	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	error: object $bad_oid: gitmodulesName: disallowed submodule name: ../
-	error: object $bad_oid: gitmodulesName: disallowed submodule name: ../
-	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	fatal: fsck error in packed object
 	fatal: fetch-pack: invalid index-pack output
@@ -144,7 +140,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules in histo
 
 	cat >err.expect <<-EOF &&
 	Cloning into '"'"'http_clone'"'"'...
-	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	error: object $bad_oid: gitmodulesName: disallowed submodule name: ..
 	fatal: fsck error in packed object
 	fatal: fetch-pack: invalid index-pack output
@@ -198,9 +193,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules multiple
 	# Our fsck should report them all
 	sort >err.expect.all <<-EOF &&
 	error in blob $bad_two: gitmodulesName: disallowed submodule name: ../
-	error in blob $bad_two: gitmodulesName: disallowed submodule name: ../
-	error in blob $bad_one: gitmodulesName: disallowed submodule name: ..
-	error in blob $bad_one: gitmodulesName: disallowed submodule name: ..
 	error in blob $bad_one: gitmodulesName: disallowed submodule name: ..
 	error in blob $bad_one: gitmodulesName: disallowed submodule name: ..
 	EOF
@@ -212,7 +204,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules multiple
 	# objects. We only report the branch that is checked out?
 	cat >err.expect.two <<-EOF &&
 	Cloning into '"'"'http_clone'"'"'...
-	error: object $bad_two: gitmodulesName: disallowed submodule name: ../
 	error: object $bad_two: gitmodulesName: disallowed submodule name: ../
 	fatal: fsck error in packed object
 	fatal: fetch-pack: invalid index-pack output
@@ -235,8 +226,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules multiple
 
 	cat >err.expect.one <<-EOF &&
 	Cloning into '"'"'http_clone'"'"'...
-	error: object $bad_one: gitmodulesName: disallowed submodule name: ..
-	error: object $bad_one: gitmodulesName: disallowed submodule name: ..
 	error: object $bad_one: gitmodulesName: disallowed submodule name: ..
 	error: object $bad_one: gitmodulesName: disallowed submodule name: ..
 	fatal: fsck error in packed object
@@ -273,7 +262,6 @@ test_expect_success 'packfile-uri with transfer.fsckobjects .gitmodules multiple
 	# look harder and report errors in "$bad_two" instead...
 	cat >err.expect.three <<-EOF &&
 	Cloning into '"'"'http_clone'"'"'...
-	error: object $bad_two: gitmodulesName: disallowed submodule name: ../
 	error: object $bad_two: gitmodulesName: disallowed submodule name: ../
 	EOF
 	if test_have_prereq SHA1
