@@ -59,7 +59,7 @@ check_meld_for_features () {
 	if test -z "$meld_use_auto_merge_option"
 	then
 		meld_use_auto_merge_option=$(
-			git config --bool-or-str mergetool.meld.useAutoMerge
+			git config --type=bool-or-str mergetool.meld.useAutoMerge
 		)
 		case "$meld_use_auto_merge_option" in
 		true | false)
