@@ -153,7 +153,7 @@ test_expect_success 'fetch handling a bad client using http:// protocol v2' '
 	test_commit -C "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" three &&
 
 	cat >err.expect <<-\EOF &&
-	fatal: error reading section header '"'"'acknowledgments'"'"'
+	fatal: remote error: fetch: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 
 	test_must_fail env \
@@ -192,16 +192,29 @@ test_expect_success 'fetch from namespaced repo respects namespaces' '
 test_expect_success 'ls-remote handling a bad client using http:// protocol v2' '
 	test_when_finished "rm -f log" &&
 
-	git ls-remote "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" >expect &&
-	env \
+	cat >log.expect <<-\EOF &&
+	packet:  upload-pack> ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	packet:          git< ERR ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	EOF
+
+	cat >err.expect <<-\EOF &&
+	fatal: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
+	EOF
+	test_must_fail env \
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
 		git -c protocol.version=2 \
-		ls-remote "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" >actual 2>err &&
+		ls-remote "$HTTPD_DOCUMENT_ROOT_PATH/http_parent" >out 2>err.actual &&
 
-	test_must_be_empty err &&
-	test_cmp expect actual &&
-	grep "git> test-bad-client$" log
+	grep "unexpected argument.*test-bad-client" err.actual &&
+	test_must_be_empty out &&
+	grep ERR log >log.actual &&
+	test_cmp log.expect log.actual
+'
+
+test_expect_failure  'ls-remote ERR and die() is racy under http:// protocol v2' '
+	test_cmp err.expect err.actual
 '
 
 test_expect_success 'ls-remote with v2 http sends only one POST' '
