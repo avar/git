@@ -342,7 +342,7 @@ void shortlog_init(struct shortlog *log)
 
 int cmd_shortlog(int argc, const char **argv, const char *prefix)
 {
-	struct shortlog log = { STRING_LIST_INIT_NODUP };
+	struct shortlog log = { .list = STRING_LIST_INIT_NODUP };
 	struct rev_info rev;
 	int nongit = !startup_info->have_repository;
 
