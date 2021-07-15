@@ -129,8 +129,8 @@ struct notes_rewrite_cfg *init_copy_notes_for_rewrite(const char *cmd)
 	c->cmd = cmd;
 	c->enabled = 1;
 	c->combine = combine_notes_concatenate;
-	CALLOC_ARRAY(c->refs, 1);
-	c->refs->strdup_strings = 1;
+	ALLOC_ARRAY(c->refs, 1);
+	string_list_init(c->refs, 1);
 	c->refs_from_env = 0;
 	c->mode_from_env = 0;
 	if (rewrite_mode_env) {
