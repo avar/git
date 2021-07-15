@@ -51,11 +51,24 @@ void strmap_init_with_options(struct strmap *map,
  */
 void strmap_clear(struct strmap *map, int free_values);
 
+/**
+ * To strmap_clear() what string_list_clear_strings() is to
+ * string_list_clear(). I.e. free your keys too, which we used as-is
+ * without `strdup_strings = 1`.
+ */
+void strmap_clear_strings(struct strmap *map, int free_values);
+
 /*
  * Similar to strmap_clear() but leaves map->map->table allocated and
  * pre-sized so that subsequent uses won't need as many rehashings.
  */
 void strmap_partial_clear(struct strmap *map, int free_values);
+
+/**
+ * To strmap_partial_clear() what string_list_clear_strings() is to
+ * string_list_clear(). See strmap_clear_strings() above.
+ */
+void strmap_partial_clear_strings(struct strmap *map, int free_values);
 
 /*
  * Insert "str" into the map, pointing to "data".

@@ -37,7 +37,8 @@ void strmap_init_with_options(struct strmap *map,
 	map->strdup_strings = strdup_strings;
 }
 
-static void strmap_free_entries_(struct strmap *map, int free_values)
+static void strmap_free_entries_(struct strmap *map, int free_keys,
+				 int free_values)
 {
 	struct hashmap_iter iter;
 	struct strmap_entry *e;
@@ -57,6 +58,8 @@ static void strmap_free_entries_(struct strmap *map, int free_values)
 	 * to make some call into the hashmap API to do that.
 	 */
 	hashmap_for_each_entry(&map->map, &iter, e, ent) {
+		if (free_keys)
+			free((void *)e->key);
 		if (free_values)
 			free(e->value);
 		if (!map->pool)
@@ -64,16 +67,38 @@ static void strmap_free_entries_(struct strmap *map, int free_values)
 	}
 }
 
+static void strmap_clear_1(struct strmap *map, int free_keys, int free_values,
+			   int partial)
+{
+	if (free_keys >= 0)
+		assert(map->strdup_strings ^ free_keys);
+	else
+		free_keys = map->strdup_strings;
+	strmap_free_entries_(map, free_keys, free_values);
+	if (partial)
+		hashmap_partial_clear(&map->map);
+	else
+		hashmap_clear(&map->map);
+}
+
 void strmap_clear(struct strmap *map, int free_values)
 {
-	strmap_free_entries_(map, free_values);
-	hashmap_clear(&map->map);
+	strmap_clear_1(map, -1, free_values, 0);
+}
+
+void strmap_clear_strings(struct strmap *map, int free_values)
+{
+	strmap_clear_1(map, 1, free_values, 0);
 }
 
 void strmap_partial_clear(struct strmap *map, int free_values)
 {
-	strmap_free_entries_(map, free_values);
-	hashmap_partial_clear(&map->map);
+	strmap_clear_1(map, -1, free_values, 1);
+}
+
+void strmap_partial_clear_strings(struct strmap *map, int free_values)
+{
+	strmap_clear_1(map, 1, free_values, 1);
 }
 
 static struct strmap_entry *create_entry(struct strmap *map,
