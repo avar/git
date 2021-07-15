@@ -458,16 +458,11 @@ void shortlog_output(struct shortlog *log)
 					fprintf(log->file, "      %s\n", msg);
 			}
 			putc('\n', log->file);
-			onelines->strdup_strings = 1;
 			string_list_clear(onelines, 0);
-			free(onelines);
 		}
-
-		log->list.items[i].util = NULL;
 	}
 
 	strbuf_release(&sb);
-	log->list.strdup_strings = 1;
-	string_list_clear(&log->list, 1);
+	string_list_clear_strings(&log->list, 1);
 	clear_mailmap(&log->mailmap);
 }
