@@ -1072,11 +1072,7 @@ void enable_ref_display_notes(struct display_notes_opt *opt, int *show_notes,
 void disable_display_notes(struct display_notes_opt *opt, int *show_notes)
 {
 	opt->use_default_notes = -1;
-	/* we have been strdup'ing ourselves, so trick
-	 * string_list into free()ing strings */
-	opt->extra_notes_refs.strdup_strings = 1;
-	string_list_clear(&opt->extra_notes_refs, 0);
-	opt->extra_notes_refs.strdup_strings = 0;
+	string_list_clear_strings(&opt->extra_notes_refs, 0);
 	*show_notes = 0;
 }
 
