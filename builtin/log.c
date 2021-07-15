@@ -769,9 +769,10 @@ static struct string_list extra_hdr = STRING_LIST_INIT_NODUP;
 static struct string_list extra_to = STRING_LIST_INIT_NODUP;
 static struct string_list extra_cc = STRING_LIST_INIT_NODUP;
 
-static void add_header(const char *value)
+static void add_header(const char *orig_value)
 {
 	struct string_list_item *item;
+	char *value = xstrdup(orig_value);
 	int len = strlen(value);
 	while (len && value[len - 1] == '\n')
 		len--;
@@ -850,7 +851,7 @@ static int git_format_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "format.headers")) {
 		if (!value)
 			die(_("format.headers without value"));
-		add_header(value);
+		add_header(xstrdup(value));
 		return 0;
 	}
 	if (!strcmp(var, "format.suffix"))
