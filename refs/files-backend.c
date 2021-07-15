@@ -3068,6 +3068,18 @@ static int files_reflog_expire(struct ref_store *ref_store,
 		strbuf_release(&err);
 		return -1;
 	}
+
+	/*
+	 * When refs are deleted their reflog is deleted before the
+	 * ref itself deleted. This race happens because there's no
+	 * such thing as a lock on the reflog, instead we always lock
+	 * the ref itself above (even that ref is packed) with
+	 * lock_ref_oid_basic().
+	 *
+	 * If a race happens we've got nothing more to do, we were
+	 * asked to delete the reflog, and it's not there
+	 * anymore. Great!
+	 */
 	if (!refs_reflog_exists(ref_store, refname)) {
 		unlock_ref(lock);
 		return 0;
