@@ -431,16 +431,6 @@ struct conflict_info {
 	assert((ci) && !(mi)->clean);        \
 } while (0)
 
-static void free_strmap_strings(struct strmap *map)
-{
-	struct hashmap_iter iter;
-	struct strmap_entry *entry;
-
-	strmap_for_each_entry(map, &iter, entry) {
-		free((char*)entry->key);
-	}
-}
-
 static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 					  int reinitialize)
 {
@@ -454,13 +444,11 @@ static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 		reinitialize ? strset_partial_clear : strset_clear;
 
 	/*
-	 * We marked opti->paths with strdup_strings = 0, so that we
-	 * wouldn't have to make another copy of the fullpath created by
-	 * make_traverse_path from setup_path_info().  But, now that we've
-	 * used it and have no other references to these strings, it is time
-	 * to deallocate them.
+	 * We used the the pattern of re-using already allocated
+	 * strings strmap_clear_strings() in make_traverse_path from
+	 * setup_path_info(). Deallocate them.
 	 */
-	free_strmap_strings(&opti->paths);
+	strmap_clear_strings(&opti->paths, 0);
 	strmap_func(&opti->paths, 1);
 
 	/*
@@ -471,15 +459,10 @@ static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 	strmap_func(&opti->conflicted, 0);
 
 	/*
-	 * opti->paths_to_free is similar to opti->paths; we created it with
-	 * strdup_strings = 0 to avoid making _another_ copy of the fullpath
-	 * but now that we've used it and have no other references to these
-	 * strings, it is time to deallocate them.  We do so by temporarily
-	 * setting strdup_strings to 1.
+	 * opti->paths_to_free is similar to opti->paths; it's memory
+	 * we borrowed and need to free with string_list_clear_strings().
 	 */
-	opti->paths_to_free.strdup_strings = 1;
-	string_list_clear(&opti->paths_to_free, 0);
-	opti->paths_to_free.strdup_strings = 0;
+	string_list_clear_strings(&opti->paths_to_free, 0);
 
 	if (opti->attr_index.cache_nr) /* true iff opt->renormalize */
 		discard_index(&opti->attr_index);
@@ -2657,7 +2640,6 @@ static int collect_renames(struct merge_options *opt,
 	 * and have no other references to these strings, it is time to
 	 * deallocate them.
 	 */
-	free_strmap_strings(&collisions);
 	strmap_clear(&collisions, 1);
 	return clean;
 }
