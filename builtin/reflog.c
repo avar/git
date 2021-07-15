@@ -352,12 +352,10 @@ static int is_head(const char *refname)
 }
 
 static void reflog_expiry_prepare(const char *refname,
-				  const struct object_id *oid,
 				  void *cb_data)
 {
 	struct expire_reflog_policy_cb *cb = cb_data;
 
-	assert(!oid);
 	if (!cb->cmd.expire_unreachable || is_head(refname)) {
 		cb->tip_commit = NULL;
 		cb->unreachable_expire_kind = UE_HEAD;
@@ -633,7 +631,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 			struct expire_reflog_policy_cb cb = { .cmd = cmd };
 
 			set_reflog_expiry_param(&cb.cmd, explicit_expiry, e->reflog);
-			status |= reflog_expire(e->reflog, NULL, flags,
+			status |= reflog_expire(e->reflog, flags,
 						reflog_expiry_prepare,
 						should_expire_reflog_ent,
 						reflog_expiry_cleanup,
@@ -653,7 +651,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 			continue;
 		}
 		set_reflog_expiry_param(&cmd, explicit_expiry, ref);
-		status |= reflog_expire(ref, NULL, flags,
+		status |= reflog_expire(ref, flags,
 					reflog_expiry_prepare,
 					should_expire_reflog_ent,
 					reflog_expiry_cleanup,
@@ -729,7 +727,7 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 
 
 		cb.cmd = cmd;
-		status |= reflog_expire(ref, NULL, flags,
+		status |= reflog_expire(ref, flags,
 					reflog_expiry_prepare,
 					should_expire_reflog_ent,
 					reflog_expiry_cleanup,
