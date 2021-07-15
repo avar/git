@@ -189,6 +189,11 @@ void string_list_clear(struct string_list *list, int free_util)
 	string_list_clear_1(list, list->strdup_strings, free_util, NULL);
 }
 
+void string_list_clear_util(struct string_list *list)
+{
+	string_list_clear_1(list, 0, 1, NULL);
+}
+
 void string_list_clear_strings(struct string_list *list, int free_util)
 {
 	string_list_clear_1(list, 1, free_util, NULL);

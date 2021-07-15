@@ -139,6 +139,19 @@ void string_list_clear(struct string_list *list, int free_util);
 void string_list_clear_strings(struct string_list *list, int free_util);
 
 /**
+ * Clear only the `util` pointer, but not the `string`, even if
+ * `strdup_strings = 1` is set. Useful for the idiom of doing e.g.:
+ *
+ *    string_list_append(&list, str + offs)->util = str;
+ *
+ * Where we add a string at some offset, own the string (so
+ * effectively `strdup_strings = `), but can't free() the string
+ * itself at the changed offset, but need to free the original data in
+ * `util` instead.
+ */
+void string_list_clear_util(struct string_list *list);
+
+/**
  * Callback type for `string_list_clear_func`.  The string associated
  * with the util pointer is passed as the second argument
  */
