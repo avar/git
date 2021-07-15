@@ -340,9 +340,23 @@ static void read_branches(void)
 
 struct ref_states {
 	struct remote *remote;
-	struct string_list new_refs, stale, tracked, heads, push;
+
+	struct string_list new_refs;
+	struct string_list stale;
+	struct string_list tracked;
+	struct string_list heads;
+	struct string_list push;
+
 	int queried;
 };
+
+#define REF_STATES_INIT { \
+	.new_refs = STRING_LIST_INIT_DUP, \
+	.stale = STRING_LIST_INIT_DUP, \
+	.tracked = STRING_LIST_INIT_DUP, \
+	.heads = STRING_LIST_INIT_DUP, \
+	.push = STRING_LIST_INIT_DUP, \
+}
 
 static int get_ref_states(const struct ref *remote_refs, struct ref_states *states)
 {
@@ -355,9 +369,6 @@ static int get_ref_states(const struct ref *remote_refs, struct ref_states *stat
 			die(_("Could not get fetch map for refspec %s"),
 				states->remote->fetch.raw[i]);
 
-	states->new_refs.strdup_strings = 1;
-	states->tracked.strdup_strings = 1;
-	states->stale.strdup_strings = 1;
 	for (ref = fetch_map; ref; ref = ref->next) {
 		if (!ref->peer_ref || !ref_exists(ref->peer_ref->name))
 			string_list_append(&states->new_refs, abbrev_branch(ref->name));
@@ -1211,7 +1222,7 @@ static int show(int argc, const char **argv)
 		OPT_BOOL('n', NULL, &no_query, N_("do not query remotes")),
 		OPT_END()
 	};
-	struct ref_states states;
+	struct ref_states states = REF_STATES_INIT;
 	struct string_list info_list = STRING_LIST_INIT_NODUP;
 	struct show_info info;
 
