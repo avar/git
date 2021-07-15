@@ -332,12 +332,11 @@ void shortlog_init(struct shortlog *log)
 
 	read_mailmap(&log->mailmap);
 
-	log->list.strdup_strings = 1;
+	string_list_init(&log->list, 1);
 	log->wrap = DEFAULT_WRAPLEN;
 	log->in1 = DEFAULT_INDENT1;
 	log->in2 = DEFAULT_INDENT2;
-	log->trailers.strdup_strings = 1;
-	log->trailers.cmp = strcasecmp;
+	string_list_cmp_init(&log->trailers, 1, strcasecmp);
 }
 
 int cmd_shortlog(int argc, const char **argv, const char *prefix)

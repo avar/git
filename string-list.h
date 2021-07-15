@@ -102,6 +102,9 @@ struct string_list {
  */
 void string_list_init(struct string_list *list, int strdup_strings);
 
+void string_list_cmp_init(struct string_list *list, int strdup_strings,
+			  compare_strings_fn cmp);
+
 /** Callback function type for for_each_string_list */
 typedef int (*string_list_each_func_t)(struct string_list_item *, void *);
 

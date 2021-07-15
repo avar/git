@@ -7,6 +7,13 @@ void string_list_init(struct string_list *list, int strdup_strings)
 	list->strdup_strings = strdup_strings;
 }
 
+void string_list_cmp_init(struct string_list *list, int strdup_strings,
+			  compare_strings_fn cmp) {
+	memset(list, 0, sizeof(*list));
+	list->strdup_strings = strdup_strings;
+	list->cmp = cmp;
+}
+
 /* if there is no exact match, point to the index where the entry could be
  * inserted */
 static int get_entry_index(const struct string_list *list, const char *string,
