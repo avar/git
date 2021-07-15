@@ -46,6 +46,7 @@ struct expire_reflog_policy_cb {
 	struct cmd_reflog_expire_cb cmd;
 	struct commit *tip_commit;
 	struct commit_list *tips;
+	struct object_id oid;
 };
 
 struct collected_reflog {
@@ -356,12 +357,13 @@ static void reflog_expiry_prepare(const char *refname,
 {
 	struct expire_reflog_policy_cb *cb = cb_data;
 
+	assert(!oid);
 	if (!cb->cmd.expire_unreachable || is_head(refname)) {
 		cb->tip_commit = NULL;
 		cb->unreachable_expire_kind = UE_HEAD;
 	} else {
 		cb->tip_commit = lookup_commit_reference_gently(the_repository,
-								oid, 1);
+								&cb->oid, 1);
 		if (!cb->tip_commit)
 			cb->unreachable_expire_kind = UE_ALWAYS;
 		else
@@ -629,9 +631,10 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		for (i = 0; i < collected.nr; i++) {
 			struct collected_reflog *e = collected.e[i];
 			struct expire_reflog_policy_cb cb = { .cmd = cmd };
+			oidcpy(&cb.oid, &e->oid);
 
 			set_reflog_expiry_param(&cb.cmd, explicit_expiry, e->reflog);
-			status |= reflog_expire(e->reflog, &e->oid, flags,
+			status |= reflog_expire(e->reflog, NULL, flags,
 						reflog_expiry_prepare,
 						should_expire_reflog_ent,
 						reflog_expiry_cleanup,
@@ -643,15 +646,14 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 
 	for (; i < argc; i++) {
 		char *ref;
-		struct object_id oid;
 		struct expire_reflog_policy_cb cb = { .cmd = cmd };
 
-		if (!dwim_log(argv[i], strlen(argv[i]), &oid, &ref)) {
+		if (!dwim_log(argv[i], strlen(argv[i]), &cb.oid, &ref)) {
 			status |= error(_("%s points nowhere!"), argv[i]);
 			continue;
 		}
 		set_reflog_expiry_param(&cmd, explicit_expiry, ref);
-		status |= reflog_expire(ref, &oid, flags,
+		status |= reflog_expire(ref, NULL, flags,
 					reflog_expiry_prepare,
 					should_expire_reflog_ent,
 					reflog_expiry_cleanup,
@@ -701,7 +703,6 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 
 	for ( ; i < argc; i++) {
 		const char *spec = strstr(argv[i], "@{");
-		struct object_id oid;
 		char *ep, *ref;
 		int recno;
 		struct expire_reflog_policy_cb cb = { 0 };
@@ -711,7 +712,7 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 			continue;
 		}
 
-		if (!dwim_log(argv[i], spec - argv[i], &oid, &ref)) {
+		if (!dwim_log(argv[i], spec - argv[i], &cb.oid, &ref)) {
 			status |= error(_("no reflog for '%s'"), argv[i]);
 			continue;
 		}
@@ -727,7 +728,7 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 		}
 
 		cb.cmd = cmd;
-		status |= reflog_expire(ref, &oid, flags,
+		status |= reflog_expire(ref, NULL, flags,
 					reflog_expiry_prepare,
 					should_expire_reflog_ent,
 					reflog_expiry_cleanup,
