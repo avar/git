@@ -160,11 +160,17 @@ void string_list_remove_empty_items(struct string_list *list, int free_util)
 	filter_string_list(list, free_util, item_is_not_empty, NULL);
 }
 
-void string_list_clear(struct string_list *list, int free_util)
+static void string_list_clear_1(struct string_list *list, int free_strings,
+				int free_util,
+				string_list_clear_func_t clearfunc)
 {
 	if (list->items) {
 		int i;
-		if (list->strdup_strings) {
+		if (clearfunc) {
+			for (i = 0; i < list->nr; i++)
+				clearfunc(list->items[i].util, list->items[i].string);
+		}
+		if (free_strings) {
 			for (i = 0; i < list->nr; i++)
 				free(list->items[i].string);
 		}
@@ -178,22 +184,26 @@ void string_list_clear(struct string_list *list, int free_util)
 	list->nr = list->alloc = 0;
 }
 
-void string_list_clear_func(struct string_list *list, string_list_clear_func_t clearfunc)
+void string_list_clear(struct string_list *list, int free_util)
 {
-	if (list->items) {
-		int i;
-		if (clearfunc) {
-			for (i = 0; i < list->nr; i++)
-				clearfunc(list->items[i].util, list->items[i].string);
-		}
-		if (list->strdup_strings) {
-			for (i = 0; i < list->nr; i++)
-				free(list->items[i].string);
-		}
-		free(list->items);
-	}
-	list->items = NULL;
-	list->nr = list->alloc = 0;
+	string_list_clear_1(list, list->strdup_strings, free_util, NULL);
+}
+
+void string_list_clear_strings(struct string_list *list, int free_util)
+{
+	string_list_clear_1(list, 1, free_util, NULL);
+}
+
+void string_list_clear_func(struct string_list *list,
+			    string_list_clear_func_t clearfunc)
+{
+	string_list_clear_1(list, list->strdup_strings, 1, clearfunc);
+}
+
+void string_list_clear_strings_func(struct string_list *list,
+				    string_list_clear_func_t clearfunc)
+{
+	string_list_clear_1(list, 1, 1, clearfunc);
 }
 
 struct string_list_item *string_list_append_nodup(struct string_list *list,

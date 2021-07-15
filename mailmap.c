@@ -49,8 +49,7 @@ static void free_mailmap_entry(void *p, const char *s)
 	free(me->name);
 	free(me->email);
 
-	me->namemap.strdup_strings = 1;
-	string_list_clear_func(&me->namemap, free_mailmap_info);
+	string_list_clear_strings_func(&me->namemap, free_mailmap_info);
 }
 
 /*
@@ -248,8 +247,7 @@ int read_mailmap(struct string_list *map)
 void clear_mailmap(struct string_list *map)
 {
 	debug_mm("mailmap: clearing %d entries...\n", map->nr);
-	map->strdup_strings = 1;
-	string_list_clear_func(map, free_mailmap_entry);
+	string_list_clear_strings_func(map, free_mailmap_entry);
 	debug_mm("mailmap: cleared\n");
 }
 

@@ -123,13 +123,52 @@ void filter_string_list(struct string_list *list, int free_util,
 void string_list_clear(struct string_list *list, int free_util);
 
 /**
+ * Free a string list initialized without `strdup_strings = 1`, but
+ * where we also want to free() the strings. You usually want to just
+ * use string_list_clear() after initializing with
+ * `STRING_LIST_INIT_DUP' instead.
+ *
+ * Useful to free e.g. a string list whose strings came from
+ * strbuf_detach() or other memory that we didn't initially allocate
+ * on the heap, but which we now manage.
+ *
+ * Under the hood this is identical in behavior to temporarily setting
+ * `strbuf_strings` to `1` for the duration of this function call, but
+ * without the verbosity of performing that dance yourself.
+ */
+void string_list_clear_strings(struct string_list *list, int free_util);
+
+/**
  * Callback type for `string_list_clear_func`.  The string associated
  * with the util pointer is passed as the second argument
  */
 typedef void (*string_list_clear_func_t)(void *p, const char *str);
 
-/** Call a custom clear function on each util pointer */
-void string_list_clear_func(struct string_list *list, string_list_clear_func_t clearfunc);
+/**
+ * Like string_list_clear() except that it first calls a custom clear
+ * function on each util pointer.
+ *
+ * We guarantee that the `clearfunc` will be called on all util
+ * pointers in a list before we proceed to free the first string or
+ * util pointer, i.e. should you need to it's OK to peek at other util
+ * items in the list itself, or to otherwise iterate it from within
+ * the `clearfunc`.
+ *
+ * You do not need to free() the passed-in util pointer itself,
+ * i.e. after calling all `clearfunc` this has the seme behavior as
+ * string_list_clear() called with with `free_util = 1`.
+ */
+void string_list_clear_func(struct string_list *list,
+			    string_list_clear_func_t clearfunc);
+
+/**
+ * Like string_list_clear_func() but free the strings too, using the
+ * same dance as described for string_list_clear_strings()
+ * above. You'll usually want to initialize with
+ * `STRING_LIST_INIT_DUP` and use string_list_clear_strings() instead.
+ */
+void string_list_clear_strings_func(struct string_list *list,
+				    string_list_clear_func_t clearfunc);
 
 /**
  * Apply `func` to each item. If `func` returns nonzero, the

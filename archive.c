@@ -494,7 +494,6 @@ static void extra_file_info_clear(void *util, const char *str)
 {
 	struct extra_file_info *info = util;
 	free(info->base);
-	free(info);
 }
 
 static int add_file_cb(const struct option *opt, const char *arg, int unset)
