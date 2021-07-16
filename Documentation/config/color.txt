@@ -126,6 +126,12 @@ color.interactive.<slot>::
 	or `error`, for four distinct types of normal output from
 	interactive commands.
 
+color.man::
+	This flag can be used to enable the automatic colorizaton of man
+	pages when using the less pager, `false` by default. When set to
+	`true` it's activated only when `color.ui` allows it, and if
+	`color.pager` enable (which it is by default).
+
 color.pager::
 	A boolean to specify whether `auto` color modes should colorize
 	output going to the pager. Defaults to true; set this to false
@@ -200,3 +206,8 @@ color.ui::
 	output not intended for machine consumption to use color, to
 	`true` or `auto` (this is the default since Git 1.8.4) if you
 	want such output to use color when written to the terminal.
++
+When set to `true` certain other `color.*` variables may still not be
+turned on unless explicitly enabled. Currently this only applies to
+`color.man`, see above. Such opt-in variables may be moved under the
+default `color.ui` umbrella in the future.
