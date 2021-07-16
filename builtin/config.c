@@ -68,6 +68,7 @@ static int fixed_value;
 #define TYPE_EXPIRY_DATE	5
 #define TYPE_COLOR		6
 #define TYPE_BOOL_OR_STR	7
+#define TYPE_BOOL_OR_AUTO	8
 
 #define OPT_CALLBACK_VALUE(s, l, v, h, i) \
 	{ OPTION_CALLBACK, (s), (l), (v), NULL, (h), PARSE_OPT_NOARG | \
@@ -99,6 +100,8 @@ static int option_parse_type(const struct option *opt, const char *arg,
 			new_type = TYPE_BOOL_OR_INT;
 		else if (!strcmp(arg, "bool-or-str"))
 			new_type = TYPE_BOOL_OR_STR;
+		else if (!strcmp(arg, "bool-or-auto"))
+			new_type = TYPE_BOOL_OR_AUTO;
 		else if (!strcmp(arg, "path"))
 			new_type = TYPE_PATH;
 		else if (!strcmp(arg, "expiry-date"))
@@ -156,6 +159,7 @@ static struct option builtin_config_options[] = {
 	OPT_CALLBACK_VALUE(0, "int", &type, N_("value is decimal number"), TYPE_INT),
 	OPT_CALLBACK_VALUE(0, "bool-or-int", &type, N_("value is --bool or --int"), TYPE_BOOL_OR_INT),
 	OPT_CALLBACK_VALUE(0, "bool-or-str", &type, N_("value is --bool or string"), TYPE_BOOL_OR_STR),
+	/* No bool-or-auto! The --<type> form is deprecated in favor of --type=<what> */
 	OPT_CALLBACK_VALUE(0, "path", &type, N_("value is a path (file or directory name)"), TYPE_PATH),
 	OPT_CALLBACK_VALUE(0, "expiry-date", &type, N_("value is an expiry date"), TYPE_EXPIRY_DATE),
 	OPT_GROUP(N_("Other")),
@@ -261,6 +265,12 @@ static int format_config(struct strbuf *buf, const char *key_, const char *value
 			int v = git_parse_maybe_bool(value_);
 			if (v < 0)
 				strbuf_addstr(buf, value_);
+			else
+				strbuf_addstr(buf, v ? "true" : "false");
+		} else if (type == TYPE_BOOL_OR_AUTO) {
+			int v = git_config_tristate(key_, value_);
+			if (v == 2)
+				strbuf_addstr(buf, "auto");
 			else
 				strbuf_addstr(buf, v ? "true" : "false");
 		} else if (type == TYPE_PATH) {
@@ -432,6 +442,15 @@ static char *normalize_value(const char *key, const char *value)
 		int v = git_parse_maybe_bool(value);
 		if (v < 0)
 			return xstrdup(value);
+		else
+			return xstrdup(v ? "true" : "false");
+	}
+	if (type == TYPE_BOOL_OR_AUTO) {
+		int v = git_parse_maybe_tristate(value);
+		if (v < 0)
+			return xstrdup(value);
+		else if (v == 2)
+			xstrdup("auto");
 		else
 			return xstrdup(v ? "true" : "false");
 	}
