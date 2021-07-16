@@ -5,6 +5,7 @@ test_description='test protocol v2 server commands'
 GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
+GIT_TEST_SANITIZE_LEAK=true
 . ./test-lib.sh
 
 test_expect_success 'test capability advertisement' '
@@ -243,7 +244,7 @@ test_expect_success 'unexpected lines are not allowed in fetch request' '
 
 # Test the basics of object-info
 #
-test_expect_success 'basics of object-info' '
+test_expect_success !SANITIZE_LEAK 'basics of object-info' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=object-info
 	object-format=$(test_oid algo)
