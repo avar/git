@@ -46,7 +46,7 @@ test_perf 'fetch' '
 		cd child &&
 		$MODERN_GIT for-each-ref --format="delete %(refname)" refs/remotes |
 		$MODERN_GIT update-ref --stdin &&
-		rm -vf .git/objects/$(echo $obj | sed "s|^..|&/|") &&
+		test_rm_loose_oid "$obj" &&
 
 		git fetch
 	)
