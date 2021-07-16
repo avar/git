@@ -137,11 +137,12 @@ ASCIIDOC_HTML = xhtml11
 ASCIIDOC_DOCBOOK = docbook
 ASCIIDOC_CONF = -f asciidoc.conf
 ASCIIDOC_COMMON = $(ASCIIDOC) $(ASCIIDOC_EXTRA) $(ASCIIDOC_CONF) \
-		-amanversion=$(GIT_VERSION) \
 		-amanmanual='Git Manual' -amansource='Git'
+ASCIIDOC_MANVERSION = -amanversion=$(GIT_VERSION)
+ASCIIDOC_ALL = $(ASCIIDOC_COMMON) $(ASCIIDOC_MANVERSION)
 ASCIIDOC_DEPS = asciidoc.conf GIT-ASCIIDOCFLAGS
-TXT_TO_HTML = $(ASCIIDOC_COMMON) -b $(ASCIIDOC_HTML)
-TXT_TO_XML = $(ASCIIDOC_COMMON) -b $(ASCIIDOC_DOCBOOK)
+TXT_TO_HTML = $(ASCIIDOC_ALL) -b $(ASCIIDOC_HTML)
+TXT_TO_XML = $(ASCIIDOC_ALL) -b $(ASCIIDOC_DOCBOOK)
 MANPAGE_XSL = manpage-normal.xsl
 XMLTO = xmlto
 XMLTO_EXTRA =
@@ -333,6 +334,16 @@ mergetools-list.made: ../git-mergetool--lib.sh $(wildcard ../mergetools/*)
 		show_tool_names can_merge "* " || :' >mergetools-merge.txt && \
 	date >$@
 
+# We use $(ASCIIDOC_COMMON) here, and not $(ASCIIDOC_ALL). We don't
+# want to include $(ASCIIDOC_MANVERSION) and have the documentation
+# re-built every time HEAD changes.
+#
+# This is a trade-off requiring a "clean" build of the documentation
+# for release purposes, in the future we might include the version if
+# there's a cheaper way to re-insert the "Source" version during
+# re-builds. If we detect that that's the only thing we changed we
+# could insert it with a cheap search/replacement against the existing
+# files.
 TRACK_ASCIIDOCFLAGS = $(subst ','\'',$(ASCIIDOC_COMMON):$(ASCIIDOC_HTML):$(ASCIIDOC_DOCBOOK))
 
 GIT-ASCIIDOCFLAGS: FORCE
