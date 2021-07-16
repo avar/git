@@ -312,10 +312,8 @@ static int parse_funcname(struct userdiff_funcname *f, const char *k,
 
 static int parse_tristate(int *b, const char *k, const char *v)
 {
-	if (v && !strcasecmp(v, "auto"))
-		*b = -1;
-	else
-		*b = git_config_bool(k, v);
+	int tristate = git_config_tristate(k, v);
+	*b = tristate == 2 ? -1 : tristate;
 	return 0;
 }
 
