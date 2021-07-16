@@ -59,24 +59,45 @@ test_expect_success 'upload-pack fails due to error in rev-list' '
 '
 
 test_expect_success 'upload-pack fails due to bad want (no object)' '
+	cat >expect <<-EOF &&
+	$(git rev-parse HEAD) HEAD
+	$(git rev-parse HEAD) refs/heads/master
+	0000
+	ERR upload-pack: not our ref $(test_oid deadbeef)
+	EOF
+
+	cat >expect.err <<-EOF &&
+	fatal: git upload-pack: not our ref $(test_oid deadbeef)
+	EOF
 
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
 		$(($hexsz + 29)) $(test_oid deadbeef) >input &&
 	test_must_fail git upload-pack . <input >output 2>output.err &&
-	grep "not our ref" output.err &&
-	grep "ERR" output &&
-	! grep multi_ack_detailed output.err
+	test-tool pkt-line unpack <output >actual &&
+	test_cmp expect actual &&
+	test_cmp expect.err output.err
 '
 
 test_expect_success 'upload-pack fails due to bad want (not tip)' '
-
 	oid=$(echo an object we have | git hash-object -w --stdin) &&
+
+	cat >expect <<-EOF &&
+	$(git rev-parse HEAD) HEAD
+	$(git rev-parse HEAD) refs/heads/master
+	0000
+	ERR upload-pack: not our ref $oid
+	EOF
+
+	cat >expect.err <<-EOF &&
+	fatal: git upload-pack: not our ref $oid
+	EOF
+
 	printf "%04xwant %s multi_ack_detailed\n00000009done\n0000" \
 		$(($hexsz + 29)) "$oid" >input &&
 	test_must_fail git upload-pack . <input >output 2>output.err &&
-	grep "not our ref" output.err &&
-	grep "ERR" output &&
-	! grep multi_ack_detailed output.err
+	test-tool pkt-line unpack <output >actual &&
+	test_cmp expect actual &&
+	test_cmp expect.err output.err
 '
 
 test_expect_success 'upload-pack fails due to error in pack-objects enumeration' '
