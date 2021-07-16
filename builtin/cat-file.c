@@ -17,6 +17,7 @@
 #include "object-store.h"
 #include "promisor-remote.h"
 
+static const char *default_format = "%(objectname) %(objecttype) %(objectsize)";
 struct batch_options {
 	int enabled;
 	int follow_symlinks;
@@ -368,24 +369,37 @@ static void batch_object_write(const char *obj_name,
 			       struct batch_options *opt,
 			       struct expand_data *data)
 {
+	struct strbuf type_name = STRBUF_INIT;
+	if (!opt->format)
+		data->info.type_name = &type_name;
+		
 	if (!data->skip_object_info &&
 	    oid_object_info_extended(the_repository, &data->oid, &data->info,
 				     OBJECT_INFO_LOOKUP_REPLACE) < 0) {
 		printf("%s missing\n",
 		       obj_name ? obj_name : oid_to_hex(&data->oid));
 		fflush(stdout);
-		return;
+		goto cleanup;
 	}
 
-	strbuf_reset(scratch);
-	strbuf_expand(scratch, opt->format, expand_format, data);
-	strbuf_addch(scratch, '\n');
-	batch_write(opt, scratch->buf, scratch->len);
+	if (!opt->format && !opt->print_contents) {
+		fprintf(stdout, "%s %s %"PRIuMAX"\n", oid_to_hex(&data->oid),
+			data->info.type_name->buf, 
+			(uintmax_t)*data->info.sizep);
+	} else {
+		const char *fmt = opt->format ? opt->format : default_format;
+		strbuf_reset(scratch);
+		strbuf_expand(scratch, fmt, expand_format, data);
+		strbuf_addch(scratch, '\n');
+		batch_write(opt, scratch->buf, scratch->len);
 
-	if (opt->print_contents) {
-		print_object_or_die(opt, data);
-		batch_write(opt, "\n", 1);
+		if (opt->print_contents) {
+			print_object_or_die(opt, data);
+			batch_write(opt, "\n", 1);
+		}
 	}
+	cleanup:
+	strbuf_release(&type_name);
 }
 
 static void batch_one_object(const char *obj_name,
@@ -503,9 +517,7 @@ static int batch_objects(struct batch_options *opt)
 	struct expand_data data;
 	int save_warning;
 	int retval = 0;
-
-	if (!opt->format)
-		opt->format = "%(objectname) %(objecttype) %(objectsize)";
+	const char *fmt;
 
 	/*
 	 * Expand once with our special mark_query flag, which will prime the
@@ -514,7 +526,8 @@ static int batch_objects(struct batch_options *opt)
 	 */
 	memset(&data, 0, sizeof(data));
 	data.mark_query = 1;
-	strbuf_expand(&output, opt->format, expand_format, &data);
+	fmt = opt->format ? opt->format : default_format;
+	strbuf_expand(&output, fmt, expand_format, &data);
 	data.mark_query = 0;
 	strbuf_release(&output);
 	if (opt->cmdmode)
