@@ -95,6 +95,7 @@ enum rev_info_stdin {
 enum rev_info_stdin_line {
 	REV_INFO_STDIN_LINE_PROCESS,
 	REV_INFO_STDIN_LINE_CONTINUE,
+	REV_INFO_STDIN_LINE_AGAIN,
 };
 
 typedef enum rev_info_stdin_line (*rev_info_stdin_line_func)(
@@ -163,8 +164,17 @@ struct rev_info {
 	 *   line is fully processed, moving onto the next line (if
 	 *   any)
 	 *
+	 * - Return REV_INFO_STDIN_LINE_AGAIN after a callback that's
+	 *   returned *_PROCESS to have the callback called again
+	 *   after this API has done its own parsing of the line,
+	 *   i.e. called handle_revision_arg().
+	 *
+	 *   The callback must return REV_INFO_STDIN_LINE_CONTINUE
+	 *   when called as a result of asking to be called again.
+	 *
 	 * Use the "stdin_line_priv" to optionally pass your own data
-	 * around.
+	 * around, and when using *_AGAIN to track in when your
+	 * callback is being called.
 	 */
 	rev_info_stdin_line_func handle_stdin_line;
 	int revarg_flags;
