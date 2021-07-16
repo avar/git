@@ -51,15 +51,13 @@ static int ref_match(const struct strvec *prefixes, const char *refname)
 }
 
 struct ls_refs_data {
-	struct packet_writer writer;
+	struct packet_writer *writer;
 	unsigned peel;
 	unsigned symrefs;
 	struct strvec prefixes;
 	unsigned unborn : 1;
 };
-#define LS_REFS_DATA_INIT { \
-	.writer = PACKET_WRITER_INIT, \
-}
+#define LS_REFS_DATA_INIT { 0 }
 
 static int send_ref(const char *refname, const struct object_id *oid,
 		    int flag, void *cb_data)
@@ -98,7 +96,7 @@ static int send_ref(const char *refname, const struct object_id *oid,
 	}
 
 	strbuf_addch(&refline, '\n');
-	packet_writer_write_len(&data->writer, refline.buf, refline.len);
+	packet_writer_write_len(data->writer, refline.buf, refline.len);
 
 	strbuf_release(&refline);
 	return 0;
@@ -131,9 +129,12 @@ static int ls_refs_config(const char *var, const char *value, void *data)
 	return parse_hide_refs_config(var, value, "uploadpack");
 }
 
-int ls_refs(struct repository *r, struct packet_reader *request)
+int ls_refs(struct repository *r,
+	    struct packet_reader *request,
+	    struct packet_writer *writer)
 {
 	struct ls_refs_data data = LS_REFS_DATA_INIT;
+	data.writer = writer;
 
 	strvec_init(&data.prefixes);
 	git_config(ls_refs_config, NULL);
@@ -150,17 +151,22 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 			strvec_push(&data.prefixes, out);
 		else if (!strcmp("unborn", arg))
 			data.unborn = allow_unborn;
+		else
+			packet_client_error(writer,
+					    N_("ls-refs: unexpected argument: '%s'"),
+					    request->line);
 	}
 
 	if (request->status != PACKET_READ_FLUSH)
-		die(_("expected flush after ls-refs arguments"));
+		packet_client_error(writer,
+				    N_("ls-refs: expected flush after arguments"));
 
 	send_possibly_unborn_head(&data);
 	if (!data.prefixes.nr)
 		strvec_push(&data.prefixes, "");
 	for_each_fullref_in_prefixes(get_git_namespace(), data.prefixes.v,
 				     send_ref, &data, 0);
-	packet_writer_flush(&data.writer);
+	packet_writer_flush(writer);
 	strvec_clear(&data.prefixes);
 	return 0;
 }
