@@ -6,7 +6,9 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 
 struct repository;
 struct packet_reader;
-int upload_pack_v2(struct repository *r, struct packet_reader *request);
+int upload_pack_v2(struct repository *r,
+		   struct packet_reader *request,
+		   struct packet_writer *writer);
 
 struct strbuf;
 int upload_pack_advertise(struct repository *r,
