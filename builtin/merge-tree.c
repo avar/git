@@ -157,7 +157,7 @@ static int same_entry(struct name_entry *a, struct name_entry *b)
 	return	!is_null_oid(&a->oid) &&
 		!is_null_oid(&b->oid) &&
 		oideq(&a->oid, &b->oid) &&
-		a->mode == b->mode;
+		a->raw_mode == b->raw_mode;
 }
 
 static int both_empty(struct name_entry *a, struct name_entry *b)
@@ -194,9 +194,9 @@ static void resolve(const struct traverse_info *info, struct name_entry *ours, s
 		return;
 
 	path = traverse_path(info, result);
-	orig_mode = ours->mode;
+	orig_mode = canon_mode(ours->raw_mode);
 	orig = create_entry(2, orig_mode, &ours->oid, path);
-	final_mode = result->mode;
+	final_mode = canon_mode(result->raw_mode);
 	final = create_entry(0, final_mode, &result->oid, path);
 
 	final->link = orig;
@@ -249,7 +249,7 @@ static struct merge_list *link_entry(unsigned stage, const struct traverse_info 
 		path = entry->path;
 	else
 		path = traverse_path(info, n);
-	link_mode = n->mode;
+	link_mode = canon_mode(n->raw_mode);
 	link = create_entry(stage, link_mode, &n->oid, path);
 
 	link->link = entry;
