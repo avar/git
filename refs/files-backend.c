@@ -3098,7 +3098,8 @@ static int files_reflog_expire(struct ref_store *ref_store,
 		}
 	}
 
-	(*prepare_fn)(refname, oid, cb.policy_cb);
+	assert(oideq(&lock->old_oid, oid));
+	(*prepare_fn)(refname, &lock->old_oid, cb.policy_cb);
 	refs_for_each_reflog_ent(ref_store, refname, expire_reflog_ent, &cb);
 	(*cleanup_fn)(cb.policy_cb);
 

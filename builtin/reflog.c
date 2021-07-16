@@ -351,7 +351,7 @@ static int is_head(const char *refname)
 }
 
 static void reflog_expiry_prepare(const char *refname,
-				  const struct object_id *oid,
+				  struct object_id *locked_oid,
 				  void *cb_data)
 {
 	struct expire_reflog_policy_cb *cb = cb_data;
@@ -361,7 +361,7 @@ static void reflog_expiry_prepare(const char *refname,
 		cb->unreachable_expire_kind = UE_HEAD;
 	} else {
 		cb->tip_commit = lookup_commit_reference_gently(the_repository,
-								oid, 1);
+								locked_oid, 1);
 		if (!cb->tip_commit)
 			cb->unreachable_expire_kind = UE_ALWAYS;
 		else

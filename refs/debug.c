@@ -364,12 +364,14 @@ struct debug_reflog_expiry_should_prune {
 };
 
 static void debug_reflog_expiry_prepare(const char *refname,
-					const struct object_id *oid,
+					struct object_id *locked_oid,
 					void *cb_data)
 {
 	struct debug_reflog_expiry_should_prune *prune = cb_data;
-	trace_printf_key(&trace_refs, "reflog_expire_prepare: %s\n", refname);
-	prune->prepare(refname, oid, prune->cb_data);
+	trace_printf_key(&trace_refs, "reflog_expire_prepare: %s locket at %s\n",
+			 refname,
+			 oid_to_hex(locked_oid));
+	prune->prepare(refname, locked_oid, prune->cb_data);
 }
 
 static int debug_reflog_expiry_should_prune_fn(struct object_id *ooid,
