@@ -1,3 +1,4 @@
+t4018 header: async def RIGHT(pi: int = 3.14):
 async def RIGHT(pi: int = 3.14):
     while True:
         break
