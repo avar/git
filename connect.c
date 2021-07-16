@@ -514,6 +514,8 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 	packet_write_fmt(fd_out, "symrefs\n");
 	if (server_supports_feature("ls-refs", "unborn", 0))
 		packet_write_fmt(fd_out, "unborn\n");
+	if (git_env_bool("GIT_TEST_PROTOCOL_BAD_LS_REFS", 0))
+		packet_write_fmt(fd_out, "test-bad-client\n");
 	for (i = 0; ref_prefixes && i < ref_prefixes->nr; i++) {
 		packet_write_fmt(fd_out, "ref-prefix %s\n",
 				 ref_prefixes->v[i]);
