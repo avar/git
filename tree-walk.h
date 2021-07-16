@@ -16,7 +16,7 @@ struct name_entry {
 	struct object_id oid;
 	const char *path;
 	int pathlen;
-	unsigned int mode;
+	unsigned int raw_mode;
 	/* simple 'mode': Only OBJ_{BLOB,TREE,COMMIT} */
 	enum object_type object_type;
 };
@@ -55,7 +55,7 @@ static inline const struct object_id *tree_entry_extract_mode(struct tree_desc *
 							      unsigned short *modep)
 {
 	*pathp = desc->entry.path;
-	*modep = desc->entry.mode;
+	*modep = desc->entry.raw_mode;
 	return &desc->entry.oid;
 }
 
@@ -75,7 +75,7 @@ static inline const struct object_id *tree_entry_extract_all(struct tree_desc *d
 							     enum object_type *object_typep)
 {
 	*pathp = desc->entry.path;
-	*modep = desc->entry.mode;
+	*modep = desc->entry.raw_mode;
 	*object_typep = desc->entry.object_type;
 	return &desc->entry.oid;
 }
