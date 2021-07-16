@@ -293,7 +293,7 @@ void resolve_tree_islands(struct repository *r,
 		while (tree_entry(&desc, &entry)) {
 			struct object *obj;
 
-			if (S_ISGITLINK(entry.mode))
+			if (entry.object_type == OBJ_COMMIT)
 				continue;
 
 			obj = lookup_object(r, &entry.oid);
