@@ -7,13 +7,14 @@ making sure that we do not segfault or otherwise behave badly.'
 . ./test-lib.sh
 
 test_expect_success 'extra delim packet in v2 ls-refs args' '
-	{
-		packetize command=ls-refs &&
-		packetize "object-format=$(test_oid algo)" &&
-		printf 0001 &&
-		# protocol expects 0000 flush here
-		printf 0001
-	} >input &&
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=ls-refs
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
 	cat >err.expect <<-\EOF &&
 	fatal: expected flush after ls-refs arguments
 	EOF
@@ -23,13 +24,14 @@ test_expect_success 'extra delim packet in v2 ls-refs args' '
 '
 
 test_expect_success 'extra delim packet in v2 fetch args' '
-	{
-		packetize command=fetch &&
-		packetize "object-format=$(test_oid algo)" &&
-		printf 0001 &&
-		# protocol expects 0000 flush here
-		printf 0001
-	} >input &&
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=fetch
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
 	cat >err.expect <<-\EOF &&
 	fatal: expected flush after fetch arguments
 	EOF
