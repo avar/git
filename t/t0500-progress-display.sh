@@ -85,12 +85,10 @@ EOF
 '
 
 test_expect_success 'progress display breaks long lines #2' '
-	# Note: we do not need that many spaces after the title to cover up
-	# the last line before breaking the progress line.
 	sed -e "s/Z$//" >expect <<\EOF &&
 Working hard.......2.........3.........4.........5.........6:   0% (1/100000)<CR>
 Working hard.......2.........3.........4.........5.........6:   0% (2/100000)<CR>
-Working hard.......2.........3.........4.........5.........6:                   Z
+Working hard.......2.........3.........4.........5.........6:                Z
    10% (10000/100000)<CR>
   100% (100000/100000)<CR>
   100% (100000/100000), done.
@@ -112,10 +110,8 @@ EOF
 '
 
 test_expect_success 'progress display breaks long lines #3 - even the first is too long' '
-	# Note: we do not actually need any spaces at the end of the title
-	# line, because there is no previous progress line to cover up.
 	sed -e "s/Z$//" >expect <<\EOF &&
-Working hard.......2.........3.........4.........5.........6:                   Z
+Working hard.......2.........3.........4.........5.........6:
    25% (25000/100000)<CR>
    50% (50000/100000)<CR>
    75% (75000/100000)<CR>
