@@ -480,7 +480,7 @@ write_script () {
 # - Explicitly using test_have_prereq.
 #
 # - Implicitly by specifying the prerequisite tag in the calls to
-#   test_expect_{success,failure} and test_external{,_without_stderr}.
+#   test_expect_{success,failure}
 #
 # The single parameter is the prerequisite tag (a simple word, in all
 # capital letters by convention).
@@ -530,21 +530,30 @@ test_lazy_prereq () {
 }
 
 test_run_lazy_prereq_ () {
+	say_color_tap_comment >&3 4 trace "Checking prerequisite $1..."
 	script='
-mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
-(
-	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'
-)'
-	say >&3 "checking prerequisite: $1"
-	say >&3 "$script"
+	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&
+	(
+	cd "$TRASH_DIRECTORY/prereq-test-dir-'"$1"'" &&'"$2"'	)'
+	say_color_tap_comment_lines >&3 4 trace "$script"
+
 	test_eval_ "$script"
 	eval_ret=$?
 	rm -rf "$TRASH_DIRECTORY/prereq-test-dir-$1"
-	if test "$eval_ret" = 0; then
-		say >&3 "prerequisite $1 ok"
-	else
-		say >&3 "prerequisite $1 not satisfied"
+
+	prereq_msg_color=pass
+	prereq_msg=ok
+	if test "$eval_ret" != 0
+	then
+		prereq_msg_color=error
+		prereq_msg="not ok, returned $eval_ret"
 	fi
+	msg=$(say_color_reset &&
+	      say_color_start $prereq_msg_color &&
+	      printf "%s" "$prereq_msg")
+
+	say_color_tap_comment >&3 4 trace "...prerequisite $1 $msg"
+
 	return $eval_ret
 }
 
@@ -639,12 +648,11 @@ test_expect_failure () {
 	export test_prereq
 	if ! test_skip "$@"
 	then
-		say >&3 "checking known breakage of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2" expecting_failure
 		then
-			test_known_broken_ok_ "$1"
+			test_known_broken_ok_ "$@"
 		else
-			test_known_broken_failure_ "$1"
+			test_known_broken_failure_ "$@"
 		fi
 	fi
 	test_finish_
@@ -659,102 +667,14 @@ test_expect_success () {
 	export test_prereq
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting success of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2"
 		then
-			test_ok_ "$1"
+			test_ok_ "$@"
 		else
 			test_failure_ "$@"
 		fi
 	fi
 	test_finish_
-}
-
-# test_external runs external test scripts that provide continuous
-# test output about their progress, and succeeds/fails on
-# zero/non-zero exit code.  It outputs the test output on stdout even
-# in non-verbose mode, and announces the external script with "# run
-# <n>: ..." before running it.  When providing relative paths, keep in
-# mind that all scripts run in "trash directory".
-# Usage: test_external description command arguments...
-# Example: test_external 'Perl API' perl ../path/to/test.pl
-test_external () {
-	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
-	test "$#" = 3 ||
-	BUG "not 3 or 4 parameters to test_external"
-	descr="$1"
-	shift
-	test_verify_prereq
-	export test_prereq
-	if ! test_skip "$descr" "$@"
-	then
-		# Announce the script to reduce confusion about the
-		# test output that follows.
-		say_color "" "# run $test_count: $descr ($*)"
-		# Export TEST_DIRECTORY, TRASH_DIRECTORY and GIT_TEST_LONG
-		# to be able to use them in script
-		export TEST_DIRECTORY TRASH_DIRECTORY GIT_TEST_LONG
-		# Run command; redirect its stderr to &4 as in
-		# test_run_, but keep its stdout on our stdout even in
-		# non-verbose mode.
-		"$@" 2>&4
-		if test "$?" = 0
-		then
-			if test $test_external_has_tap -eq 0; then
-				test_ok_ "$descr"
-			else
-				say_color "" "# test_external test $descr was ok"
-				test_success=$(($test_success + 1))
-			fi
-		else
-			if test $test_external_has_tap -eq 0; then
-				test_failure_ "$descr" "$@"
-			else
-				say_color error "# test_external test $descr failed: $@"
-				test_failure=$(($test_failure + 1))
-			fi
-		fi
-	fi
-}
-
-# Like test_external, but in addition tests that the command generated
-# no output on stderr.
-test_external_without_stderr () {
-	# The temporary file has no (and must have no) security
-	# implications.
-	tmp=${TMPDIR:-/tmp}
-	stderr="$tmp/git-external-stderr.$$.tmp"
-	test_external "$@" 4> "$stderr"
-	test -f "$stderr" || error "Internal error: $stderr disappeared."
-	descr="no stderr: $1"
-	shift
-	say >&3 "# expecting no stderr from previous command"
-	if test ! -s "$stderr"
-	then
-		rm "$stderr"
-
-		if test $test_external_has_tap -eq 0; then
-			test_ok_ "$descr"
-		else
-			say_color "" "# test_external_without_stderr test $descr was ok"
-			test_success=$(($test_success + 1))
-		fi
-	else
-		if test "$verbose" = t
-		then
-			output=$(echo; echo "# Stderr is:"; cat "$stderr")
-		else
-			output=
-		fi
-		# rm first in case test_failure exits.
-		rm "$stderr"
-		if test $test_external_has_tap -eq 0; then
-			test_failure_ "$descr" "$@" "$output"
-		else
-			say_color error "# test_external_without_stderr test $descr failed: $@: $output"
-			test_failure=$(($test_failure + 1))
-		fi
-	fi
 }
 
 # debugging-friendly alternatives to "test [-f|-d|-e]"
