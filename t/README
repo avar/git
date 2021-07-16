@@ -157,10 +157,13 @@ appropriately before running "make". Short options can be bundled, i.e.
 
 -V::
 --verbose-log::
-	Write verbose output to the same logfile as `--tee`, but do
-	_not_ write it to stdout. Unlike `--tee --verbose`, this option
+	An alias for `--verbose --tee`. This option
 	is safe to use when stdout is being consumed by a TAP parser
-	like `prove`. Implies `--tee` and `--verbose`.
+	like `prove`.
+	Historically this option was different from `--verbose --tee`
+	and would not write any verbose output to stdout to ensure the
+	TAP-correctness of the output. The TAP-correctness of the
+	output is now sanity checked by the test library,
 
 --with-dashes::
 	By default tests are run without dashed forms of
@@ -868,32 +871,6 @@ library for your script to use.
 	    skip_all='skipping perl interface tests, perl not available'
 	    test_done
 	fi
-
- - test_external [<prereq>] <message> <external> <script>
-
-   Execute a <script> with an <external> interpreter (like perl). This
-   was added for tests like t9700-perl-git.sh which do most of their
-   work in an external test script.
-
-	test_external \
-	    'GitwebCache::*FileCache*' \
-	    perl "$TEST_DIRECTORY"/t9503/test_cache_interface.pl
-
-   If the test is outputting its own TAP you should set the
-   test_external_has_tap variable somewhere before calling the first
-   test_external* function. See t9700-perl-git.sh for an example.
-
-	# The external test will outputs its own plan
-	test_external_has_tap=1
-
- - test_external_without_stderr [<prereq>] <message> <external> <script>
-
-   Like test_external but fail if there's any output on stderr,
-   instead of checking the exit code.
-
-	test_external_without_stderr \
-	    'Perl API' \
-	    perl "$TEST_DIRECTORY"/t9700/test.pl
 
  - test_expect_code <exit-code> <command>
 
