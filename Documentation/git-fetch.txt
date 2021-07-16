@@ -285,6 +285,15 @@ linkgit:git-gc[1]).
 
 include::transfer-data-leaks.txt[]
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-rest.txt[]
+
+include::config/fetch.txt[]
+
+include::config/remote.txt[]
+
 BUGS
 ----
 Using --recurse-submodules can only fetch new commits in already checked

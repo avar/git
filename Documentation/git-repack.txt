@@ -193,22 +193,9 @@ option to `git repack`.
 CONFIGURATION
 -------------
 
-Various configuration variables affect packing, see
-linkgit:git-config[1] (search for "pack" and "delta").
+include::templates/configuration-include-pack.txt[]
 
-By default, the command passes `--delta-base-offset` option to
-'git pack-objects'; this typically results in slightly smaller packs,
-but the generated packs are incompatible with versions of Git older than
-version 1.4.4. If you need to share your repository with such ancient Git
-versions, either directly or via the dumb http protocol, then you
-need to set the configuration variable `repack.UseDeltaBaseOffset` to
-"false" and repack. Access from old Git versions over the native protocol
-is unaffected by this option as the conversion is performed on the fly
-as needed in that case.
-
-Delta compression is not used on objects larger than the
-`core.bigFileThreshold` configuration variable and on files with the
-attribute `delta` set to false.
+include::config/repack.txt[]
 
 SEE ALSO
 --------
