@@ -463,10 +463,9 @@ int read_oneliner(struct strbuf *buf,
 		return 0;
 	}
 
-	if (buf->len > orig_len && buf->buf[buf->len - 1] == '\n') {
-		if (--buf->len > orig_len && buf->buf[buf->len - 1] == '\r')
-			--buf->len;
-		buf->buf[buf->len] = '\0';
+	if (buf->len > orig_len && strbuf_chomp(buf, '\n')) {
+		if (buf->len > orig_len)
+			strbuf_chomp(buf, '\r');
 	}
 
 	if ((flags & READ_ONELINER_SKIP_IF_EMPTY) && buf->len == orig_len)
