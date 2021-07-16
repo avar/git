@@ -196,13 +196,6 @@ be updated.  (See linkgit:git-config[1]).
 With `--prune` option, run pruning against all the remotes that are updated.
 
 
-DISCUSSION
-----------
-
-The remote configuration is achieved using the `remote.origin.url` and
-`remote.origin.fetch` configuration variables.  (See
-linkgit:git-config[1]).
-
 EXIT STATUS
 -----------
 
@@ -255,6 +248,14 @@ $ git remote add -f -t master -m master origin git://example.com/git.git/
 $ git merge origin
 ------------
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/remote.txt[]
+
+include::config/remotes.txt[]
 
 SEE ALSO
 --------
