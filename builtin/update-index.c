@@ -621,6 +621,7 @@ static struct cache_entry *read_one_ent(const char *which,
 	memcpy(ce->name, path, namelen);
 	ce->ce_flags = create_ce_flags(stage);
 	ce->ce_namelen = namelen;
+	mode = canon_mode(mode);
 	ce->ce_mode = create_ce_mode(mode);
 	return ce;
 }
