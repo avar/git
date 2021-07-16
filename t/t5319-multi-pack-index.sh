@@ -648,7 +648,7 @@ test_expect_success 'repack with minimum size does not alter existing packs' '
 		test-tool chmtime =-3 .git/objects/pack/pack-B* &&
 		test-tool chmtime =-2 .git/objects/pack/pack-A* &&
 		ls .git/objects/pack >expect &&
-		MINSIZE=$(test-tool path-utils file-size .git/objects/pack/*pack | sort -n | head -n 1) &&
+		MINSIZE=$(test-tool path-utils file-sizes .git/objects/pack/*pack | sort -n | head -n 1) &&
 		git multi-pack-index repack --batch-size=$MINSIZE &&
 		ls .git/objects/pack >actual &&
 		test_cmp expect actual
@@ -672,7 +672,7 @@ test_expect_success 'repack respects repack.packKeptObjects=false' '
 		test_line_count = 5 idx-list &&
 		test-tool read-midx .git/objects | grep idx >midx-list &&
 		test_line_count = 5 midx-list &&
-		THIRD_SMALLEST_SIZE=$(test-tool path-utils file-size .git/objects/pack/*pack | sort -n | sed -n 3p) &&
+		THIRD_SMALLEST_SIZE=$(test-tool path-utils file-sizes .git/objects/pack/*pack | sort -n | sed -n 3p) &&
 		BATCH_SIZE=$((THIRD_SMALLEST_SIZE + 1)) &&
 		git multi-pack-index repack --batch-size=$BATCH_SIZE &&
 		ls .git/objects/pack/*idx >idx-list &&
@@ -687,7 +687,7 @@ test_expect_success 'repack creates a new pack' '
 		cd dup &&
 		ls .git/objects/pack/*idx >idx-list &&
 		test_line_count = 5 idx-list &&
-		THIRD_SMALLEST_SIZE=$(test-tool path-utils file-size .git/objects/pack/*pack | sort -n | head -n 3 | tail -n 1) &&
+		THIRD_SMALLEST_SIZE=$(test-tool path-utils file-sizes .git/objects/pack/*pack | sort -n | head -n 3 | tail -n 1) &&
 		BATCH_SIZE=$(($THIRD_SMALLEST_SIZE + 1)) &&
 		git multi-pack-index repack --batch-size=$BATCH_SIZE &&
 		ls .git/objects/pack/*idx >idx-list &&
