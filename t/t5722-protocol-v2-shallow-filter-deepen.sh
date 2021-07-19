@@ -130,14 +130,15 @@ test_expect_success 'even with handcrafted request, filter does not work if not 
 	0000
 	EOF
 
-	cat >err.expect <<-\EOF &&
-	fatal: unexpected line: '"'"'filter blob:none'"'"'
+	cat >expect <<-EOF &&
+	ERR fetch: unexpected argument: '"'"'filter blob:none'"'"'
 	EOF
-	test_must_fail test-tool -C server serve-v2 --stateless-rpc \
-		<in >out 2>err.actual &&
 
-	test_must_be_empty out &&
-	test_cmp err.expect err.actual &&
+	test_must_fail test-tool -C server serve-v2 --stateless-rpc \
+		<in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual &&
+	test_must_be_empty err &&
 
 	# Exercise to ensure that if advertised, filter works
 	git -C server config uploadpack.allowfilter 1 &&
