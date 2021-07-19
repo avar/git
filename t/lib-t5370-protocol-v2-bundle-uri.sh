@@ -101,3 +101,121 @@ test_expect_success "bad client with $T5730_PROTOCOL:// using protocol v2" '
 	grep "clone> test-bad-client$" log >sent-bad-request &&
 	test_file_not_empty sent-bad-request
 '
+
+test_expect_success "ls-remote-bundle-uri with $T5730_PROTOCOL:// using protocol v2" '
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED" &&
+
+	# All data about bundle URIs
+	cat >expect <<-EOF &&
+	$T5370_BUNDLE_URI_ESCAPED
+	EOF
+	git \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		"$T5370_URI" \
+		>actual &&
+	test_cmp expect actual &&
+
+	# Only the URIs
+	git \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri --uri \
+		"$T5370_URI" \
+		>actual2 &&
+	test_cmp actual actual2
+'
+
+test_expect_success "ls-remote-bundle-uri with $T5730_PROTOCOL:// using protocol v2" '
+	ATTR="foo bar=baz" &&
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED $ATTR" &&
+
+	# All data about bundle URIs
+	cat >expect <<-EOF &&
+	$T5370_BUNDLE_URI_ESCAPED $ATTR
+	EOF
+	git \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		"$T5370_URI" \
+		>actual &&
+	test_cmp expect actual
+'
+
+test_expect_success "ls-remote-bundle-uri with $T5730_PROTOCOL:// using protocol v2: --uri" '
+	ATTR="foo bar=baz" &&
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED $ATTR" &&
+
+	# All data about bundle URIs
+	cat >expect <<-EOF &&
+	$T5370_BUNDLE_URI_ESCAPED
+	EOF
+	git \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		--uri \
+		"$T5370_URI" \
+		>actual &&
+	test_cmp expect actual
+'
+
+test_expect_success "ls-remote-bundle-uri --[no-]quiet with $T5730_PROTOCOL:// using protocol v2" '
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED" &&
+
+	cat >err.expect <<-\EOF &&
+	Cloning into '"'"'child'"'"'...
+	EOF
+	git \
+		-c protocol.version=2 \
+		 clone "$T5370_URI" child \
+		 >out 2>err.actual &&
+	test_cmp err.expect err.actual &&
+	test_must_be_empty out &&
+
+	# Without --[no-]quiet
+	cat >out.expect <<-EOF &&
+	$T5370_BUNDLE_URI_ESCAPED
+	EOF
+	cat >err.expect <<-EOF &&
+	From $T5370_URI
+	EOF
+	git \
+		-C child \
+		 -c protocol.version=2 \
+		ls-remote-bundle-uri \
+		>out.actual 2>err.actual &&
+	test_cmp err.expect err.actual &&
+	test_cmp out.expect out.actual &&
+
+	# --no-quiet is the default
+	git \
+		-C child \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		--no-quiet \
+		>out.actual 2>err.actual &&
+	test_cmp err.expect err.actual &&
+	test_cmp out.expect out.actual &&
+
+	# --quiet quiets the "From" line
+	git \
+		-C child \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		--quiet \
+		>out.actual 2>err &&
+	test_must_be_empty err &&
+	test_cmp out.expect out.actual &&
+
+	# --quiet is implicit if the remote is not implicit
+	git \
+		-c protocol.version=2 \
+		ls-remote-bundle-uri \
+		"$T5370_URI" \
+		>out.actual 2>err &&
+	test_must_be_empty err &&
+	test_cmp out.expect out.actual
+'
