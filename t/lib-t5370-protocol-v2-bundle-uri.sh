@@ -219,3 +219,50 @@ test_expect_success "ls-remote-bundle-uri --[no-]quiet with $T5730_PROTOCOL:// u
 	test_must_be_empty err &&
 	test_cmp out.expect out.actual
 '
+
+test_expect_success "ls-remote-bundle-uri with -c transfer.injectBundleURI using with $T5730_PROTOCOL:// using protocol v2" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED" &&
+
+	cat >expect <<-\EOF &&
+	https://injected.example.com/fake-1.bdl
+	https://injected.example.com/fake-2.bdl
+	EOF
+	GIT_TRACE_PACKET="$PWD/log" \
+	git \
+		-c protocol.version=2 \
+		-c transfer.injectBundleURI="https://injected.example.com/fake-1.bdl" \
+		-c transfer.injectBundleURI="https://injected.example.com/fake-2.bdl" \
+		ls-remote-bundle-uri \
+		"$T5370_URI" \
+		>actual 2>err &&
+	test_cmp expect actual &&
+	test_path_is_missing log
+'
+
+test_expect_success "ls-remote-bundle-uri with bad -c transfer.injectBundleURI protocol v2 with $T5730_PROTOCOL://" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5370_PARENT" uploadpack.bundleURI \
+		"$T5370_BUNDLE_URI_ESCAPED" &&
+
+	cat >err.expect <<-\EOF &&
+	error: bad (empty) transfer.injectBundleURI
+	error: could not get the bundle-uri list
+	EOF
+
+	test_must_fail env \
+		GIT_TRACE_PACKET="$PWD/log" \
+		git \
+		-c protocol.version=2 \
+		-c transfer.injectBundleURI \
+		ls-remote-bundle-uri \
+		"$T5370_URI" \
+		>out 2>err.actual &&
+	test_must_be_empty out &&
+	test_cmp err.expect err.actual &&
+	test_path_is_missing log
+	
+'
