@@ -1522,7 +1522,7 @@ int commit_tree_extended(const char *msg, size_t msg_len,
 	/* Not having i18n.commitencoding is the same as having utf-8 */
 	encoding_is_utf8 = is_encoding_utf8(git_commit_encoding);
 
-	strbuf_init(&buffer, 8192); /* should avoid reallocs for the headers */
+	strbuf_init(&buffer, STRBUF_HINT_SIZE); /* should avoid reallocs for the headers */
 	strbuf_addf(&buffer, "tree %s\n", oid_to_hex(tree));
 
 	/*
