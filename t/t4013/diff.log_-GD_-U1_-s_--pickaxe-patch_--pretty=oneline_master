@@ -1,0 +1,4 @@
+$ git log -GD -U1 -s --pickaxe-patch --pretty=oneline master
+9a6d4949b6b76956d9d5e26f2791ec2ceff5fdc0 Third
+1bde4ae5f36c8d9abe3a0fce0c6aab3c4a12fe44 Second
+$
