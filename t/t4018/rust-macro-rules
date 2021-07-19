@@ -1,3 +1,4 @@
+t4018 header: macro_rules! RIGHT {
 macro_rules! RIGHT {
     () => {
         // a comment
