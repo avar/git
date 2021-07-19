@@ -22,6 +22,7 @@
 #include "protocol.h"
 #include "object-store.h"
 #include "color.h"
+#include "bundle-uri.h"
 
 static int transport_use_color = -1;
 static char transport_colors[][COLOR_MAXLEN] = {
@@ -1499,13 +1500,45 @@ int transport_fetch_refs(struct transport *transport, struct ref *refs)
 	return rc;
 }
 
+struct config_cb {
+	struct transport *transport;
+	int configured;
+	int ret;
+};
+
+static int bundle_uri_config(const char *var, const char *value, void *data)
+{
+	struct config_cb *cb = data;
+	struct transport *transport = cb->transport;
+	struct string_list *uri = &transport->bundle_uri;
+
+	if (!strcmp(var, "transfer.injectbundleuri")) {
+		cb->configured = 1;
+		if (!value)
+			cb->ret = error(_("bad (empty) transfer.injectBundleURI"));
+		else if (bundle_uri_parse_line(uri, value) < 0)
+			cb->ret = error(_("bad transfer.injectBundleURI: '%s'"),
+					value);
+		return 0;
+	}
+	return 0;
+}
+
 int transport_get_remote_bundle_uri(struct transport *transport, int quiet)
 {
 	const struct transport_vtable *vtable = transport->vtable;
+	struct config_cb cb = {
+		.transport = transport,
+	};
 
 	/* Lazily configured */
 	if (transport->got_remote_bundle_uri++)
 		return 0;
+
+	/* Our own config can fake it up with transport.injectBundleURI */
+	git_config(bundle_uri_config, &cb);
+	if (cb.configured)
+		return cb.ret;
 
 	/*
 	 * This is intentionally below the transport.injectBundleURI,
