@@ -1,0 +1,13 @@
+color.branch::
+	A boolean to enable/disable color in the output of
+	linkgit:git-branch[1]. May be set to `always`,
+	`false` (or `never`) or `auto` (or `true`), in which case colors are used
+	only when the output is to a terminal. If unset, then the
+	value of `color.ui` is used (`auto` by default).
+
+color.branch.<slot>::
+	Use customized color for branch coloration. `<slot>` is one of
+	`current` (the current branch), `local` (a local branch),
+	`remote` (a remote-tracking branch in refs/remotes/),
+	`upstream` (upstream tracking branch), `plain` (other
+	refs).
