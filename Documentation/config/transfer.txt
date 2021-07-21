@@ -73,3 +73,23 @@ transfer.unpackLimit::
 transfer.advertiseSID::
 	Boolean. When true, client and server processes will advertise their
 	unique session IDs to their remote counterpart. Defaults to false.
+
+transfer.injectBundleURI::
+	Allows for the injection of `bundle-uri` lines into the
+	protocol v2 transport dialog (see `protocol.version` in
+	linkgit:git-config[1]). See `bundle-uri` in
+	link:technical/protocol-v2.html[the Git Wire Protocol, Version
+	2] documentation for what the format looks like.
++
+Can be given more than once, each key being injected as one line into
+the dialog.
++
+This is useful for testing the `bundle-uri` facility, and to e.g. use
+linkgit:git-clone[1] to clone from a server which does not support
+`bundle-uri`, but where the clone can benefit from getting some or
+most of the data from a static bundle retrieved from elsewhere.
++
+Impacts any command that uses the transport to communicate with remote
+linkgit:git-upload-pack[1] processes, e.g. linkgit:git-clone[1],
+linkgit:git-fetch[1] and the linkgit:git-ls-remote-bundle-uri[1]
+inspection command, this includes the `file://` protocol.
