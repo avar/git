@@ -3,8 +3,6 @@
 
 #include "hash.h"
 
-struct progress;
-
 /* A SHA1-protected file */
 struct hashfile {
 	int fd;
