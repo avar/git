@@ -96,10 +96,7 @@ int cmd_main(int argc, const char **argv)
 	while (arg < argc && argv[arg][0] == '-') {
 		const char *p;
 
-		if (argv[arg][1] == 't') {
-		} else if (argv[arg][1] == 'c') {
-		} else if (argv[arg][1] == 'a') {
-		} else if (argv[arg][1] == 'v') {
+		if (argv[arg][1] == 'v') {
 			get_verbosely = 1;
 		} else if (argv[arg][1] == 'w') {
 			write_ref = &argv[arg + 1];
@@ -118,6 +115,8 @@ int cmd_main(int argc, const char **argv)
 				die(_("argument to --packfile must be a valid hash (got '%s')"), p);
 		} else if (skip_prefix(argv[arg], "--index-pack-arg=", &p)) {
 			strvec_push(&index_pack_args, p);
+		} else {
+			usage(http_fetch_usage);
 		}
 		arg++;
 	}
