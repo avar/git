@@ -1,3 +1,4 @@
+t4018 header: public static function RIGHT()
 class Klass
 {
     public static function RIGHT()
