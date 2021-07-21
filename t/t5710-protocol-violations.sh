@@ -1,0 +1,99 @@
+#!/bin/sh
+
+test_description='Test responses to violations of the network protocol. In most
+of these cases it will generally be acceptable for one side to break off
+communications if the other side says something unexpected. We are mostly
+making sure that we do not segfault or otherwise behave badly.'
+. ./test-lib.sh
+
+test_expect_success 'extra delim packet in v2 ls-refs args' '
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=ls-refs
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR ls-refs: expected flush after arguments
+	EOF
+
+	test_must_fail env GIT_PROTOCOL=version=2 \
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
+'
+
+test_expect_success 'extra delim packet in v2 fetch args' '
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=fetch
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR fetch: expected flush after arguments
+	EOF
+
+	test_must_fail env GIT_PROTOCOL=version=2 \
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
+'
+
+test_expect_success 'extra delim packet in v2 object-info args' '
+	# protocol expects 0000 flush after the 0001
+	test-tool pkt-line pack >input <<-EOF &&
+	command=object-info
+	object-format=$(test_oid algo)
+	0001
+	0001
+	EOF
+
+	cat >expect <<-EOF &&
+	version 2
+	agent=FAKE
+	ls-refs=unborn
+	fetch=shallow wait-for-done
+	server-option
+	object-format=$(test_oid algo)
+	object-info
+	0000
+	ERR object-info: expected flush after arguments
+	EOF
+
+	cat >err.expect <<-\EOF &&
+	fatal: object-info: expected flush after arguments
+	EOF
+	test_must_fail env GIT_PROTOCOL=version=2 \
+		git upload-pack . <input >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	sed "s/^agent=.*/agent=FAKE/" <actual >actual.normalized &&
+	test_must_be_empty err &&
+	test_cmp expect actual.normalized
+'
+
+test_done

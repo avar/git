@@ -3,6 +3,9 @@
 
 struct repository;
 struct packet_reader;
-int cap_object_info(struct repository *r, struct packet_reader *request);
+struct packet_writer;
+int cap_object_info(struct repository *r,
+		    struct packet_reader *request,
+		    struct packet_writer *writer);
 
 #endif /* PROTOCOL_CAPS_H */
