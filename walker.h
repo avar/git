@@ -20,16 +20,10 @@ struct walker {
 __attribute__((format (printf, 2, 3)))
 void walker_say(struct walker *walker, const char *fmt, ...);
 
-/* Load pull targets from stdin */
-int walker_targets_stdin(char ***target, const char ***write_ref);
-
 /* Free up loaded targets */
 void walker_targets_free(int targets, char **target, const char **write_ref);
 
-/* If write_ref is set, the ref filename to write the target value to. */
-/* If write_ref_log_details is set, additional text will appear in the ref log. */
-int walker_fetch(struct walker *impl, int targets, char **target,
-		 const char **write_ref, const char *write_ref_log_details);
+int walker_fetch(struct walker *impl, int targets, char **target);
 
 void walker_free(struct walker *walker);
 

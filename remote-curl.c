@@ -1137,7 +1137,7 @@ static int fetch_dumb(int nr_heads, struct ref **to_fetch)
 	walker->get_verbosely = options.verbosity >= 3;
 	walker->get_progress = options.progress;
 	walker->get_recover = 0;
-	ret = walker_fetch(walker, nr_heads, targets, NULL, NULL);
+	ret = walker_fetch(walker, nr_heads, targets);
 	walker_free(walker);
 
 	for (i = 0; i < nr_heads; i++)
