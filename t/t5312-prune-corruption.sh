@@ -71,7 +71,7 @@ test_expect_success 'create history with missing tip commit' '
 	test_tick && git commit --allow-empty -m two &&
 	missing=$(git rev-parse HEAD) &&
 	git checkout --detach $base &&
-	rm .git/objects/$(echo $missing | sed "s,..,&/,") &&
+	test_rm_loose_oid "$missing" &&
 	test_must_fail git cat-file -e $missing
 '
 
