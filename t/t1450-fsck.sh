@@ -337,6 +337,72 @@ test_expect_success 'tree entry with type mismatch' '
 	test_i18ngrep ! "dangling blob" out
 '
 
+test_expect_success 'tree entry with duplicate type mismatching objects' '
+	test_create_repo duplicate-entry &&
+	(
+		cd duplicate-entry &&
+		blob="$(printf "foo" | git hash-object -w --stdin)" &&
+		tree="$(printf "100644 blob $blob\tfoo" | git mktree)" &&
+		commit="$(git commit-tree $tree -m "first commit")" &&
+		git cat-file commit $commit >good-commit &&
+
+		# First bad commit, wrong type, but in the right order
+		printf "40000 A\0$(echo $tree | hex2oct)" >broken-tree-A &&
+		printf "100644 A\0$(echo $blob | hex2oct)" >broken-tree-B &&
+		cat broken-tree-A broken-tree-B >broken-tree.1 &&
+		broken_tree1="$(git hash-object -w --literally -t tree broken-tree.1)" &&
+		bad_commit1="$(git commit-tree $broken_tree1 -m "bad commit 1")" &&
+		git cat-file commit $bad_commit1 >bad-commit.1 &&
+		git update-ref refs/heads/broken-commit-1 $bad_commit1 &&
+
+		test_must_fail git fsck &&
+		git -c fsck.duplicateEntries=warn fsck 2>err &&
+		grep " in tree .*$broken_tree1: duplicateEntries" err &&
+
+		# Second bad commits, wrong types and order
+		cat broken-tree-B broken-tree-A >broken-tree.2 &&
+		broken_tree2="$(git hash-object -w --literally -t tree broken-tree.2)" &&
+		bad_commit2="$(git commit-tree $broken_tree2 -m "bad commit 2")" &&
+		git cat-file commit $bad_commit2 >bad-commit.2 &&
+		git update-ref refs/heads/broken-commit-2 $bad_commit2 &&
+
+		test_must_fail git fsck &&
+		git -c fsck.duplicateEntries=warn fsck 2>err &&
+		grep " in tree .*$broken_tree2: duplicateEntries" err &&
+
+		# git mktree should "fix" the order of this already broken data
+		git ls-tree broken-commit-1 >broken-tree-1-ls &&
+		git ls-tree broken-commit-2 >broken-tree-2-ls &&
+		! test_cmp broken-tree-1-ls broken-tree-2-ls &&
+
+		git mktree <broken-tree-1-ls >broken-mktree-1 &&
+		git mktree <broken-tree-2-ls >broken-mktree-2 &&
+		test_cmp broken-mktree-1 broken-mktree-2
+	)
+'
+
+test_expect_success 'diff-tree stressing tree-diff.c::tree_entry_pathcmp(), not the same type' '
+	zero=$(test_oid zero) &&
+	git -C duplicate-entry diff-tree broken-commit-1 broken-commit-2 >1-to-2 &&
+	grep "$zero" 1-to-2 >lines &&
+	test_line_count = 2 lines &&
+
+	git -C duplicate-entry diff-tree broken-commit-2 broken-commit-1 >2-to-1 &&
+	grep "$zero" 2-to-1 >lines &&
+	test_line_count = 2 lines
+'
+
+test_expect_success 'diff-tree stressing tree-diff.c::tree_entry_pathcmp(), types not reversed' '
+	blob_ok=$(git -C duplicate-entry rev-parse broken-commit-2:A) &&
+	git -C duplicate-entry diff-tree --diff-filter=A broken-commit-1 broken-commit-2 >1-to-2 &&
+	grep "$blob_ok" 1-to-2 &&
+	test_line_count = 1 1-to-2 &&
+
+	git -C duplicate-entry diff-tree --diff-filter=A broken-commit-2 broken-commit-1 >2-to-1 &&
+	grep "$blob_ok" 2-to-1 &&
+	test_line_count = 1 2-to-1
+'
+
 test_expect_success 'tag pointing to nonexistent' '
 	badoid=$(test_oid deadbeef) &&
 	cat >invalid-tag <<-EOF &&
