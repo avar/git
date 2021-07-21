@@ -228,38 +228,6 @@ static int mark_complete(const char *path, const struct object_id *oid,
 	return 0;
 }
 
-int walker_targets_stdin(char ***target, const char ***write_ref)
-{
-	int targets = 0, targets_alloc = 0;
-	struct strbuf buf = STRBUF_INIT;
-
-	assert(!*target);
-	assert(!*write_ref);
-
-	while (1) {
-		char *rf_one = NULL;
-		char *tg_one;
-
-		if (strbuf_getline_lf(&buf, stdin) == EOF)
-			break;
-		tg_one = buf.buf;
-		rf_one = strchr(tg_one, '\t');
-		if (rf_one)
-			*rf_one++ = 0;
-
-		if (targets >= targets_alloc) {
-			targets_alloc = targets_alloc ? targets_alloc * 2 : 64;
-			REALLOC_ARRAY(*target, targets_alloc);
-			REALLOC_ARRAY(*write_ref, targets_alloc);
-		}
-		(*target)[targets] = xstrdup(tg_one);
-		(*write_ref)[targets] = xstrdup_or_null(rf_one);
-		targets++;
-	}
-	strbuf_release(&buf);
-	return targets;
-}
-
 void walker_targets_free(int targets, char **target, const char **write_ref)
 {
 	while (targets--) {
@@ -269,27 +237,16 @@ void walker_targets_free(int targets, char **target, const char **write_ref)
 	}
 }
 
-int walker_fetch(struct walker *walker, int targets, char **target,
-		 const char **write_ref, const char *write_ref_log_details)
+int walker_fetch(struct walker *walker, int targets, char **target)
 {
 	struct strbuf refname = STRBUF_INIT;
 	struct strbuf err = STRBUF_INIT;
-	struct ref_transaction *transaction = NULL;
 	struct object_id *oids;
-	char *msg = NULL;
 	int i, ret = -1;
 
 	save_commit_buffer = 0;
 
 	ALLOC_ARRAY(oids, targets);
-
-	if (write_ref) {
-		transaction = ref_transaction_begin(&err);
-		if (!transaction) {
-			error("%s", err.buf);
-			goto done;
-		}
-	}
 
 	if (!walker->get_recover) {
 		for_each_ref(mark_complete, NULL);
@@ -305,40 +262,9 @@ int walker_fetch(struct walker *walker, int targets, char **target,
 			goto done;
 	}
 
-	if (loop(walker))
-		goto done;
-	if (!write_ref) {
+	if (!loop(walker))
 		ret = 0;
-		goto done;
-	}
-	if (write_ref_log_details) {
-		msg = xstrfmt("fetch from %s", write_ref_log_details);
-	} else {
-		msg = NULL;
-	}
-	for (i = 0; i < targets; i++) {
-		if (!write_ref[i])
-			continue;
-		strbuf_reset(&refname);
-		strbuf_addf(&refname, "refs/%s", write_ref[i]);
-		if (ref_transaction_update(transaction, refname.buf,
-					   oids + i, NULL, 0,
-					   msg ? msg : "fetch (unknown)",
-					   &err)) {
-			error("%s", err.buf);
-			goto done;
-		}
-	}
-	if (ref_transaction_commit(transaction, &err)) {
-		error("%s", err.buf);
-		goto done;
-	}
-
-	ret = 0;
-
 done:
-	ref_transaction_free(transaction);
-	free(msg);
 	free(oids);
 	strbuf_release(&err);
 	strbuf_release(&refname);

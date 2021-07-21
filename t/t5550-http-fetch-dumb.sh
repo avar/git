@@ -186,28 +186,6 @@ test_expect_success 'fetch changes via http' '
 	test_cmp file clone/file
 '
 
-test_expect_success 'fetch changes via manual http-fetch' '
-	cp -R clone-tmpl clone2 &&
-
-	HEAD=$(git rev-parse --verify HEAD) &&
-	(cd clone2 &&
-	 git http-fetch -w heads/main-new $HEAD $(git config remote.origin.url) &&
-	 git checkout main-new &&
-	 test $HEAD = $(git rev-parse --verify HEAD)) &&
-	test_cmp file clone2/file
-'
-
-test_expect_success 'manual http-fetch without -a works just as well' '
-	cp -R clone-tmpl clone3 &&
-
-	HEAD=$(git rev-parse --verify HEAD) &&
-	(cd clone3 &&
-	 git http-fetch -w heads/main-new $HEAD $(git config remote.origin.url) &&
-	 git checkout main-new &&
-	 test $HEAD = $(git rev-parse --verify HEAD)) &&
-	test_cmp file clone3/file
-'
-
 test_expect_success 'http remote detects correct HEAD' '
 	git push public main:other &&
 	(cd clone &&
