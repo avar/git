@@ -162,12 +162,12 @@ static int call_advertise(struct protocol_capability *command,
 
 static int call_command(struct protocol_capability *command,
 			struct repository *r, struct strvec *keys,
-			struct packet_reader *request)
+			struct packet_reader *request,
+			struct packet_writer *writer)
 {
-	struct packet_writer writer = PACKET_WRITER_INIT;
 	read_startup_config(command);
 
-	return command->command(r, request, &writer);
+	return command->command(r, request, writer);
 }
 
 void protocol_v2_advertise_capabilities(void)
@@ -227,7 +227,8 @@ static int is_valid_capability(const char *key)
 	return c && call_advertise(c, the_repository, NULL);
 }
 
-static int is_command(const char *key, struct protocol_capability **command)
+static int is_command(const char *key, struct protocol_capability **command,
+		      struct packet_writer *writer)
 {
 	const char *out;
 
@@ -235,10 +236,13 @@ static int is_command(const char *key, struct protocol_capability **command)
 		struct protocol_capability *cmd = get_capability(out);
 
 		if (*command)
-			die("command '%s' requested after already requesting command '%s'",
-			    out, (*command)->name);
+			packet_client_error(writer,
+					    N_("serve: command '%s' requested after "
+					       "already requesting command '%s'"),
+					    out, (*command)->name);
 		if (!cmd || !call_advertise(cmd, the_repository, NULL) || !cmd->command)
-			die("invalid command '%s'", out);
+			packet_client_error(writer,
+					    N_("serve: invalid command '%s'"), out);
 
 		*command = cmd;
 		return 1;
@@ -267,7 +271,8 @@ static int has_capability(const struct strvec *keys, const char *capability,
 	return 0;
 }
 
-static void check_algorithm(struct repository *r, struct strvec *keys)
+static void check_algorithm(struct repository *r, struct strvec *keys,
+			    struct packet_writer *writer)
 {
 	int client = GIT_HASH_SHA1, server = hash_algo_by_ptr(r->hash_algo);
 	const char *algo_name;
@@ -275,12 +280,15 @@ static void check_algorithm(struct repository *r, struct strvec *keys)
 	if (has_capability(keys, "object-format", &algo_name)) {
 		client = hash_algo_by_name(algo_name);
 		if (client == GIT_HASH_UNKNOWN)
-			die("unknown object format '%s'", algo_name);
+			packet_client_error(writer,
+					    N_("serve: unknown object format '%s'"),
+					       algo_name);
 	}
 
 	if (client != server)
-		die("mismatched object format: server %s; client %s\n",
-		    r->hash_algo->name, hash_algos[client].name);
+		packet_client_error(writer,
+				    N_("serve: mismatched object format: server '%s'; client '%s'"),
+				    r->hash_algo->name, hash_algos[client].name);
 }
 
 enum request_state {
@@ -292,6 +300,7 @@ static int process_request(void)
 {
 	enum request_state state = PROCESS_REQUEST_KEYS;
 	struct packet_reader reader;
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	struct strvec keys = STRVEC_INIT;
 	struct protocol_capability *command = NULL;
 	const char *client_sid;
@@ -314,11 +323,12 @@ static int process_request(void)
 			BUG("Should have already died when seeing EOF");
 		case PACKET_READ_NORMAL:
 			/* collect request; a sequence of keys and values */
-			if (is_command(reader.line, &command) ||
+			if (is_command(reader.line, &command, &writer) ||
 			    is_valid_capability(reader.line))
 				strvec_push(&keys, reader.line);
 			else
-				die("unknown capability '%s'", reader.line);
+				packet_client_error(
+					&writer, N_("serve: unknown capability '%s'"), reader.line);
 
 			/* Consume the peeked line */
 			packet_reader_read(&reader);
@@ -353,14 +363,14 @@ static int process_request(void)
 	}
 
 	if (!command)
-		die("no command requested");
+		packet_client_error(&writer, N_("serve: no command requested"));
 
-	check_algorithm(the_repository, &keys);
+	check_algorithm(the_repository, &keys, &writer);
 
 	if (has_capability(&keys, "session-id", &client_sid))
 		trace2_data_string("transfer", NULL, "client-sid", client_sid);
 
-	call_command(command, the_repository, &keys, &reader);
+	call_command(command, the_repository, &keys, &reader, &writer);
 
 	strvec_clear(&keys);
 	return 0;
