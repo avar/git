@@ -6,7 +6,7 @@
 #include "strvec.h"
 
 static const char http_fetch_usage[] = "git http-fetch "
-"[-c] [-t] [-a] [-v] [--recover] [-w ref] [--stdin | --packfile=hash | commit-id] url";
+"[-v] [--recover] [-w ref] [--stdin | --packfile=hash | commit-id] url";
 
 static int fetch_using_walker(const char *raw_url, int get_verbosely,
 			      int get_recover, int commits, char **commit_id,
