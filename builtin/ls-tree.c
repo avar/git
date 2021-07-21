@@ -63,7 +63,7 @@ static int show_recursive(const char *base, int baselen, const char *pathname)
 
 static int show_tree(const struct object_id *oid, struct strbuf *base,
 		     const char *pathname,
-		     enum object_type object_type, unsigned mode,
+		     enum object_type object_type, unsigned raw_mode,
 		     void *context)
 {
 	int retval = 0;
@@ -103,11 +103,11 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 						  "%"PRIuMAX, (uintmax_t)size);
 			} else
 				xsnprintf(size_text, sizeof(size_text), "-");
-			printf("%06o %s %s %7s\t", mode, type,
+			printf("%06o %s %s %7s\t", raw_mode, type,
 			       find_unique_abbrev(oid, abbrev),
 			       size_text);
 		} else
-			printf("%06o %s %s\t", mode, type,
+			printf("%06o %s %s\t", raw_mode, type,
 			       find_unique_abbrev(oid, abbrev));
 	}
 	baselen = base->len;
