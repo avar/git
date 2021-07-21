@@ -475,6 +475,7 @@ void check_stateless_delimiter(int stateless_rpc,
 int get_remote_bundle_uri(int fd_out, struct packet_reader *reader,
 			  struct string_list *bundle_uri, int stateless_rpc)
 {
+	const char *hash_name;
 	int line_nr = 1;
 
 	/* Assert bundle-uri support */
@@ -482,6 +483,20 @@ int get_remote_bundle_uri(int fd_out, struct packet_reader *reader,
 
 	/* Send command */
 	packet_write_fmt(fd_out, "command=bundle-uri\n");
+
+	if (server_supports_v2("agent", 0))
+		packet_write_fmt(fd_out, "agent=%s", git_user_agent_sanitized());
+
+	if (server_feature_v2("object-format", &hash_name)) {
+		int hash_algo = hash_algo_by_name(hash_name);
+		if (hash_algo == GIT_HASH_UNKNOWN)
+			die(_("unknown object format '%s' specified by server"), hash_name);
+		reader->hash_algo = &hash_algos[hash_algo];
+		packet_write_fmt(fd_out, "object-format=%s", reader->hash_algo->name);
+	} else {
+		reader->hash_algo = &hash_algos[GIT_HASH_SHA1];
+	}
+
 	packet_delim(fd_out);
 
 	/* Send options */
