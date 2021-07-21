@@ -78,8 +78,16 @@ test_expect_success 'request invalid capability' '
 	foobar
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "unknown capability" err
+
+	cat >expect <<-\EOF &&
+	ERR serve: unknown capability '"'"'foobar'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'request with no command' '
@@ -88,8 +96,16 @@ test_expect_success 'request with no command' '
 	object-format=$(test_oid algo)
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "no command requested" err
+
+	cat >expect <<-\EOF &&
+	ERR serve: no command requested
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'request invalid command' '
@@ -99,8 +115,36 @@ test_expect_success 'request invalid command' '
 	agent=git/test
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "invalid command" err
+
+	cat >expect <<-\EOF &&
+	ERR serve: invalid command '"'"'foo'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
+'
+
+test_expect_success 'request more than one command' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=ls-refs
+	command=fetch
+	object-format=$(test_oid algo)
+	agent=git/test
+	0000
+	EOF
+
+	cat >expect <<-\EOF &&
+	ERR serve: command '"'"'fetch'"'"' requested after already requesting command '"'"'ls-refs'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 # Test the basics of fetch
@@ -112,8 +156,16 @@ test_expect_success 'wrong object-format' '
 	object-format=$(test_oid wrong_algo)
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "mismatched object format" err
+
+	cat >expect <<-EOF &&
+	ERR serve: mismatched object format: server '"'"'$(test_oid algo)'"'"'; client '"'"'$(test_oid wrong_algo)'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 test_expect_success 'fetch with unknown features' '
@@ -327,12 +379,15 @@ test_expect_success 'basics of bundle-uri: dies if not enabled' '
 	0000
 	EOF
 
-	cat >err.expect <<-EOF &&
-	fatal: invalid command '"'"'bundle-uri'"'"'
+	cat >expect <<-\EOF &&
+	ERR serve: invalid command '"'"'bundle-uri'"'"'
 	EOF
 
-	test_must_fail test-tool serve-v2 --stateless-rpc <in 2>err.actual &&
-	test_cmp err.expect err.actual
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+
+	test_must_be_empty err &&
+	test_cmp expect actual
 '
 
 
