@@ -4,9 +4,13 @@
 #include "http.h"
 #include "walker.h"
 #include "strvec.h"
+#include "parse-options.h"
 
-static const char http_fetch_usage[] = "git http-fetch "
-"[-v] [--recover] [-w ref] [--stdin | --packfile=hash | commit-id] url";
+static char const * const http_fetch_usage[] = {
+	N_("[-v] --packfile=checksum --index-pack-args=<arg>... <url>"),
+	N_("[-v] [--recover] [-w ref <commit> | -w ref --stdin] <url>"),
+	NULL
+};
 
 static int fetch_using_walker(const char *raw_url, int get_verbosely,
 			      int get_recover, int commits, char **commit_id,
@@ -80,60 +84,57 @@ static void fetch_single_packfile(struct object_id *packfile_hash,
 int cmd_main(int argc, const char **argv)
 {
 	int commits_on_stdin = 0;
-	int commits;
-	const char **write_ref = NULL;
-	char **commit_id;
-	int arg = 1;
+	char **commit_id = NULL;
 	int get_verbosely = 0;
 	int get_recover = 0;
 	int packfile = 0;
-	int nongit;
-	struct object_id packfile_hash;
+	const char *write_ref = NULL;
+	const char *url;
+	struct object_id packfile_hash = { 0 };
 	struct strvec index_pack_args = STRVEC_INIT;
+	struct option options[] = {
+		OPT__VERBOSE(&get_verbosely, N_("be verbose")),
+		OPT_STRING('w', NULL, &write_ref, N_("refname"),
+			   N_("reference name to write to")),
+		OPT_BOOL(0, "recover", &get_recover,
+			 N_("Verify that everything reachable from target is fetched")),
+		OPT_BOOL(0, "stdin", &commits_on_stdin,
+			 N_("read commits and filename from stdin")),
+		{ OPTION_CALLBACK, 0, "packfile", &packfile_hash,
+		  N_("checksum"), N_("the checksum of the packfile"),
+		  PARSE_OPT_NONEG, parse_opt_object_id_hex, 0 },
+		OPT_STRVEC(0, "index-pack-arg", &index_pack_args, N_("args"),
+			   N_("arguments to pass to git-index-pack")),
+		OPT_END(),
+	};
 
-	setup_git_directory_gently(&nongit);
-
-	while (arg < argc && argv[arg][0] == '-') {
-		const char *p;
-
-		if (argv[arg][1] == 'v') {
-			get_verbosely = 1;
-		} else if (argv[arg][1] == 'w') {
-			write_ref = &argv[arg + 1];
-			arg++;
-		} else if (argv[arg][1] == 'h') {
-			usage(http_fetch_usage);
-		} else if (!strcmp(argv[arg], "--recover")) {
-			get_recover = 1;
-		} else if (!strcmp(argv[arg], "--stdin")) {
-			commits_on_stdin = 1;
-		} else if (skip_prefix(argv[arg], "--packfile=", &p)) {
-			const char *end;
-
-			packfile = 1;
-			if (parse_oid_hex(p, &packfile_hash, &end) || *end)
-				die(_("argument to --packfile must be a valid hash (got '%s')"), p);
-		} else if (skip_prefix(argv[arg], "--index-pack-arg=", &p)) {
-			strvec_push(&index_pack_args, p);
-		} else {
-			usage(http_fetch_usage);
-		}
-		arg++;
-	}
-	if (argc != arg + 2 - (commits_on_stdin || packfile))
-		usage(http_fetch_usage);
-
-	if (nongit)
-		die(_("not a git repository"));
-
+	setup_git_directory();
 	git_config(git_default_config, NULL);
 
-	if (packfile) {
-		if (!index_pack_args.nr)
-			die(_("--packfile requires --index-pack-args"));
+	argc = parse_options(argc, argv, NULL, options, http_fetch_usage, 0);
+	packfile = !is_null_oid(&packfile_hash);
 
-		fetch_single_packfile(&packfile_hash, argv[arg],
-				      index_pack_args.v);
+	if (!packfile && !commits_on_stdin && argc != 2) {
+		error(_("must supply --packfile, --stdin or <commit>"));
+		goto usage;
+	}
+
+	if (!is_null_oid(&packfile_hash)) {
+		if (!index_pack_args.nr) {
+			error(_("--packfile requires --index-pack-args"));
+			goto usage;
+		}
+		if (get_recover || write_ref || commits_on_stdin) {
+			error(_("incompatible options with --packfile"));
+			goto usage;
+		}
+		if (argc != 1) {
+			error(_("must provide one URL with --packfile=*"));
+			goto usage;
+		}
+
+		url = argv[0];
+		fetch_single_packfile(&packfile_hash, url, index_pack_args.v);
 
 		return 0;
 	}
@@ -142,12 +143,30 @@ int cmd_main(int argc, const char **argv)
 		die(_("--index-pack-args can only be used with --packfile"));
 
 	if (commits_on_stdin) {
-		commits = walker_targets_stdin(&commit_id, &write_ref);
-	} else {
-		commit_id = (char **) &argv[arg++];
-		commits = 1;
+		char **commit_id = NULL;
+		const char **write_ref_stdin = NULL;
+		int targets;
+
+		if (argc > 1) {
+			error(_("only provide <url>, not <commit> with --stdin"));
+			goto usage;
+		}
+
+		targets = walker_targets_stdin(&commit_id, &write_ref_stdin);
+		return fetch_using_walker(argv[0], get_verbosely, get_recover,
+					  targets, commit_id, write_ref_stdin,
+					  1);
 	}
-	return fetch_using_walker(argv[arg], get_verbosely, get_recover,
-				  commits, commit_id, write_ref,
-				  commits_on_stdin);
+
+	if (argc != 2) {
+		error(_("need <commit> and <url> with -w without --stdin"));
+		goto usage;
+	}
+
+	commit_id = (char **)&argv[0];
+	url = argv[1];
+	return fetch_using_walker(url, get_verbosely, get_recover, 1,
+				  commit_id, &write_ref, 0);
+usage:
+	usage_with_options(http_fetch_usage, options);
 }
