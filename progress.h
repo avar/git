@@ -23,6 +23,7 @@ struct progress {
 	struct strbuf status;
 	size_t status_len_utf8;
 
+	uint64_t last_update;
 	uint64_t last_value;
 	uint64_t total;
 	unsigned last_percent;
@@ -56,5 +57,6 @@ struct progress *start_delayed_sparse_progress(const char *title,
 					       uint64_t total);
 void stop_progress(struct progress **progress);
 void stop_progress_msg(struct progress **progress, const char *msg);
+void stop_progress_early(struct progress **p_progress);
 
 #endif
