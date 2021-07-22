@@ -1,3 +1,5 @@
+#!/bin/sh
+#
 # Library of functions shared by all tests scripts, included by
 # test-lib.sh.
 #
@@ -15,6 +17,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
+
+# Early bailing out on 'prove t*.sh'
+if test -n "$HARNESS_ACTIVE" && test "$0" = "test-lib-functions.sh"
+then
+	echo "1..0 # SKIP accidentally invoked 'prove t*.sh'?"
+	exit 0
+fi
 
 # The semantics of the editor variables are that of invoking
 # sh -c "$EDITOR \"$@\"" files ...
