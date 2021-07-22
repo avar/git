@@ -1105,7 +1105,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 	} else {
 		/* Unknown protocol in URL. Pass to external handler. */
 		int len = external_specification_len(url);
-		char *handler = xmemdupz(url, len);
+		char *handler = xstrndup(url, len);
 		transport_helper_init(ret, handler);
 	}
 
