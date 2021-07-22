@@ -254,6 +254,29 @@ void display_progress(struct progress *progress, uint64_t n)
 		display(progress, n, NULL, 0);
 }
 
+void increment_progress(struct progress *progress)
+{
+	uint64_t n;
+	uint64_t last;
+	uint64_t total;
+
+	if (!progress)
+		return;
+
+	last  = progress->last_value;
+	total = progress->total;
+
+	if (!total)
+		BUG("%s: increment_progress() without total", progress->title.buf);
+
+	n = last == -1 ? 1 : last + 1;
+
+	if (n > total)
+		BUG("counted past total %lu with increment_progress()", total);
+	
+	display(progress, n, NULL, 0);
+}
+
 static void progress_interval(int signum)
 {
 	progress_update = 1;

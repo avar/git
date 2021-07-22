@@ -640,9 +640,10 @@ static int fsck_cruft(const char *basename, const char *path, void *data)
 	return 0;
 }
 
-static int fsck_subdir(unsigned int nr, const char *path, void *progress)
+static int fsck_subdir(const char *path, void *data)
 {
-	display_progress(progress, nr + 1);
+	struct progress *progress = data;
+	increment_progress(progress);
 	return 0;
 }
 

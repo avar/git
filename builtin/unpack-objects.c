@@ -504,8 +504,8 @@ static void unpack_all(void)
 		progress = start_progress(_("Unpacking objects"), nr_objects);
 	CALLOC_ARRAY(obj_list, nr_objects);
 	for (i = 0; i < nr_objects; i++) {
+		increment_progress(progress);
 		unpack_one(i);
-		display_progress(progress, i + 1);
 	}
 	stop_progress(&progress);
 

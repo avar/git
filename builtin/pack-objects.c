@@ -2268,11 +2268,12 @@ static void get_object_details(void)
 
 	for (i = 0; i < to_pack.nr_objects; i++) {
 		struct object_entry *entry = sorted_by_offset[i];
+		increment_progress(progress_state);
+
 		check_object(entry, i);
 		if (entry->type_valid &&
 		    oe_size_greater_than(&to_pack, entry, big_file_threshold))
 			entry->no_try_delta = 1;
-		display_progress(progress_state, i + 1);
 	}
 	stop_progress(&progress_state);
 
