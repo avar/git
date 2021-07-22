@@ -37,8 +37,8 @@ static int ent_compare(const void *a_, const void *b_)
 {
 	struct treeent *a = *(struct treeent **)a_;
 	struct treeent *b = *(struct treeent **)b_;
-	return base_name_compare(a->name, a->len, a->mode,
-				 b->name, b->len, b->mode);
+	return base_name_compare(a->name, a->len, S_ISDIR(a->mode),
+				 b->name, b->len, S_ISDIR(b->mode));
 }
 
 static void write_tree(struct object_id *oid)
