@@ -262,8 +262,8 @@ static unsigned check_objects(void)
 		progress = start_delayed_progress(_("Checking objects"), max);
 
 	for (i = 0; i < max; i++) {
+		increment_progress(progress);
 		foreign_nr += check_object(get_indexed_object(i));
-		display_progress(progress, i + 1);
 	}
 
 	stop_progress(&progress);
@@ -1161,7 +1161,11 @@ static void parse_pack_objects(unsigned char *hash)
 				nr_objects);
 	for (i = 0; i < nr_objects; i++) {
 		struct object_entry *obj = &objects[i];
-		void *data = unpack_raw_entry(obj, &ofs_delta->offset,
+		void *data;
+
+		increment_progress(progress);
+
+		data = unpack_raw_entry(obj, &ofs_delta->offset,
 					      &ref_delta_oid,
 					      &obj->idx.oid);
 		obj->real_type = obj->type;
@@ -1182,7 +1186,6 @@ static void parse_pack_objects(unsigned char *hash)
 			sha1_object(data, NULL, obj->size, obj->type,
 				    &obj->idx.oid);
 		free(data);
-		display_progress(progress, i+1);
 	}
 	objects[i].idx.offset = consumed_bytes;
 	stop_progress(&progress);
