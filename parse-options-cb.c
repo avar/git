@@ -151,6 +151,24 @@ int parse_opt_object_id(const struct option *opt, const char *arg, int unset)
 	return 0;
 }
 
+int parse_opt_object_id_hex(const struct option *opt, const char *arg, int unset)
+{
+	struct object_id oid;
+	struct object_id *target = opt->value;
+	const char *end;
+
+	if (unset) {
+		oidcpy(target, null_oid());
+		return 0;
+	}
+	if (!arg)
+		return -1;
+	if (parse_oid_hex(arg, &oid, &end) || *end)
+		return error(_("malformed hex object name '%s'"), arg);
+	*target = oid;
+	return 0;
+}
+
 int parse_opt_tertiary(const struct option *opt, const char *arg, int unset)
 {
 	int *target = opt->value;
@@ -204,6 +222,22 @@ int parse_opt_string_list(const struct option *opt, const char *arg, int unset)
 		return -1;
 
 	string_list_append(v, arg);
+	return 0;
+}
+
+int parse_opt_strvec(const struct option *opt, const char *arg, int unset)
+{
+	struct strvec *v = opt->value;
+
+	if (unset) {
+		strvec_clear(v);
+		return 0;
+	}
+
+	if (!arg)
+		return -1;
+
+	strvec_push(v, arg);
 	return 0;
 }
 

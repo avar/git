@@ -9,15 +9,15 @@ git-http-fetch - Download from a remote Git repository via HTTP
 SYNOPSIS
 --------
 [verse]
-'git http-fetch' [-c] [-t] [-a] [-d] [-v] [-w filename] [--recover] [--stdin | --packfile=<hash> | <commit>] <url>
+
+'git http-fetch' [-v] --packfile=checksum --index-pack-args=<arg>... <url>
+'git http-fetch' [-v] [--recover] [-w ref <commit> | -w ref --stdin] <url>
 
 DESCRIPTION
 -----------
 Downloads a remote Git repository via HTTP.
 
-This command always gets all objects. Historically, there were three options
-`-a`, `-c` and `-t` for choosing which objects to download. They are now
-silently ignored.
+This command always gets all objects.
 
 OPTIONS
 -------
@@ -25,8 +25,6 @@ commit-id::
         Either the hash or the filename under [URL]/refs/ to
         pull.
 
--a, -c, -t::
-	These options are ignored for historical reasons.
 -v::
 	Report what is downloaded.
 

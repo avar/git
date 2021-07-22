@@ -8,6 +8,13 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 . "$TEST_DIRECTORY"/lib-httpd.sh
 start_httpd
 
+test_expect_success 'http-fetch usage' '
+	test_expect_code 129 git http-fetch &&
+	test_expect_code 129 git http-fetch -h &&
+	test_expect_code 129 git http-fetch -a &&
+	test_expect_code 129 git http-fetch --unknown-option
+'
+
 test_expect_success 'setup repository' '
 	git config push.default matching &&
 	echo content1 >file &&
@@ -184,7 +191,7 @@ test_expect_success 'fetch changes via manual http-fetch' '
 
 	HEAD=$(git rev-parse --verify HEAD) &&
 	(cd clone2 &&
-	 git http-fetch -a -w heads/main-new $HEAD $(git config remote.origin.url) &&
+	 git http-fetch -w heads/main-new $HEAD $(git config remote.origin.url) &&
 	 git checkout main-new &&
 	 test $HEAD = $(git rev-parse --verify HEAD)) &&
 	test_cmp file clone2/file
