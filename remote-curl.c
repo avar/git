@@ -1500,6 +1500,7 @@ int cmd_main(int argc, const char **argv)
 		const char *arg;
 
 		if (strbuf_getline_lf(&buf, stdin) == EOF) {
+			strbuf_release(&buf);
 			if (ferror(stdin))
 				error(_("remote-curl: error reading command stream from git"));
 			return 1;
@@ -1555,6 +1556,7 @@ int cmd_main(int argc, const char **argv)
 		strbuf_reset(&buf);
 	} while (1);
 
+	strbuf_release(&buf);
 	http_cleanup();
 
 	return 0;

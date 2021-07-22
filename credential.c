@@ -105,7 +105,7 @@ static int match_partial_url(const char *url, void *cb)
 static void credential_apply_config(struct credential *c)
 {
 	char *normalized_url;
-	struct urlmatch_config config = { STRING_LIST_INIT_DUP };
+	struct urlmatch_config config = URLMATCH_CONFIG_INIT;
 	struct strbuf url = STRBUF_INIT;
 
 	if (!c->host)
@@ -117,9 +117,7 @@ static void credential_apply_config(struct credential *c)
 		return;
 
 	config.section = "credential";
-	config.key = NULL;
 	config.collect_fn = credential_config_callback;
-	config.cascade_fn = NULL;
 	config.select_fn = select_all;
 	config.fallback_match_fn = match_partial_url;
 	config.cb = c;
@@ -129,6 +127,7 @@ static void credential_apply_config(struct credential *c)
 
 	git_config(urlmatch_config_entry, &config);
 	free(normalized_url);
+	urlmatch_config_release(&config);
 	strbuf_release(&url);
 
 	c->configured = 1;
