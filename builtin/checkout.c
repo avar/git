@@ -91,6 +91,34 @@ struct checkout_opts {
 	struct tree *source_tree;
 };
 
+#define CHECKOUT_OPTS_CHECKOUT_INIT { \
+	.dwim_new_local_branch = 1, \
+	.switch_branch_doing_nothing_is_ok = 1, \
+	.accept_ref = 1, \
+	.accept_pathspec = 1, \
+	.implicit_detach = 1, \
+	.can_switch_when_in_progress = 1, \
+	.empty_pathspec_ok = 1, \
+	.overlay_mode = -1, \
+	.checkout_index = -2,    /* default on */ \
+	.checkout_worktree = -2, /* default on */ \
+}
+
+#define CHECKOUT_OPTS_SWITCH_INIT { \
+	.dwim_new_local_branch = 1, \
+	.accept_ref = 1, \
+	.only_merge_on_switching_branches = 1, \
+	.orphan_from_empty_tree = 1, \
+	.overlay_mode = -1, \
+}
+
+#define CHECKOUT_OPTS_RESTORE_INIT { \
+	.accept_pathspec = 1, \
+	.checkout_index = -1,    /* default off */ \
+	.checkout_worktree = -2, /* default on */ \
+	.ignore_unmerged_opt = "--ignore-unmerged", \
+}
+
 struct branch_info {
 	const char *name; /* The short name used */
 	const char *path; /* The full name of a real branch */
@@ -1787,7 +1815,7 @@ static int checkout_main(int argc, const char **argv, const char *prefix,
 
 int cmd_checkout(int argc, const char **argv, const char *prefix)
 {
-	struct checkout_opts opts;
+	struct checkout_opts opts = CHECKOUT_OPTS_CHECKOUT_INIT;
 	struct option *options;
 	struct option checkout_options[] = {
 		OPT_STRING('b', NULL, &opts.new_branch, N_("branch"),
@@ -1801,20 +1829,6 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 	int ret;
-
-	memset(&opts, 0, sizeof(opts));
-	opts.dwim_new_local_branch = 1;
-	opts.switch_branch_doing_nothing_is_ok = 1;
-	opts.only_merge_on_switching_branches = 0;
-	opts.accept_ref = 1;
-	opts.accept_pathspec = 1;
-	opts.implicit_detach = 1;
-	opts.can_switch_when_in_progress = 1;
-	opts.orphan_from_empty_tree = 0;
-	opts.empty_pathspec_ok = 1;
-	opts.overlay_mode = -1;
-	opts.checkout_index = -2;    /* default on */
-	opts.checkout_worktree = -2; /* default on */
 
 	if (argc == 3 && !strcmp(argv[1], "-b")) {
 		/*
@@ -1838,7 +1852,7 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 
 int cmd_switch(int argc, const char **argv, const char *prefix)
 {
-	struct checkout_opts opts;
+	struct checkout_opts opts = CHECKOUT_OPTS_SWITCH_INIT;
 	struct option *options = NULL;
 	struct option switch_options[] = {
 		OPT_STRING('c', "create", &opts.new_branch, N_("branch"),
@@ -1852,17 +1866,6 @@ int cmd_switch(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 	int ret;
-
-	memset(&opts, 0, sizeof(opts));
-	opts.dwim_new_local_branch = 1;
-	opts.accept_ref = 1;
-	opts.accept_pathspec = 0;
-	opts.switch_branch_doing_nothing_is_ok = 0;
-	opts.only_merge_on_switching_branches = 1;
-	opts.implicit_detach = 0;
-	opts.can_switch_when_in_progress = 0;
-	opts.orphan_from_empty_tree = 1;
-	opts.overlay_mode = -1;
 
 	options = parse_options_dup(switch_options);
 	options = add_common_options(&opts, options);
@@ -1878,7 +1881,7 @@ int cmd_switch(int argc, const char **argv, const char *prefix)
 
 int cmd_restore(int argc, const char **argv, const char *prefix)
 {
-	struct checkout_opts opts;
+	struct checkout_opts opts = CHECKOUT_OPTS_RESTORE_INIT;
 	struct option *options;
 	struct option restore_options[] = {
 		OPT_STRING('s', "source", &opts.from_treeish, "<tree-ish>",
@@ -1893,15 +1896,6 @@ int cmd_restore(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 	int ret;
-
-	memset(&opts, 0, sizeof(opts));
-	opts.accept_ref = 0;
-	opts.accept_pathspec = 1;
-	opts.empty_pathspec_ok = 0;
-	opts.overlay_mode = 0;
-	opts.checkout_index = -1;    /* default off */
-	opts.checkout_worktree = -2; /* default on */
-	opts.ignore_unmerged_opt = "--ignore-unmerged";
 
 	options = parse_options_dup(restore_options);
 	options = add_common_options(&opts, options);
