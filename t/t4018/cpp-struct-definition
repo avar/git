@@ -1,3 +1,4 @@
+t4018 header: struct RIGHT {
 struct RIGHT {
 	unsigned
 	/* this bit field looks like a label and should not be picked up */
