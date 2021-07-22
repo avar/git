@@ -1,3 +1,4 @@
+t4018 header: union RIGHT {
 union RIGHT {
 	double v;
 	int ChangeMe;

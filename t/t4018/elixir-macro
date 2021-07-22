@@ -1,3 +1,4 @@
+t4018 header: defmacro foo(RIGHT) do
 defmacro foo(RIGHT) do
   # Code
   # Code
