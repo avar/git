@@ -1623,6 +1623,16 @@ static int do_fetch(struct transport *transport,
 			}
 		}
 		if (source_ref) {
+			if (!branch) {
+				const char *shortname = NULL;
+				if (!skip_prefix(source_ref->name,
+						 "refs/heads/", &shortname))
+					shortname = source_ref->name;
+				die(_("could not set upstream of HEAD to '%s' from '%s' when "
+				      "it does not point to any branch."),
+				    shortname, transport->remote->name);
+			}
+
 			if (!strcmp(source_ref->name, "HEAD") ||
 			    starts_with(source_ref->name, "refs/heads/"))
 				install_branch_config(0,
