@@ -702,6 +702,10 @@ SEE ALSO
 --------
 linkgit:git-hook[1]
 
+The `uploadpack.packObjectsHook` configuration variable can configure
+a hook for linkgit:git-pack-objects[1] to use, but not in a way that
+uses the hook facility discussed above.
+
 GIT
 ---
 Part of the linkgit:git[1] suite
