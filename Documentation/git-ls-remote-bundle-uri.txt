@@ -1,0 +1,63 @@
+git-ls-remote-bundle-uri(1)
+===========================
+
+NAME
+----
+git-ls-remote-bundle-uri - List 'bundle-uri' in a remote repository
+
+
+SYNOPSIS
+--------
+[verse]
+'git ls-remote-bundle-uri [--quiet] [--uri] [--upload-pack=<exec>]
+	[[-o | --server-option=]<option>] <repository>
+
+
+DESCRIPTION
+-----------
+
+Displays the `bundle-uri`s advertised by a remote repository. See
+`bundle-uri` in link:technical/protocol-v2.html[the Git Wire Protocol,
+Version 2] documentation for what the output format looks like.
+
+OPTIONS
+-------
+
+-q::
+--quiet::
+	Do not print remote URL to stderr in cases where the remote
+	name is inferred from config.
++
+When the remote name is not inferred (e.g. `git ls-remote-bundle-uri
+origin`, or `git ls-remote-bundle-uri https://[...]`) the remote URL
+is not printed in any case.
+
+--uri::
+	Print only the URIs, and not any of their optional attributes.
+
+--upload-pack=<exec>::
+	Specify the full path of 'git-upload-pack' on the remote
+	host. This allows listing references from repositories accessed via
+	SSH and where the SSH daemon does not use the PATH configured by the
+	user.
+
+-o <option>::
+--server-option=<option>::
+	Transmit the given string to the server when communicating using
+	protocol version 2.  The given string must not contain a NUL or LF
+	character.
+	When multiple `--server-option=<option>` are given, they are all
+	sent to the other side in the order listed on the command line.
+
+<repository>::
+	The "remote" repository to query.  This parameter can be
+	either a URL or the name of a remote (see the GIT URLS and
+	REMOTES sections of linkgit:git-fetch[1]).
+
+SEE ALSO
+--------
+linkgit:git-ls-remote[1].
+
+GIT
+---
+Part of the linkgit:git[1] suite
