@@ -796,7 +796,7 @@ enum expire_reflog_flags {
  * expiration policy that is desired.
  *
  * reflog_expiry_prepare_fn -- Called once after the reference is
- *     locked.
+ *     locked. Called with the OID of the locked reference.
  *
  * reflog_expiry_should_prune_fn -- Called once for each entry in the
  *     existing reflog. It should return true iff that entry should be
@@ -806,7 +806,7 @@ enum expire_reflog_flags {
  *     unlocked again.
  */
 typedef void reflog_expiry_prepare_fn(const char *refname,
-				      const struct object_id *oid,
+				      struct object_id *lock_oid,
 				      void *cb_data);
 typedef int reflog_expiry_should_prune_fn(struct object_id *ooid,
 					  struct object_id *noid,
