@@ -417,8 +417,7 @@ typedef int each_loose_object_fn(const struct object_id *oid,
 typedef int each_loose_cruft_fn(const char *basename,
 				const char *path,
 				void *data);
-typedef int each_loose_subdir_fn(unsigned int nr,
-				 const char *path,
+typedef int each_loose_subdir_fn(const char *path,
 				 void *data);
 int for_each_file_in_obj_subdir(unsigned int subdir_nr,
 				struct strbuf *path,

@@ -5,10 +5,10 @@
 
 static struct progress *progress;
 
-static int prune_subdir(unsigned int nr, const char *path, void *data)
+static int prune_subdir(const char *path, void *data)
 {
 	int *opts = data;
-	display_progress(progress, nr + 1);
+	increment_progress(progress);
 	if (!(*opts & PRUNE_PACKED_DRY_RUN))
 		rmdir(path);
 	return 0;

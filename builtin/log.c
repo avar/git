@@ -2157,7 +2157,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		progress = start_delayed_progress(_("Generating patches"), total);
 	while (0 <= --nr) {
 		int shown;
-		display_progress(progress, total - nr);
+		increment_progress(progress);
 		commit = list[nr];
 		rev.nr = total - nr + (start_number - 1);
 		/* Make the second and subsequent mails replies to the first */

@@ -279,6 +279,8 @@ void resolve_tree_islands(struct repository *r,
 		struct name_entry entry;
 		khiter_t pos;
 
+		increment_progress(progress_state);
+
 		pos = kh_get_oid_map(island_marks, ent->idx.oid);
 		if (pos >= kh_end(island_marks))
 			continue;
@@ -304,8 +306,6 @@ void resolve_tree_islands(struct repository *r,
 		}
 
 		free_tree_buffer(tree);
-
-		display_progress(progress_state, i+1);
 	}
 
 	stop_progress(&progress_state);
