@@ -94,7 +94,7 @@ test_expect_success 'subtest: 2/3 tests passing' '
 	check_sub_test_lib_test partial-pass <<-\EOF
 	> ok 1 - passing test #1
 	> not ok 2 - failing test #2
-	#	false
+	#false
 	> ok 3 - passing test #3
 	> # failed 1 among 3 test(s)
 	> 1..3
@@ -156,7 +156,7 @@ test_expect_success 'subtest: mixed results: pass, failure and a TODO test' '
 	check_sub_test_lib_test mixed-results1 <<-\EOF
 	> ok 1 - passing test
 	> not ok 2 - failing test
-	> #	false
+	> #false
 	> not ok 3 - pretend we have a known breakage # TODO known breakage
 	> # still have 1 known breakage(s)
 	> # failed 1 among remaining 2 test(s)
@@ -184,11 +184,11 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	> ok 3 - passing test
 	> ok 4 - passing test
 	> not ok 5 - failing test
-	> #	false
+	> #false
 	> not ok 6 - failing test
-	> #	false
+	> #false
 	> not ok 7 - failing test
-	> #	false
+	> #false
 	> not ok 8 - pretend we have a known breakage # TODO known breakage
 	> not ok 9 - pretend we have a known breakage # TODO known breakage
 	> ok 10 - pretend we have fixed a known breakage # TODO known breakage vanished
@@ -206,19 +206,17 @@ test_expect_success 'subtest: --verbose option' '
 	test_expect_success "failing test" false
 	test_done
 	EOF
-	mv t1234-verbose/out t1234-verbose/out+ &&
-	grep -v "^Initialized empty" t1234-verbose/out+ >t1234-verbose/out &&
 	check_sub_test_lib_test t1234-verbose <<-\EOF
-	> expecting success of 1234.1 '\''passing test'\'': true
+	#### Created repo for '"'"'t1234-verbose'"'"' in '"'"'[ROOT DIR]/trash directory.t1234-verbose'"'"'
 	> ok 1 - passing test
+	> ###true
 	> Z
-	> expecting success of 1234.2 '\''test with output'\'': echo foo
 	> foo
 	> ok 2 - test with output
+	> ###echo foo
 	> Z
-	> expecting success of 1234.3 '\''failing test'\'': false
 	> not ok 3 - failing test
-	> #	false
+	> #false
 	> Z
 	> # failed 1 among 3 test(s)
 	> 1..3
@@ -232,15 +230,100 @@ test_expect_success 'subtest: --verbose-only option' '
 	check_sub_test_lib_test t1234-verbose <<-\EOF
 	> ok 1 - passing test
 	> Z
-	> expecting success of 1234.2 '\''test with output'\'': echo foo
 	> foo
 	> ok 2 - test with output
+	> ###echo foo
 	> Z
 	> not ok 3 - failing test
-	> #	false
+	> #false
 	> # failed 1 among 3 test(s)
 	> 1..3
 	EOF
+'
+
+test_expect_success 'setup subtest: --verbose-only output correctness' '
+	write_sub_test_lib_test verbose-only <<-\EOF
+	test_expect_success "one" "
+		printf \"ok 1 - try to screw with TAP output | \"
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+'
+
+test_expect_success 'subtest: --verbose output correctness' '
+	run_sub_test_lib_test verbose-only --verbose &&
+	check_sub_test_lib_test verbose-only <<-\EOF
+	> #### Created repo for '"'"'verbose-only'"'"' in '"'"'[ROOT DIR]/trash directory.verbose-only'"'"'
+	> ok 1 - try to screw with TAP output | ok 1 - one
+	> ###
+	> ###printf "ok 1 - try to screw with TAP output | "
+	> ###
+	> Z
+	> ok 2 - two
+	> ###true
+	> Z
+	> # passed all 2 test(s)
+	> 1..2
+	EOF
+'
+
+test_expect_success 'subtest: --verbose-only=0 output before any test_expect_{success,failure}' '
+	run_sub_test_lib_test verbose-only --verbose-only=0 &&
+	check_sub_test_lib_test verbose-only <<-\EOF
+	> #### Created repo for '"'"'verbose-only'"'"' in '"'"'[ROOT DIR]/trash directory.verbose-only'"'"'
+	ok 1 - one
+	ok 2 - two
+	# passed all 2 test(s)
+	1..2
+	EOF
+'
+
+test_expect_failure 'subtest: --verbose-only=1 output correctness' '
+	run_sub_test_lib_test verbose-only --verbose-only=1 &&
+
+	# TODO: replace this with check_sub_test_lib_test once it passes
+	grep "^1\.\.2$" verbose-only/out.raw &&
+	grep "^ok 1 - one" verbose-only/out.raw
+'
+
+test_expect_success 'subtest: --verbose-only=* globbing' '
+	write_sub_test_lib_test verbose-only-glob <<-\EOF &&
+	test_expect_success "one" "
+		>1-file &&
+		>2-file
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+
+	run_sub_test_lib_test verbose-only-glob --verbose &&
+	cp verbose-only-glob/out.raw expected &&
+	run_sub_test_lib_test verbose-only-glob --verbose-only=* &&
+	cp verbose-only-glob/out.raw actual &&
+	test_cmp expected actual
+'
+
+test_expect_success 'subtest: skip all with skip_all=*' '
+	write_and_run_sub_test_lib_test skip-all --verbose --color <<-\EOF &&
+	skip_all="cannot run here"
+	test_done
+	EOF
+	check_sub_test_lib_test skip-all <<-\EOF
+	<MAGENTA>#### Created repo for '"'"'skip-all'"'"' in '"'"'[ROOT DIR]/trash directory.skip-all'"'"'<RESET>
+	<CYAN>1..0 # SKIP cannot run here<RESET>
+	EOF
+'
+
+test_expect_success 'subtest: skip all GIT_SKIP_TESTS' '
+	(
+		run_sub_test_lib_test full-pass \
+			--skip="full" \
+			 --color --verbose &&
+		check_sub_test_lib_test full-pass <<-\EOF
+		> <CYAN>1..0 # SKIP skip all tests in full<RESET>
+		EOF
+	)
 '
 
 test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
@@ -249,8 +332,9 @@ test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
 			--skip="full.2" &&
 		check_sub_test_lib_test full-pass <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
 		> ok 3 - passing test #3
+		> # 1 test(s) skipped
 		> # passed all 3 test(s)
 		> 1..3
 		EOF
@@ -269,11 +353,12 @@ test_expect_success 'subtest: skip several with GIT_SKIP_TESTS' '
 		EOF
 		check_sub_test_lib_test git-skip-tests-several <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
 		> ok 3 - passing test #3
 		> ok 4 - passing test #4
-		> ok 5 # skip passing test #5 (GIT_SKIP_TESTS)
+		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
+		> # 2 test(s) skipped
 		> # passed all 6 test(s)
 		> 1..6
 		EOF
@@ -286,11 +371,12 @@ test_expect_success 'subtest: sh pattern skipping with GIT_SKIP_TESTS' '
 			--skip="git.[2-5]" &&
 		check_sub_test_lib_test git-skip-tests-several <<-\EOF
 		> ok 1 - passing test #1
-		> ok 2 # skip passing test #2 (GIT_SKIP_TESTS)
-		> ok 3 # skip passing test #3 (GIT_SKIP_TESTS)
-		> ok 4 # skip passing test #4 (GIT_SKIP_TESTS)
-		> ok 5 # skip passing test #5 (GIT_SKIP_TESTS)
+		> ok 2 # SKIP passing test #2 (GIT_SKIP_TESTS)
+		> ok 3 # SKIP passing test #3 (GIT_SKIP_TESTS)
+		> ok 4 # SKIP passing test #4 (GIT_SKIP_TESTS)
+		> ok 5 # SKIP passing test #5 (GIT_SKIP_TESTS)
 		> ok 6 - passing test #6
+		> # 4 test(s) skipped
 		> # passed all 6 test(s)
 		> 1..6
 		EOF
@@ -327,11 +413,12 @@ test_expect_success 'subtest: --run basic' '
 	run_sub_test_lib_test git-skip-tests-several --run="1,3,5" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -344,9 +431,10 @@ test_expect_success 'subtest: --run with a range' '
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -358,10 +446,11 @@ test_expect_success 'subtest: --run with two ranges' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
-	> ok 4 # skip passing test #4 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 2 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -374,9 +463,10 @@ test_expect_success 'subtest: --run with a left open range' '
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -386,12 +476,13 @@ test_expect_success 'subtest: --run with a right open range' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="4-" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
-	> ok 2 # skip passing test #2 (--run)
-	> ok 3 # skip passing test #3 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -403,10 +494,11 @@ test_expect_success 'subtest: --run with basic negation' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 1 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -418,10 +510,11 @@ test_expect_success 'subtest: --run with two negations' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 2 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -432,11 +525,12 @@ test_expect_success 'subtest: --run a range and negation' '
 		--run="-4,!2" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
 	> ok 4 - passing test #4
-	> ok 5 # skip passing test #5 (--run)
-	> ok 6 # skip passing test #6 (--run)
+	> ok 5 # SKIP passing test #5 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -446,12 +540,13 @@ test_expect_success 'subtest: --run range negation' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="!1-3" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
-	> ok 2 # skip passing test #2 (--run)
-	> ok 3 # skip passing test #3 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
 	> ok 6 - passing test #6
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -461,12 +556,13 @@ test_expect_success 'subtest: --run include, exclude and include' '
 	run_sub_test_lib_test git-skip-tests-several \
 		--run="1-5,!1-3,2" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -476,12 +572,13 @@ test_expect_success 'subtest: --run include, exclude and include, comma separate
 	run_sub_test_lib_test git-skip-tests-several \
 		--run=1-5,!1-3,2 &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
-	> ok 1 # skip passing test #1 (--run)
+	> ok 1 # SKIP passing test #1 (--run)
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
 	> ok 4 - passing test #4
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -493,10 +590,11 @@ test_expect_success 'subtest: --run exclude and include' '
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
 	> ok 2 - passing test #2
-	> ok 3 # skip passing test #3 (--run)
-	> ok 4 # skip passing test #4 (--run)
+	> ok 3 # SKIP passing test #3 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -507,11 +605,12 @@ test_expect_success 'subtest: --run empty selectors' '
 		--run="1,,3,,,5" &&
 	check_sub_test_lib_test git-skip-tests-several <<-\EOF
 	> ok 1 - passing test #1
-	> ok 2 # skip passing test #2 (--run)
+	> ok 2 # SKIP passing test #2 (--run)
 	> ok 3 - passing test #3
-	> ok 4 # skip passing test #4 (--run)
+	> ok 4 # SKIP passing test #4 (--run)
 	> ok 5 - passing test #5
-	> ok 6 # skip passing test #6 (--run)
+	> ok 6 # SKIP passing test #6 (--run)
+	> # 3 test(s) skipped
 	> # passed all 6 test(s)
 	> 1..6
 	EOF
@@ -529,12 +628,13 @@ test_expect_success 'subtest: --run substring selector' '
 	EOF
 	check_sub_test_lib_test run-substring-selector <<-\EOF
 	> ok 1 - relevant test
-	> ok 2 # skip other test #1 (--run)
-	> ok 3 # skip other test #2 (--run)
-	> ok 4 # skip other test #3 (--run)
-	> ok 5 # skip other test #4 (--run)
-	> ok 6 # skip other test #5 (--run)
-	> ok 7 # skip other test #6 (--run)
+	> ok 2 # SKIP other test #1 (--run)
+	> ok 3 # SKIP other test #2 (--run)
+	> ok 4 # SKIP other test #3 (--run)
+	> ok 5 # SKIP other test #4 (--run)
+	> ok 6 # SKIP other test #5 (--run)
+	> ok 7 # SKIP other test #6 (--run)
+	> # 6 test(s) skipped
 	> # passed all 7 test(s)
 	> 1..7
 	EOF
@@ -586,10 +686,11 @@ test_expect_success 'subtest: tests respect prerequisites' '
 	check_sub_test_lib_test prereqs <<-\EOF
 	ok 1 - prereq is satisfied
 	ok 2 - have_prereq works
-	ok 3 # skip prereq not satisfied (missing DONTHAVEIT)
+	ok 3 # SKIP prereq not satisfied (missing DONTHAVEIT)
 	ok 4 - multiple prereqs
-	ok 5 # skip mixed prereqs (yes,no) (missing DONTHAVEIT of HAVEIT,DONTHAVEIT)
-	ok 6 # skip mixed prereqs (no,yes) (missing DONTHAVEIT of DONTHAVEIT,HAVEIT)
+	ok 5 # SKIP mixed prereqs (yes,no) (missing DONTHAVEIT of HAVEIT,DONTHAVEIT)
+	ok 6 # SKIP mixed prereqs (no,yes) (missing DONTHAVEIT of DONTHAVEIT,HAVEIT)
+	> # 3 test(s) skipped
 	# passed all 6 test(s)
 	1..6
 	EOF
@@ -611,9 +712,10 @@ test_expect_success 'subtest: tests respect lazy prerequisites' '
 
 	check_sub_test_lib_test lazy-prereqs <<-\EOF
 	ok 1 - lazy prereq is satisifed
-	ok 2 # skip negative lazy prereq (missing !LAZY_TRUE)
-	ok 3 # skip lazy prereq not satisfied (missing LAZY_FALSE)
+	ok 2 # SKIP negative lazy prereq (missing !LAZY_TRUE)
+	ok 3 # SKIP lazy prereq not satisfied (missing LAZY_FALSE)
 	ok 4 - negative false prereq
+	# 2 test(s) skipped
 	# passed all 4 test(s)
 	1..4
 	EOF
@@ -655,7 +757,23 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 	test_done
 	EOF
 
-	grep "echo trace" lazy-prereq-and-tracing/err
+	check_sub_test_lib_test_out lazy-prereq-and-tracing \
+		<<-\EOF &&
+	> #### Created repo for '"'"'lazy-prereq-and-tracing'"'"' in '"'"'[ROOT DIR]/trash directory.lazy-prereq-and-tracing'"'"'
+	> #### Checking prerequisite LAZY...
+	> ####
+	> ####	mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&
+	> ####	(
+	> ####	cd "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&true	)
+	> #### ...prerequisite LAZY ok
+	> trace
+	> ok 1 - lazy
+	> ###test_have_prereq LAZY && echo trace
+	> Z
+	> # passed all 1 test(s)
+	> 1..1
+	EOF
+	grep "echo trace" lazy-prereq-and-tracing/err.raw
 '
 
 test_expect_success 'subtest: tests clean up after themselves' '
@@ -693,15 +811,15 @@ test_expect_success 'subtest: tests clean up even on failures' '
 	EOF
 	check_sub_test_lib_test failing-cleanup <<-\EOF
 	> not ok 1 - tests clean up even after a failure
-	> #	Z
-	> #	touch clean-after-failure &&
-	> #	test_when_finished rm clean-after-failure &&
-	> #	(exit 1)
-	> #	Z
+	> #
+	> #touch clean-after-failure &&
+	> #test_when_finished rm clean-after-failure &&
+	> #(exit 1)
+	> #
 	> not ok 2 - failure to clean up causes the test to fail
-	> #	Z
-	> #	test_when_finished "(exit 2)"
-	> #	Z
+	> #
+	> #test_when_finished "(exit 2)"
+	> #
 	> # failed 2 among 2 test(s)
 	> 1..2
 	EOF

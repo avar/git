@@ -71,6 +71,12 @@ _run_sub_test_lib_test_common () {
 		# the sub-test.
 		sane_unset HARNESS_ACTIVE &&
 
+		# Under a top-level --verbose-log we'd get the
+		# "GIT_TEST_TEE_STARTED " prefix in all our output
+		# without resetting GIT_TEST_TEE_STARTED (normally it
+		# guards against recursion).
+		sane_unset GIT_TEST_TEE_STARTED &&
+
 		export TEST_DIRECTORY &&
 		# The child test re-sources GIT-BUILD-OPTIONS and may thus
 		# override the test output directory. We thus pass it as an
@@ -80,7 +86,7 @@ _run_sub_test_lib_test_common () {
 		GIT_SKIP_TESTS=$skip &&
 		export GIT_SKIP_TESTS &&
 		sane_unset GIT_TEST_FAIL_PREREQS &&
-		./"$name.sh" "$@" >out 2>err;
+		./"$name.sh" "$@" >out.raw 2>err.raw;
 		ret=$? &&
 		test "$ret" "$cmp_op" "$want_code"
 	)
@@ -109,13 +115,19 @@ run_sub_test_lib_test_err () {
 _check_sub_test_lib_test_common () {
 	name="$1" &&
 	sed -e 's/^> //' -e 's/Z$//' >"$name"/expect.out &&
+	test_decode_color <"$name"/out.raw >"$name"/out &&
 	test_cmp "$name"/expect.out "$name"/out
 }
 
 check_sub_test_lib_test () {
 	name="$1" # stdin is the expected output from the test
 	_check_sub_test_lib_test_common "$name" &&
-	test_must_be_empty "$name"/err
+	test_must_be_empty "$name"/err.raw
+}
+
+check_sub_test_lib_test_out () {
+	name="$1" # stdin is the expected output from the test
+	_check_sub_test_lib_test_common "$name"
 }
 
 check_sub_test_lib_test_err () {
@@ -123,6 +135,7 @@ check_sub_test_lib_test_err () {
 	_check_sub_test_lib_test_common "$name" &&
 	# expected error output is in descriptor 3
 	sed -e 's/^> //' -e 's/Z$//' <&3 >"$name"/expect.err &&
+	test_decode_color <"$name"/err.raw >"$name"/err &&
 	test_cmp "$name"/expect.err "$name"/err
 }
 
