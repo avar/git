@@ -65,6 +65,9 @@ test_expect_success 'usage' '
 	test_expect_code 128 git log -Gregex -Sstring 2>err &&
 	grep "mutually exclusive" err &&
 
+	test_expect_code 128 git log -Sstring --pickaxe-patch 2>err &&
+	test_i18ngrep "mutually exclusive" err &&
+
 	test_expect_code 128 git log -Gregex --find-object=HEAD 2>err &&
 	grep "mutually exclusive" err &&
 
@@ -221,6 +224,53 @@ test_expect_success 'log -S --pickaxe-regex looks into binary files' '
 
 	git -C GS-bin-txt log --pickaxe-regex -S"[a]" >log &&
 	test_cmp log full-log
+'
+
+test_expect_success 'setup log -G --pickaxe-patch' '
+	git checkout --orphan G-patch &&
+	test_write_lines A B C D E F G >file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	sed "s/B/2/" <file >tmp &&
+	mv tmp file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	sed -e "s/D/4/" <file >tmp &&
+	mv tmp file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	git rm file &&
+	git commit --allow-empty-message &&
+	git log --oneline -1 HEAD~0 >file.fourth &&
+	git log --oneline -1 HEAD~1 >file.third &&
+	git log --oneline -1 HEAD~2 >file.second &&
+	git log --oneline -1 HEAD~3 >file.first
+'
+
+test_expect_success 'log -G --pickaxe-patch skips header and range information' '
+	git log --pickaxe-patch -p -G"(@@|file)" >log &&
+	test_must_be_empty log
+'
+
+test_expect_success 'log -G --pickaxe-patch searching in context' '
+	git log --oneline --pickaxe-patch -G"^ F" -U2 -s >log &&
+	test_cmp file.third log &&
+	git log --oneline --pickaxe-patch -G"^ F" -U1 -s >log &&
+	test_must_be_empty log
+'
+
+test_expect_success 'log -G --pickaxe-patch searching added / removed lines (skip create/delete)' '
+	git log --oneline --pickaxe-patch -G"^-[D2]" -s HEAD~1 >log &&
+	test_cmp file.third log &&
+	git log --oneline --pickaxe-patch -G"^\+[D2]" -s -1 >log &&
+	test_cmp file.second log
+'
+
+test_expect_success 'log -G --pickaxe-patch searching created / deleted files' '
+	git log --oneline --pickaxe-patch -G"^\+A" -s >log &&
+	test_cmp file.first log &&
+	git log --oneline --pickaxe-patch -G"^\-A" -s >log &&
+	test_cmp file.fourth log
 '
 
 test_done
