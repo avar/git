@@ -2389,7 +2389,7 @@ int for_each_file_in_obj_subdir(unsigned int subdir_nr,
 
 	strbuf_setlen(path, baselen - 1);
 	if (!r && subdir_cb)
-		r = subdir_cb(subdir_nr, path->buf, data);
+		r = subdir_cb(path->buf, data);
 
 	strbuf_setlen(path, origlen);
 
