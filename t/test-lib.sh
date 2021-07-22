@@ -415,9 +415,18 @@ LANG=C
 LC_ALL=C
 PAGER=cat
 TZ=UTC
-COLUMNS=80
-export LANG LC_ALL PAGER TZ COLUMNS
+export LANG LC_ALL PAGER TZ
 EDITOR=:
+
+# For repeatability we need to set term_columns()'s idea of
+# columns. We do this via GIT_TEST_COLUMNS and not COLUMNS because
+# e.g. versions of bash >= 5.0 have "shopt -s checkwinsize" on by
+# default. We could do "shopt -u checkwinsize >/dev/null 2>&1" here to
+# fix that particular issue, but this is not shell specific, and
+# future-proof the tests.
+GIT_TEST_COLUMNS=80
+COLUMNS=10
+export GIT_TEST_COLUMNS COLUMNS
 
 # A call to "unset" with no arguments causes at least Solaris 10
 # /usr/xpg4/bin/sh and /bin/ksh to bail out.  So keep the unsets
