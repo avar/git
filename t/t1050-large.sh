@@ -23,7 +23,7 @@ do
 	test_expect_success "add with $config" '
 		test_when_finished "rm -f .git/objects/pack/pack-*.* .git/index" &&
 		git $config add large1 &&
-		sz=$(test_file_size .git/objects/pack/pack-*.pack) &&
+		sz=$(test-tool path-utils file-size .git/objects/pack/pack-*.pack) &&
 		case "$expect" in
 		small) test "$sz" -le 100000 ;;
 		large) test "$sz" -ge 100000 ;;
