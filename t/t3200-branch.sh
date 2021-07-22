@@ -328,7 +328,7 @@ test_expect_success 'git branch --list -v with --abbrev' '
 '
 
 test_expect_success 'git branch --column' '
-	COLUMNS=81 git branch --column=column >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=81 git branch --column=column >actual &&
 	cat >expect <<\EOF &&
   a/b/c   bam     foo     l     * main    n       o/p     r
   abc     bar     j/k     m/m     mb      o/o     q       topic
@@ -341,7 +341,7 @@ test_expect_success 'git branch --column with an extremely long branch name' '
 	long=z$long/$long/$long/$long &&
 	test_when_finished "git branch -d $long" &&
 	git branch $long &&
-	COLUMNS=80 git branch --column=column >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=80 git branch --column=column >actual &&
 	cat >expect <<EOF &&
   a/b/c
   abc
@@ -367,7 +367,7 @@ EOF
 test_expect_success 'git branch with column.*' '
 	git config column.ui column &&
 	git config column.branch "dense" &&
-	COLUMNS=80 git branch >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=80 git branch >actual &&
 	git config --unset column.branch &&
 	git config --unset column.ui &&
 	cat >expect <<\EOF &&
@@ -383,7 +383,7 @@ test_expect_success 'git branch --column -v should fail' '
 
 test_expect_success 'git branch -v with column.ui ignored' '
 	git config column.ui column &&
-	COLUMNS=80 git branch -v | cut -c -8 | sed "s/ *$//" >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=80 git branch -v | cut -c -8 | sed "s/ *$//" >actual &&
 	git config --unset column.ui &&
 	cat >expect <<\EOF &&
   a/b/c
