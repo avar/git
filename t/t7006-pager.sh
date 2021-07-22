@@ -651,7 +651,7 @@ test_expect_success TTY 'git tag with auto-columns ' '
 	cat >expect <<-\EOF &&
 	initial  one      two      three    four     five
 	EOF
-	test_terminal env PAGER="cat >actual" COLUMNS=80 \
+	test_terminal env PAGER="cat >actual" GIT_TEST_COLUMNS= COLUMNS=80 \
 		git -c column.ui=auto tag --sort=authordate &&
 	test_cmp expect actual
 '

@@ -165,6 +165,13 @@ int term_columns(void)
 	term_columns_at_startup = 80;
 	term_columns_guessed = 1;
 
+	col_string = getenv("GIT_TEST_COLUMNS");
+	if (col_string && (n_cols = atoi(col_string)) > 0) {
+		term_columns_at_startup = n_cols;
+		term_columns_guessed = 0;
+		return term_columns_at_startup;
+	}
+
 	col_string = getenv("COLUMNS");
 	if (col_string && (n_cols = atoi(col_string)) > 0) {
 		term_columns_at_startup = n_cols;

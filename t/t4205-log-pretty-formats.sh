@@ -207,7 +207,7 @@ test_expect_success 'left alignment formatting at the nth column' '
 '
 
 test_expect_success 'left alignment formatting at the nth column' '
-	COLUMNS=50 git log --pretty="tformat:%h %<|(-10)%s" >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=50 git log --pretty="tformat:%h %<|(-10)%s" >actual &&
 	qz_to_tab_space <<-EOF >expected &&
 	$head1 message two                    Z
 	$head2 message one                    Z
@@ -350,7 +350,7 @@ test_expect_success 'right alignment formatting at the nth column' '
 '
 
 test_expect_success 'right alignment formatting at the nth column' '
-	COLUMNS=50 git log --pretty="tformat:%h %>|(-10)%s" >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=50 git log --pretty="tformat:%h %>|(-10)%s" >actual &&
 	qz_to_tab_space <<-EOF >expected &&
 	$head1                      message two
 	$head2                      message one
@@ -450,7 +450,7 @@ test_expect_success 'center alignment formatting at the nth column' '
 '
 
 test_expect_success 'center alignment formatting at the nth column' '
-	COLUMNS=70 git log --pretty="tformat:%h %><|(-30)%s" >actual &&
+	GIT_TEST_COLUMNS= COLUMNS=70 git log --pretty="tformat:%h %><|(-30)%s" >actual &&
 	qz_to_tab_space <<-EOF >expected &&
 	$head1           message two          Z
 	$head2           message one          Z
