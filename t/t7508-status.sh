@@ -108,13 +108,13 @@ test_expect_success 'status --column' '
 #	dir2/modified  untracked
 #
 EOF
-	COLUMNS=50 git -c status.displayCommentPrefix=true status --column="column dense" >output &&
+	GIT_TEST_COLUMNS= COLUMNS=50 git -c status.displayCommentPrefix=true status --column="column dense" >output &&
 	test_cmp expect output
 '
 
 test_expect_success 'status --column status.displayCommentPrefix=false' '
 	strip_comments expect &&
-	COLUMNS=49 git -c status.displayCommentPrefix=false status --column="column dense" >output &&
+	GIT_TEST_COLUMNS= COLUMNS=49 git -c status.displayCommentPrefix=false status --column="column dense" >output &&
 	test_cmp expect output
 '
 
