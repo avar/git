@@ -1033,7 +1033,8 @@ enum discovery_result {
 	/* these are errors */
 	GIT_DIR_HIT_CEILING = -1,
 	GIT_DIR_HIT_MOUNT_POINT = -2,
-	GIT_DIR_INVALID_GITFILE = -3
+	GIT_DIR_INVALID_GITFILE = -3,
+	GIT_DIR_GITFILE_NOT_A_REPO = -4,
 };
 
 /*
@@ -1118,8 +1119,11 @@ static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
 				/* NEEDSWORK: fail if .git is not file nor dir */
 				if (is_git_directory(dir->buf))
 					gitdirenv = DEFAULT_GIT_DIR_ENVIRONMENT;
-			} else if (error_code != READ_GITFILE_ERR_STAT_FAILED)
+			} else if (error_code == READ_GITFILE_ERR_NOT_A_REPO) {
+				return GIT_DIR_GITFILE_NOT_A_REPO;
+			} else if (error_code != READ_GITFILE_ERR_STAT_FAILED) {
 				return GIT_DIR_INVALID_GITFILE;
+			}
 		}
 		strbuf_setlen(dir, offset);
 		if (gitdirenv) {
@@ -1209,6 +1213,8 @@ const char *setup_git_directory_gently(int *nongit_ok)
 	struct strbuf dir = STRBUF_INIT, gitdir = STRBUF_INIT;
 	const char *prefix = NULL;
 	struct repository_format repo_fmt = REPOSITORY_FORMAT_INIT;
+	int die_on_error = !nongit_ok;
+	enum discovery_result discovery;
 
 	/*
 	 * We may have read an incomplete configuration before
@@ -1231,7 +1237,9 @@ const char *setup_git_directory_gently(int *nongit_ok)
 		die_errno(_("Unable to read current working directory"));
 	strbuf_addbuf(&dir, &cwd);
 
-	switch (setup_git_directory_gently_1(&dir, &gitdir, 1)) {
+	discovery = setup_git_directory_gently_1(&dir, &gitdir, die_on_error);
+
+	switch (discovery) {
 	case GIT_DIR_EXPLICIT:
 		prefix = setup_explicit_git_dir(gitdir.buf, &cwd, &repo_fmt, nongit_ok);
 		break;
@@ -1259,6 +1267,16 @@ const char *setup_git_directory_gently(int *nongit_ok)
 			    dir.buf);
 		*nongit_ok = 1;
 		break;
+	case GIT_DIR_GITFILE_NOT_A_REPO:
+		if (!nongit_ok)
+			die(_("not a git repository: %s"), dir.buf);
+		*nongit_ok = 1;
+		break;
+	case GIT_DIR_INVALID_GITFILE:
+		if (!nongit_ok)
+			die(_("invalid .git file: %s"), dir.buf);
+		*nongit_ok = 1;
+		break;
 	case GIT_DIR_NONE:
 		/*
 		 * As a safeguard against setup_git_directory_gently_1 returning
@@ -1266,8 +1284,7 @@ const char *setup_git_directory_gently(int *nongit_ok)
 		 * set startup_info->have_repository to 1 when we did nothing to
 		 * find a repository.
 		 */
-	default:
-		BUG("unhandled setup_git_directory_1() result");
+		BUG("setup_git_directory_1() should not return GIT_DIR_NONE");
 	}
 
 	/*
