@@ -33,13 +33,12 @@ check_fsck () {
 }
 
 corrupt () {
-	mv .git/objects/$(test_oid_to_path $1) .git/$1
+	mv "$(test_oid_to_objects_path $1)" .git/$1
 }
 
 recover () {
-	aa=$(echo $1 | cut -c 1-2)
-	mkdir -p .git/objects/$aa
-	mv .git/$1 .git/objects/$(test_oid_to_path $1)
+	mkdir -p "$(test_oid_to_objects_dir $1)" &&
+	mv ".git/$1" "$(test_oid_to_objects_path $1)"
 }
 
 check_dont_have () {
