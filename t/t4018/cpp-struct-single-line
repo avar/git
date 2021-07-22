@@ -1,3 +1,4 @@
+t4018 header: struct RIGHT_iterator_tag {};
 void wrong()
 {
 }
