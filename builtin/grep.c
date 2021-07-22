@@ -467,7 +467,7 @@ static int grep_submodule(struct grep_opt *opt,
 		object = parse_object_or_die(oid, NULL);
 		obj_read_unlock();
 		data = read_object_with_reference(&subrepo,
-						  &object->oid, tree_type,
+						  &object->oid, OBJ_TREE,
 						  &size, NULL);
 		if (!data)
 			die(_("unable to read tree (%s)"), oid_to_hex(&object->oid));
@@ -637,7 +637,7 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 		int hit, len;
 
 		data = read_object_with_reference(opt->repo,
-						  &obj->oid, tree_type,
+						  &obj->oid, OBJ_TREE,
 						  &size, NULL);
 		if (!data)
 			die(_("unable to read tree (%s)"), oid_to_hex(&obj->oid));
