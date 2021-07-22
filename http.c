@@ -991,13 +991,11 @@ void http_init(struct remote *remote, const char *url, int proactive_auth)
 	char *low_speed_limit;
 	char *low_speed_time;
 	char *normalized_url;
-	struct urlmatch_config config = { STRING_LIST_INIT_DUP };
+	struct urlmatch_config config = URLMATCH_CONFIG_INIT;
 
 	config.section = "http";
-	config.key = NULL;
 	config.collect_fn = http_options;
 	config.cascade_fn = git_default_config;
-	config.cb = NULL;
 
 	http_is_verbose = 0;
 	normalized_url = url_normalize(url, &config.url);
@@ -2381,6 +2379,7 @@ struct http_object_request *new_http_object_request(const char *base_url,
 abort:
 	strbuf_release(&prevfile);
 	free(freq->url);
+	git_inflate_end(&freq->stream);
 	free(freq);
 	return NULL;
 }
@@ -2451,4 +2450,6 @@ void release_http_object_request(struct http_object_request *freq)
 		freq->slot = NULL;
 	}
 	strbuf_release(&freq->tmpfile);
+	git_inflate_end(&freq->stream);
+	free(freq);
 }
