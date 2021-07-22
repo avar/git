@@ -13,7 +13,7 @@ test_expect_success 'test capability advertisement' '
 	wrong_algo sha1:sha256
 	wrong_algo sha256:sha1
 	EOF
-	cat >expect <<-EOF &&
+	cat >expect.base <<-EOF &&
 	version 2
 	agent=git/$(git version | cut -d" " -f3)
 	ls-refs=unborn
@@ -21,8 +21,38 @@ test_expect_success 'test capability advertisement' '
 	server-option
 	object-format=$(test_oid algo)
 	object-info
+	EOF
+	cat >expect.trailer <<-EOF &&
 	0000
 	EOF
+	cat expect.base expect.trailer >expect &&
+
+	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
+		--advertise-capabilities >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'test capability advertisement with uploadpack.packfileURI' '
+	test_config uploadpack.blobPackfileUri FAKE &&
+
+	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uris/" <expect >expect.packfileURI &&
+
+	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
+		--advertise-capabilities >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect.packfileURI actual
+'
+
+test_expect_success 'test capability advertisement with uploadpack.bundleURI' '
+	test_config uploadpack.bundleURI FAKE &&
+
+	cat >expect.extra <<-EOF &&
+	bundle-uri
+	EOF
+	cat expect.base \
+	    expect.extra \
+	    expect.trailer >expect &&
 
 	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
 		--advertise-capabilities >out &&
@@ -73,6 +103,8 @@ test_expect_success 'request invalid command' '
 	test_i18ngrep "invalid command" err
 '
 
+# Test the basics of fetch
+#
 test_expect_success 'wrong object-format' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=fetch
@@ -82,6 +114,26 @@ test_expect_success 'wrong object-format' '
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
 	test_i18ngrep "mismatched object format" err
+'
+
+test_expect_success 'fetch with unknown features' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=fetch
+	object-format=$(test_oid algo)
+	0001
+	we-do-not
+	know-about=this
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	ERR fetch: unexpected argument: '"'"'we-do-not'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual &&
+	test_must_be_empty err
 '
 
 # Test the basics of ls-refs
@@ -224,24 +276,6 @@ test_expect_success 'sending server-options' '
 	test_cmp expect actual
 '
 
-test_expect_success 'unexpected lines are not allowed in fetch request' '
-	git init server &&
-
-	test-tool pkt-line pack >in <<-EOF &&
-	command=fetch
-	object-format=$(test_oid algo)
-	0001
-	this-is-not-a-command
-	0000
-	EOF
-
-	(
-		cd server &&
-		test_must_fail test-tool serve-v2 --stateless-rpc
-	) <in >/dev/null 2>err &&
-	grep "unexpected line: .this-is-not-a-command." err
-'
-
 # Test the basics of object-info
 #
 test_expect_success !SANITIZE_LEAK 'basics of object-info' '
@@ -264,6 +298,123 @@ test_expect_success !SANITIZE_LEAK 'basics of object-info' '
 
 	test-tool serve-v2 --stateless-rpc <in >out &&
 	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'object-info with unknown arguments' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=object-info
+	object-format=$(test_oid algo)
+	0001
+	we-do-not
+	know-about=this
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	ERR object-info: unexpected argument: '"'"'we-do-not'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_must_be_empty err &&
+	test_cmp expect actual
+'
+
+test_expect_success 'basics of bundle-uri: dies if not enabled' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uri
+	0000
+	EOF
+
+	cat >err.expect <<-EOF &&
+	fatal: invalid command '"'"'bundle-uri'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in 2>err.actual &&
+	test_cmp err.expect err.actual
+'
+
+
+test_expect_success 'basics of bundle-uri: enabled with single URI' '
+	test_config uploadpack.bundleURI https://cdn.example.com/repo.bdl &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uri
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	https://cdn.example.com/repo.bdl
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc <in >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'basics of bundle-uri: enabled with single URI' '
+	test_config uploadpack.bundleURI https://cdn.example.com/repo.bdl &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uri
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	https://cdn.example.com/repo.bdl
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc <in >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'basics of bundle-uri: enabled with two URIs' '
+	test_config uploadpack.bundleURI https://cdn.example.com/repo.bdl &&
+	test_config uploadpack.bundleURI https://cdn.example.com/recent.bdl --add &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uri
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	https://cdn.example.com/repo.bdl
+	https://cdn.example.com/recent.bdl
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc <in >out &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'basics of bundle-uri: unknown future feature(s)' '
+	test_config uploadpack.bundleURI https://cdn.example.com/fake.bdl &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	command=bundle-uri
+	object-format=$(test_oid algo)
+	0001
+	some-feature
+	we-do-not
+	know=about
+	0000
+	EOF
+
+	cat >expect <<-\EOF &&
+	ERR bundle-uri: unexpected argument: '"'"'some-feature'"'"'
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in >out 2>err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_must_be_empty err &&
 	test_cmp expect actual
 '
 

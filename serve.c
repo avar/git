@@ -8,6 +8,7 @@
 #include "protocol-caps.h"
 #include "serve.h"
 #include "upload-pack.h"
+#include "bundle-uri.h"
 
 static int advertise_sid;
 
@@ -51,7 +52,8 @@ static int session_id_advertise(struct repository *r, struct strbuf *value)
 
 typedef int (*advertise_fn_t)(struct repository *r, struct strbuf *value);
 typedef int (*command_fn_t)(struct repository *r,
-			    struct packet_reader *request);
+			    struct packet_reader *request,
+			    struct packet_writer *writer);
 
 struct protocol_capability {
 	/*
@@ -133,6 +135,12 @@ static struct protocol_capability capabilities[] = {
 		.advertise = always_advertise,
 		.command = cap_object_info,
 	},
+	{
+		.name = "bundle-uri",
+		.startup_config = bundle_uri_startup_config,
+		.advertise = bundle_uri_advertise,
+		.command = bundle_uri_command,
+	},
 };
 
 static void read_startup_config(struct protocol_capability *command)
@@ -156,10 +164,10 @@ static int call_command(struct protocol_capability *command,
 			struct repository *r, struct strvec *keys,
 			struct packet_reader *request)
 {
-
+	struct packet_writer writer = PACKET_WRITER_INIT;
 	read_startup_config(command);
 
-	return command->command(r, request);
+	return command->command(r, request, &writer);
 }
 
 void protocol_v2_advertise_capabilities(void)
@@ -290,8 +298,7 @@ static int process_request(void)
 
 	packet_reader_init(&reader, 0, NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
-			   PACKET_READ_GENTLE_ON_EOF |
-			   PACKET_READ_DIE_ON_ERR_PACKET);
+			   PACKET_READ_GENTLE_ON_EOF);
 
 	/*
 	 * Check to see if the client closed their end before sending another
